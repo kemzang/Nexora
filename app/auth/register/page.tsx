@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, Brain, Zap, CheckCircle, Code, Rocket } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const { signUp } = useAuth()
+  const { showToast } = useToast()
 
   const {
     register,
@@ -59,6 +61,20 @@ export default function RegisterPage() {
         setError(result.error)
         setLoading(false)
       } else {
+        // Envoyer l'email de bienvenue
+        try {
+          await fetch('/api/email/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email,
+              userName: data.firstName,
+            }),
+          })
+        } catch {
+          // Email secondaire
+        }
+        showToast('Inscription réussie ! Vérifiez votre email.', 'success')
         setLoading(false)
         setSuccess(true)
         setTimeout(() => {

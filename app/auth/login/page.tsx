@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, Brain, Zap } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
 
 const loginSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { signIn } = useAuth()
+  const { showToast } = useToast()
 
   const {
     register,
@@ -45,6 +47,7 @@ export default function LoginPage() {
       if (result.error) {
         setError(result.error)
       } else {
+        showToast('Connexion réussie !', 'success')
         router.push('/dashboard')
       }
     } catch (err) {

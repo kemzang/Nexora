@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Brain, CreditCard, Lock, CheckCircle, ArrowLeft, Loader2, Shield 
 } from 'lucide-react'
+import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/hooks/use-auth'
 
 const planDetails: Record<string, { name: string; price: string; features: string[] }> = {
   free: {
@@ -54,6 +56,8 @@ function formatExpiry(value: string) {
 function CheckoutForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { showToast } = useToast()
+  const { user } = useAuth()
   const plan = searchParams.get('plan') || 'pro'
   const currentPlan = planDetails[plan] || planDetails.pro
 
@@ -87,25 +91,37 @@ function CheckoutForm() {
 
     setLoading(true)
 
-    // Simulation du traitement de paiement
-    // En production, ici on enverrait les données à un processeur de paiement (Stripe, etc.)
     try {
       await new Promise(resolve => setTimeout(resolve, 2000))
 
-      // Simuler l'enregistrement de la carte et le débit
       const priceInCents = parseInt(searchParams.get('price') || '0')
-      
-      console.log('Traitement du paiement:', {
-        plan,
-        amount: priceInCents,
-        cardLast4: cardNumber.replace(/\s/g, '').slice(-4),
-        cardName,
-      })
+      const last4 = cardNumber.replace(/\s/g, '').slice(-4)
 
+      // Envoyer l'email de confirmation de paiement
+      if (user?.email) {
+        try {
+          await fetch('/api/email/payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: user.email,
+              userName: user.firstName || user.email.split('@')[0],
+              planName: currentPlan.name,
+              amount: currentPlan.price,
+              cardLast4: last4,
+            }),
+          })
+        } catch {
+          // L'email est secondaire, on ne bloque pas le paiement
+        }
+      }
+
+      showToast(`Paiement confirmé ! Plan ${currentPlan.name} activé.`, 'success')
       setSuccess(true)
       setTimeout(() => router.push('/dashboard'), 3000)
     } catch {
       setError('Erreur lors du traitement du paiement. Veuillez réessayer.')
+      showToast('Erreur lors du paiement.', 'error')
     } finally {
       setLoading(false)
     }

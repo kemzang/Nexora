@@ -343,12 +343,59 @@ CREATE TRIGGER trg_assist BEFORE UPDATE ON assistants FOR EACH ROW EXECUTE FUNCT
 CREATE TRIGGER trg_tpl BEFORE UPDATE ON response_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trg_inv BEFORE UPDATE ON invoices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Auto-create profile on signup
+-- Auto-create profile and free subscription on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  free_plan_id UUID;
+  free_tokens INTEGER;
 BEGIN
+  -- 1. Créer le profil
   INSERT INTO user_profiles (id, display_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'first_name' || ' ' || NEW.raw_user_meta_data->>'last_name', NEW.email));
+
+  -- 2. Récupérer les infos du plan Free
+  SELECT id, tokens_per_month INTO free_plan_id, free_tokens 
+  FROM subscription_plans 
+  WHERE slug = 'free' 
+  LIMIT 1;
+
+  -- 3. Créer l'abonnement par défaut (si le plan existe)
+  IF free_plan_id IS NOT NULL THEN
+    INSERT INTO user_subscriptions (
+      user_id, 
+      plan_id, 
+      status, 
+      current_period_start, 
+      current_period_end, 
+      tokens_remaining
+    )
+    VALUES (
+      NEW.id, 
+      free_plan_id, 
+      'active', 
+      CURRENT_TIMESTAMP, 
+      CURRENT_TIMESTAMP + INTERVAL '1 month', 
+      free_tokens
+    );
+
+    -- 4. Ajouter la transaction initiale de tokens
+    INSERT INTO token_transactions (
+      user_id,
+      transaction_type,
+      amount,
+      balance_after,
+      description
+    )
+    VALUES (
+      NEW.id,
+      'bonus',
+      free_tokens,
+      free_tokens,
+      'Bienvenue ! Tokens gratuits du plan Free.'
+    );
+  END IF;
+
   RETURN NEW;
 END;
 $$ language 'plpgsql' SECURITY DEFINER;
@@ -389,6 +436,4 @@ INSERT INTO ai_models (name, provider, model_id, description, capabilities, cont
   ('Claude 3.5 Sonnet', 'Anthropic', 'claude-3-5-sonnet-latest', 'Meilleur rapport qualité/prix',
    '{"chat":true,"completion":true,"agent":true,"edit":true}', 200000, 0.000003, 0.000015, 'business', 6),
   ('Gemini 2.0 Flash', 'Google', 'gemini-2.0-flash', 'Ultra rapide Google',
-   '{"chat":true,"completion":true}', 1000000, 0.0000001, 0.0000004, 'pro', 7),
-  ('Llama 3.3 70B', 'Meta', 'llama-3.3-70b', 'Open source performant',
-   '{"chat":true,"completion":true}', 128000, 0.00000059, 0.00000079, 'pro', 8);
+   '{"chat":true,"completion":true}', 1000000, 0.0000001, 0.0000004, 'pro', 7);

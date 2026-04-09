@@ -122,6 +122,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Créer une entrée dans usage_sessions pour le suivi
+    // On l'insère avant de renvoyer le flux, on mettra à jour les tokens à la fin si possible
+    // (Note: Pour un vrai suivi précis en streaming, il faudrait intercepter le flux ou utiliser les callbacks du fournisseur)
+    const { data: usageSession } = await supabase
+      .from('usage_sessions')
+      .insert({
+        user_id: user.id,
+        session_type: 'chat_proxy',
+        model_id: null, // On pourrait mapper model_id vers l'UUID de la table ai_models
+        metadata: { 
+          model: selectedModel, 
+          provider: provider || 'openai',
+          messages_count: messages.length 
+        }
+      })
+      .select()
+      .single();
+
     // Transférer le flux de réponse directement
     return new NextResponse(aiResponse.body, {
       headers: {

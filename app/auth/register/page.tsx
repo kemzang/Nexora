@@ -152,13 +152,22 @@ function RegisterForm() {
                   Votre compte a été créé avec succès. Cliquez sur le bouton ci-dessous pour ouvrir VS Code et commencer à coder.
                 </p>
                 <div className="space-y-4">
-                  <Button 
-                    onClick={() => window.location.href = redirectUrl}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-7 rounded-2xl text-lg shadow-xl shadow-indigo-600/20 group transition-all"
-                  >
-                    Ouvrir VS Code
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  {redirectUrl ? (
+                    <a 
+                      href={redirectUrl}
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-5 rounded-2xl text-lg shadow-xl shadow-indigo-600/20 group transition-all flex items-center justify-center no-underline"
+                    >
+                      Ouvrir VS Code
+                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </a>
+                  ) : (
+                    <Button 
+                      disabled
+                      className="w-full bg-gray-600 text-white font-bold py-7 rounded-2xl text-lg"
+                    >
+                      Lien non disponible
+                    </Button>
+                  )}
                   <Button 
                     variant="ghost" 
                     onClick={() => router.push('/dashboard')}

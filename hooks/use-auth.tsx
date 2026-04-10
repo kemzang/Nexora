@@ -61,11 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       const result = await AuthService.signIn(credentials)
+      if (result.error) {
+        return { error: result.error }
+      }
       if (result.user && result.session) {
         setUser(result.user)
         setToken(result.session.access_token)
+        return { error: undefined, token: result.session.access_token }
       }
-      return { error: result.error, token: result.session?.access_token }
+      return { error: 'Erreur lors de la récupération de la session' }
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     } finally {
@@ -77,11 +81,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     try {
       const result = await AuthService.signUp(credentials)
+      if (result.error) {
+        return { error: result.error }
+      }
       if (result.user && result.session) {
         setUser(result.user)
         setToken(result.session.access_token)
+        return { error: undefined, token: result.session.access_token }
       }
-      return { error: result.error, token: result.session?.access_token }
+      return { error: undefined, token: undefined } // Succès mais confirmation email requise
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     } finally {

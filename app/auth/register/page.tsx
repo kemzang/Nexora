@@ -60,6 +60,8 @@ function RegisterForm() {
   })
 
   const onSubmit = async (data: RegisterFormData) => {
+    if (loading) return
+    
     setLoading(true)
     setError(null)
 
@@ -75,38 +77,15 @@ function RegisterForm() {
         setError(result.error)
         setLoading(false)
       } else {
-        // Envoyer l'email de bienvenue
-        try {
-          await fetch('/api/email/welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: data.email,
-              userName: data.firstName,
-            }),
-          })
-        } catch {
-          // Email secondaire
-        }
-        showToast('Inscription réussie ! Vérifiez votre email.', 'success')
-        
-        if (callback && result.token) {
-          const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${result.token}`
-          // Redirection directe suite au clic sur "Créer mon compte"
-          window.location.href = redirectUrl
-          
-          // On affiche l'écran de succès après un court délai comme fallback
-          setTimeout(() => setSuccess(true), 500)
-        } else {
-          setSuccess(true)
-          setTimeout(() => {
-            router.push('/auth/login')
-          }, 3000)
-        }
+        showToast('Inscription réussie !', 'success')
+        // Safety timeout au cas où la redirection ne se fait pas
+        setTimeout(() => {
+          setLoading(false)
+        }, 5000)
       }
     } catch (err) {
-      setError('Une erreur est survenue lors de l\'inscription')
-    } finally {
+      console.error('Registration error:', err)
+      setError('Une erreur inattendue est survenue lors de l\'inscription')
       setLoading(false)
     }
   }

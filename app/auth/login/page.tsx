@@ -55,31 +55,27 @@ function LoginForm() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
+    if (loading) return
+    
     setLoading(true)
     setError(null)
 
     try {
       const result = await signIn(data)
+      
       if (result.error) {
         setError(result.error)
+        setLoading(false)
       } else {
         showToast('Connexion réussie !', 'success')
-        
-        if (callback && result.token) {
-          const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${result.token}`
-          // Redirection directe suite au clic sur "Se connecter"
-          // C'est le moment le plus fiable pour que le navigateur accepte d'ouvrir VS Code
-          window.location.href = redirectUrl
-          
-          // On affiche quand même l'écran de succès après un court délai comme fallback
-          setTimeout(() => setSuccess(true), 500)
-        } else {
-          router.push('/dashboard')
-        }
+        // Safety timeout au cas où la redirection ne se fait pas
+        setTimeout(() => {
+          setLoading(false)
+        }, 5000)
       }
     } catch (err) {
-      setError('Une erreur est survenue lors de la connexion')
-    } finally {
+      console.error('Login error:', err)
+      setError('Une erreur inattendue est survenue')
       setLoading(false)
     }
   }
@@ -286,7 +282,7 @@ function LoginForm() {
               <span>IA Rapide</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
+              <Code className="w-4 h-4 text-blue-400" />
               <span>Code Intelligent</span>
             </div>
             <div className="flex items-center space-x-2">

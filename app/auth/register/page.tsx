@@ -42,10 +42,10 @@ function RegisterForm() {
 
   // Redirection si déjà connecté
   useEffect(() => {
-    if (user && token && callback && !success) {
-      setSuccess(true)
-      const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${token}`
-      window.location.href = redirectUrl
+    if (user && token && callback) {
+      if (!success) setSuccess(true)
+      // On ne redirige plus automatiquement ici car c'est souvent bloqué par le navigateur
+      // sans action utilisateur. On laisse l'écran de succès avec le bouton s'afficher.
     } else if (user && token && !callback) {
       router.push('/dashboard')
     }
@@ -89,17 +89,20 @@ function RegisterForm() {
           // Email secondaire
         }
         showToast('Inscription réussie ! Vérifiez votre email.', 'success')
-        setLoading(false)
-        setSuccess(true)
         
-        setTimeout(() => {
-          if (callback && result.token) {
-            const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${result.token}`
-            window.location.href = redirectUrl
-          } else {
+        if (callback && result.token) {
+          const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${result.token}`
+          // Redirection directe suite au clic sur "Créer mon compte"
+          window.location.href = redirectUrl
+          
+          // On affiche l'écran de succès après un court délai comme fallback
+          setTimeout(() => setSuccess(true), 500)
+        } else {
+          setSuccess(true)
+          setTimeout(() => {
             router.push('/auth/login')
-          }
-        }, 3000)
+          }, 3000)
+        }
       }
     } catch (err) {
       setError('Une erreur est survenue lors de l\'inscription')

@@ -39,13 +39,12 @@ function RegisterForm() {
   const { showToast } = useToast()
 
   const callback = searchParams.get('callback')
+  const state = searchParams.get('state')
 
   // Redirection si déjà connecté
   useEffect(() => {
     if (user && token && callback) {
       if (!success) setSuccess(true)
-      // On ne redirige plus automatiquement ici car c'est souvent bloqué par le navigateur
-      // sans action utilisateur. On laisse l'écran de succès avec le bouton s'afficher.
     } else if (user && token && !callback) {
       router.push('/dashboard')
     }
@@ -58,6 +57,17 @@ function RegisterForm() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema)
   })
+
+  const getRedirectUrl = (tokenValue: string) => {
+    if (!callback) return null
+    // Utiliser le schéma correct : vscode://Nexora.nexora/auth
+    const baseUrl = "vscode://Nexora.nexora/auth"
+    const params = new URLSearchParams()
+    params.append('token', tokenValue)
+    if (state) params.append('state', state)
+    
+    return `${baseUrl}?${params.toString()}`
+  }
 
   const onSubmit = async (data: RegisterFormData) => {
     if (loading) return
@@ -78,10 +88,19 @@ function RegisterForm() {
         setLoading(false)
       } else {
         showToast('Inscription réussie !', 'success')
-        // Safety timeout au cas où la redirection ne se fait pas
-        setTimeout(() => {
-          setLoading(false)
-        }, 5000)
+        
+        if (callback && result.token) {
+          const redirectUrl = getRedirectUrl(result.token)
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+          }
+          setTimeout(() => setSuccess(true), 500)
+        } else {
+          setSuccess(true)
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 3000)
+        }
       }
     } catch (err) {
       console.error('Registration error:', err)
@@ -91,7 +110,7 @@ function RegisterForm() {
   }
 
   if (success) {
-    const redirectUrl = callback && token ? `${callback}${callback.includes('?') ? '&' : '?'}token=${token}` : null
+    const redirectUrl = callback && token ? getRedirectUrl(token) : null
     return (
       <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 overflow-hidden relative">
         {/* Animated Background */}

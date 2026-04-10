@@ -33,14 +33,12 @@ function LoginForm() {
   const { showToast } = useToast()
 
   const callback = searchParams.get('callback')
+  const state = searchParams.get('state')
 
   // Redirection si déjà connecté
   useEffect(() => {
     if (user && token && callback) {
       if (!success) setSuccess(true)
-      // On ne redirige plus automatiquement ici car c'est bloqué par les navigateurs 
-      // sans une interaction utilisateur (clic). L'écran de succès avec le bouton
-      // s'affichera et l'utilisateur devra cliquer sur "Ouvrir VS Code".
     } else if (user && token && !callback) {
       router.push('/dashboard')
     }
@@ -53,6 +51,17 @@ function LoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema)
   })
+
+  const getRedirectUrl = (tokenValue: string) => {
+    if (!callback) return null
+    // Utiliser le schéma correct : vscode://Nexora.nexora/auth
+    const baseUrl = "vscode://Nexora.nexora/auth"
+    const params = new URLSearchParams()
+    params.append('token', tokenValue)
+    if (state) params.append('state', state)
+    
+    return `${baseUrl}?${params.toString()}`
+  }
 
   const onSubmit = async (data: LoginFormData) => {
     if (loading) return
@@ -68,10 +77,16 @@ function LoginForm() {
         setLoading(false)
       } else {
         showToast('Connexion réussie !', 'success')
-        // Safety timeout au cas où la redirection ne se fait pas
-        setTimeout(() => {
-          setLoading(false)
-        }, 5000)
+        
+        if (callback && result.token) {
+          const redirectUrl = getRedirectUrl(result.token)
+          if (redirectUrl) {
+            window.location.href = redirectUrl
+          }
+          setTimeout(() => setSuccess(true), 500)
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -81,7 +96,7 @@ function LoginForm() {
   }
 
   if (success && callback) {
-    const redirectUrl = `${callback}${callback.includes('?') ? '&' : '?'}token=${token}`
+    const redirectUrl = token ? getRedirectUrl(token) : null
     return (
       <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 overflow-hidden relative">
         {/* Animated Background */}
@@ -116,7 +131,9 @@ function LoginForm() {
 
             <div className="space-y-4">
               <Button 
-                onClick={() => window.location.href = redirectUrl}
+                onClick={() => {
+                  if (redirectUrl) window.location.href = redirectUrl
+                }}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-7 rounded-2xl text-lg shadow-xl shadow-indigo-600/20 group transition-all"
               >
                 Ouvrir VS Code
@@ -142,11 +159,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      {/* Background Animation */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20 -top-48 -left-48 animate-pulse"></div>
-        <div className="absolute w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-20 -bottom-48 -right-48 animate-pulse delay-1000"></div>
+    <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
       </div>
 
       <motion.div
@@ -155,8 +172,8 @@ function LoginForm() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl">
-          <CardHeader className="text-center space-y-6">
+        <Card className="backdrop-blur-xl bg-white/[0.03] border-white/10 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="text-center space-y-6 pt-10">
             {/* Logo */}
             <motion.div
               initial={{ scale: 0 }}
@@ -179,77 +196,85 @@ function LoginForm() {
             </motion.div>
 
             <div className="space-y-2">
-              <CardTitle className="text-2xl font-bold text-white">
-                Bienvenue sur <span className="gradient-text">Nexora</span>
+              <CardTitle className="text-3xl font-bold text-white tracking-tight">
+                Nexora
               </CardTitle>
-              <CardDescription className="text-gray-300">
-                L'extension VS Code IA qui transforme votre code
+              <CardDescription className="text-gray-400">
+                Connectez-vous pour continuer
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 p-10 pt-6">
             {error && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
-                <Alert variant="destructive" className="bg-red-500/20 border-red-500/50 text-white">
+                <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400 rounded-xl">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">Email</Label>
+                <Label htmlFor="email" className="text-gray-300 ml-1">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="vous@exemple.com"
                   {...register('email')}
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
+                  className="bg-white/5 border-white/10 text-white placeholder-gray-600 focus:border-purple-500/50 h-12 rounded-xl transition-all"
                 />
                 {errors.email && (
-                  <p className="text-red-400 text-sm">{errors.email.message}</p>
+                  <p className="text-red-400 text-xs ml-1">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-white">Mot de passe</Label>
+                <div className="flex items-center justify-between ml-1">
+                  <Label htmlFor="password" className="text-gray-300">Mot de passe</Label>
+                  <Link 
+                    href="/auth/forgot-password" 
+                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    Oublié ?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   {...register('password')}
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
+                  className="bg-white/5 border-white/10 text-white placeholder-gray-600 focus:border-purple-500/50 h-12 rounded-xl transition-all"
                 />
                 {errors.password && (
-                  <p className="text-red-400 text-sm">{errors.password.message}</p>
+                  <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>
                 )}
               </div>
 
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 transition-all duration-300 hover:scale-105"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion en cours...
+                    Connexion...
                   </>
                 ) : (
                   <>
-                    <Zap className="mr-2 h-4 w-4" />
                     Se connecter
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
             </form>
 
-            <div className="text-center space-y-4">
-              <div className="text-gray-300">
+            <div className="text-center pt-2">
+              <p className="text-gray-500 text-sm">
                 Pas encore de compte ?{' '}
                 <Link 
                   href={`/auth/register${callback ? `?callback=${encodeURIComponent(callback)}` : ''}`} 
@@ -257,39 +282,28 @@ function LoginForm() {
                 >
                   Créer un compte
                 </Link>
-              </div>
-              
-              <Link 
-                href="/auth/forgot-password" 
-                className="text-sm text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                Mot de passe oublié ?
-              </Link>
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Features Preview */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center"
+          className="mt-8 flex justify-center space-x-6"
         >
-          <div className="flex justify-center space-x-8 text-gray-400 text-sm">
-            <div className="flex items-center space-x-2">
-              <Zap className="w-4 h-4 text-yellow-400" />
-              <span>IA Rapide</span>
+          {[
+            { icon: Zap, color: 'text-yellow-400', label: 'Rapide' },
+            { icon: Code, color: 'text-blue-400', label: 'Intelligent' },
+            { icon: Sparkles, color: 'text-purple-400', label: 'Productif' }
+          ].map((item, i) => (
+            <div key={i} className="flex items-center space-x-2 text-gray-500 text-xs">
+              <item.icon className={`w-4 h-4 ${item.color}`} />
+              <span>{item.label}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Code className="w-4 h-4 text-blue-400" />
-              <span>Code Intelligent</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span>Auto-complétion</span>
-            </div>
-          </div>
+          ))}
         </motion.div>
       </motion.div>
     </div>

@@ -34,19 +34,27 @@ function LoginForm() {
   const { showToast } = useToast()
 
   const callback = searchParams.get('callback')
+  const redirect = searchParams.get('redirect')
   const state = searchParams.get('state')
 
   // Redirection si déjà connecté
   useEffect(() => {
-    if (user && token && callback) {
-      if (!success) {
-        setSuccess(true)
-        setRedirectToken(token)
+    if (user && token) {
+      if (callback) {
+        // Ancien flux VS Code avec callback
+        if (!success) {
+          setSuccess(true)
+          setRedirectToken(token)
+        }
+      } else if (redirect) {
+        // Nouveau flux - rediriger vers l'URL de redirection
+        window.location.href = redirect
+      } else {
+        // Connexion normale
+        router.push('/dashboard')
       }
-    } else if (user && token && !callback) {
-      router.push('/dashboard')
     }
-  }, [user, token, callback, router, success])
+  }, [user, token, callback, redirect, router, success])
 
   const {
     register,
@@ -58,8 +66,8 @@ function LoginForm() {
 
   const getRedirectUrl = (tokenValue: string) => {
     if (!callback) return null
-    // Utiliser le schéma correct : vscode://Nexora.nexora/auth
-    const baseUrl = "vscode://Nexora.nexora/auth"
+    // Utiliser l'URL que ton extension attend
+    const baseUrl = "vscode://Nexora.nexora"
     const params = new URLSearchParams()
     params.append('token', tokenValue)
     if (state) params.append('state', state)
@@ -82,15 +90,22 @@ function LoginForm() {
       } else {
         showToast('Connexion réussie !', 'success')
         
-        if (callback && result.token) {
-          setRedirectToken(result.token)
-          const redirectUrl = getRedirectUrl(result.token)
-          if (redirectUrl) {
-            // Tenter la redirection directe
-            window.location.assign(redirectUrl)
+        // Vérifier si c'est une connexion depuis VS Code
+        if (callback) {
+          // Ancien flux d'authentification VS Code
+          if (result.token) {
+            setRedirectToken(result.token)
+            const redirectUrl = getRedirectUrl(result.token)
+            if (redirectUrl) {
+              window.location.assign(redirectUrl)
+            }
           }
           setSuccess(true)
+        } else if (redirect) {
+          // Nouveau flux - rediriger vers l'URL de redirection (continue-redirect)
+          window.location.href = redirect
         } else {
+          // Connexion normale
           router.push('/dashboard')
         }
       }

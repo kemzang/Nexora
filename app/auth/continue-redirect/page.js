@@ -18,6 +18,9 @@ export default function ContinueRedirectPage() {
 
     const handleAuth = async () => {
       try {
+        // Attendre un peu pour s'assurer que tout est chargé
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         const { supabase } = await import('@/lib/supabase')
         
         const urlParams = new URLSearchParams(window.location.search)
@@ -73,6 +76,7 @@ export default function ContinueRedirectPage() {
     handleAuth()
   }, [mounted])
 
+  // Affichage de chargement pendant le montage
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { verifyToken } from '@/lib/auth-verify'
 
 export const runtime = 'edge'
 
@@ -16,24 +17,22 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
+    const userId = await verifyToken(token)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Récupérer le profil utilisateur
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('display_name, avatar_url')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     // Retourner l'organisation au format Continue Hub
     const organizations = [
       {
-        id: user.id,
-        name: profile?.display_name || user.email?.split('@')[0] || 'Utilisateur',
+        id: userId,
+        name: profile?.display_name || 'Utilisateur',
         slug: 'nexora',
         iconUrl: profile?.avatar_url || null,
         role: 'member',

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'edge'
@@ -16,9 +17,8 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-
-    if (authError || !user) {
+    const userId = await verifyToken(token)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     // Logger l'usage en arrière-plan (sans bloquer la réponse)
     void supabase.from('usage_sessions').insert({
-      user_id: user.id,
+      user_id: userId,
       session_type: 'chat_proxy',
       metadata: { model: selectedModel, messages_count: messages.length }
     })

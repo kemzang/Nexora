@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { verifyToken } from '@/lib/auth-verify'
 
 export const runtime = 'edge'
 
@@ -40,11 +41,11 @@ function getModelsForPlan(plan: string, token: string) {
 
   switch (plan) {
     case 'pro':
-      return { models: [proModel, miniModel], autocomplete: miniModel }
+      return { models: [proModel, deepseekModel, miniModel], autocomplete: miniModel }
     case 'enterprise':
       return { models: [proModel, deepseekModel, miniModel], autocomplete: miniModel }
     default: // free
-      return { models: [miniModel], autocomplete: miniModel }
+      return { models: [deepseekModel, miniModel], autocomplete: deepseekModel }
   }
 }
 
@@ -56,9 +57,8 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
+    const userId = await verifyToken(token)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     const { data: subscription } = await supabase
       .from('user_subscriptions')
       .select('plan_id, status, subscription_plans(name)')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('status', 'active')
       .single()
 

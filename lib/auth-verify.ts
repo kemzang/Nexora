@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Hash SHA-256 compatible Edge Runtime (Web Crypto API)
+// Cache en mémoire (valide pendant la durée de vie du serveur)
+const tokenCache = new Map<string, { userId: string; expiresAt: number }>()
+
 async function sha256(text: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(text)
@@ -9,15 +11,19 @@ async function sha256(text: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Vérifie un token (soit Supabase natif JWT, soit token custom nxr_...)
-// Retourne le user_id ou null
 export async function verifyToken(token: string): Promise<string | null> {
+  // Vérifier le cache d'abord (évite une requête Supabase)
+  const cached = tokenCache.get(token)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.userId
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Token custom généré par exchange-code
+  // Token custom nxr_
   if (token.startsWith('nxr_')) {
     const tokenHash = await sha256(token)
     const { data, error } = await supabase
@@ -29,11 +35,17 @@ export async function verifyToken(token: string): Promise<string | null> {
 
     if (error || !data) return null
     if (data.expires_at && new Date(data.expires_at) < new Date()) return null
+
+    // Mettre en cache pour 5 minutes
+    tokenCache.set(token, { userId: data.user_id, expiresAt: Date.now() + 5 * 60 * 1000 })
     return data.user_id
   }
 
   // Token Supabase natif (JWT)
   const { data: { user }, error } = await supabase.auth.getUser(token)
   if (error || !user) return null
+
+  // Mettre en cache pour 5 minutes
+  tokenCache.set(token, { userId: user.id, expiresAt: Date.now() + 5 * 60 * 1000 })
   return user.id
 }

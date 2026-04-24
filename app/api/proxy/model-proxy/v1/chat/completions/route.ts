@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 
-// Node.js runtime (pas Edge) pour supporter les modules crypto
 export const runtime = 'nodejs'
 
 const supabase = createClient(
@@ -18,36 +17,37 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-    const userId = await verifyToken(token)
+
+    // Lire le body et vérifier le token en parallèle
+    const [userId, body] = await Promise.all([
+      verifyToken(token),
+      req.json()
+    ])
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
     const { messages, model, stream = true, ...rest } = body
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Messages requis' }, { status: 400 })
     }
 
-    // DeepSeek par défaut si aucun modèle passé
-    let selectedModel = model || 'deepseek-chat'
-    let apiUrl: string
-    let apiKey: string
-
-    if (!model || model.startsWith('deepseek')) {
-      apiUrl = 'https://api.deepseek.com/chat/completions'
-      apiKey = process.env.DEEPSEEK_API_KEY!
-    } else {
-      apiUrl = 'https://api.openai.com/v1/chat/completions'
-      apiKey = process.env.OPENAI_API_KEY!
-    }
+    // DeepSeek par défaut
+    const selectedModel = model || 'deepseek-chat'
+    const isDeepSeek = !model || model.startsWith('deepseek')
+    const apiUrl = isDeepSeek
+      ? 'https://api.deepseek.com/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions'
+    const apiKey = isDeepSeek
+      ? process.env.DEEPSEEK_API_KEY!
+      : process.env.OPENAI_API_KEY!
 
     if (!apiKey) {
       return NextResponse.json({ error: 'Clé API non configurée' }, { status: 500 })
     }
 
-    // Appel vers l'IA
     const aiResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -62,14 +62,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: err }, { status: aiResponse.status })
     }
 
-    // Logger l'usage en arrière-plan (sans bloquer la réponse)
+    // Logger en arrière-plan sans bloquer
     void supabase.from('usage_sessions').insert({
       user_id: userId,
       session_type: 'chat_proxy',
       metadata: { model: selectedModel, messages_count: messages.length }
     })
 
-    // Retourner le stream directement
     return new NextResponse(aiResponse.body, {
       headers: {
         'Content-Type': aiResponse.headers.get('Content-Type') || 'text/event-stream',

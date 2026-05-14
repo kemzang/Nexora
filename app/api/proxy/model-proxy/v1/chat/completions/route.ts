@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
-import { selectBestModel, estimateTokens, type ModelId, MODELS, type PlanId } from '@/lib/models'
+import { selectBestModel, estimateTokens, type ModelId, type PlanId } from '@/lib/models'
 
 export const runtime = 'nodejs'
 
@@ -10,7 +10,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const API_CONFIG: Record<string, { baseUrl: string; keyEnv: string; format: 'openai' | 'anthropic' | 'gemini' }> = {
+const planCache = new Map<string, { plan: PlanId; expiresAt: number }>()
+
+async function getUserPlan(userId: string): Promise<PlanId> {
+  const cached = planCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) return cached.plan
+
+  const { data } = await supabase
+    .from('user_subscriptions')
+    .select('subscription_plans!inner(slug)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const plan = (data?.subscription_plans as any)?.slug as PlanId || 'free'
+
+  planCache.set(userId, { plan, expiresAt: Date.now() + 300_000 })
+  return plan
+}
+
+const API_ROUTES: Record<string, { baseUrl: string; keyEnv: string; format: 'openai' | 'anthropic' | 'gemini' }> = {
   'deepseek-chat': { baseUrl: 'https://api.deepseek.com/chat/completions', keyEnv: 'DEEPSEEK_API_KEY', format: 'openai' },
   'gemini-flash': { baseUrl: 'https://generativelanguage.googleapis.com/v1beta', keyEnv: 'GEMINI_API_KEY', format: 'gemini' },
   'gemini-pro': { baseUrl: 'https://generativelanguage.googleapis.com/v1beta', keyEnv: 'GEMINI_API_KEY', format: 'gemini' },
@@ -21,96 +40,45 @@ const API_CONFIG: Record<string, { baseUrl: string; keyEnv: string; format: 'ope
   'claude-opus': { baseUrl: 'https://api.anthropic.com/v1/messages', keyEnv: 'ANTHROPIC_API_KEY', format: 'anthropic' },
 }
 
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const { data: sub } = await supabase
-    .from('user_subscriptions')
-    .select('plan_id, status')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .single()
-
-  if (!sub) return 'free'
-
-  const { data: plan } = await supabase
-    .from('subscription_plans')
-    .select('slug')
-    .eq('id', sub.plan_id)
-    .single()
-
-  return (plan?.slug as PlanId) || 'free'
-}
-
-async function fetchOpenAI(apiUrl: string, apiKey: string, body: any) {
-  return fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  })
-}
-
-async function fetchAnthropic(apiUrl: string, apiKey: string, body: any, modelId: string) {
-  const systemMessages = body.messages.filter((m: any) => m.role === 'system')
-  const nonSystemMessages = body.messages.filter((m: any) => m.role !== 'system')
-
-  const anthropicBody: Record<string, any> = {
-    model: modelId,
-    max_tokens: 4096,
-    messages: nonSystemMessages.map((m: any) => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: m.content,
-    })),
+function callAPI(route: typeof API_ROUTES[string], apiKey: string, body: any, modelId: string): Promise<Response> {
+  if (route.format === 'openai') {
+    return fetch(route.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify(body),
+    })
   }
 
-  if (systemMessages.length > 0) {
-    anthropicBody.system = systemMessages.map((m: any) => ({ type: 'text', text: m.content }))
+  if (route.format === 'anthropic') {
+    const sys = body.messages.filter((m: any) => m.role === 'system')
+    const msgs = body.messages.filter((m: any) => m.role !== 'system')
+    return fetch(route.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: modelId,
+        max_tokens: 4096,
+        system: sys.length > 0 ? sys.map((m: any) => ({ type: 'text', text: m.content })) : undefined,
+        messages: msgs.map((m: any) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+        stream: body.stream,
+      }),
+    })
   }
 
-  if (body.stream) {
-    anthropicBody.stream = true
-  }
-
-  return fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(anthropicBody),
-  })
-}
-
-async function fetchGemini(apiUrl: string, apiKey: string, body: any, modelId: string) {
-  const lastUserMsg = [...body.messages].reverse().find((m: any) => m.role === 'user')
-  const contents = body.messages
-    .filter((m: any) => m.role !== 'system')
-    .map((m: any) => ({
+  if (route.format === 'gemini') {
+    const contents = body.messages.filter((m: any) => m.role !== 'system').map((m: any) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }))
-
-  const geminiBody: Record<string, any> = {
-    contents,
-    generationConfig: {
-      temperature: body.temperature ?? 0.7,
-      maxOutputTokens: body.max_tokens ?? 4096,
-    },
+    const modelPath = modelId === 'gemini-flash' ? 'gemini-2.0-flash' : 'gemini-2.0-pro'
+    return fetch(`${route.baseUrl}/models/${modelPath}:generateContent${body.stream ? '?alt=sse' : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({ contents, generationConfig: { temperature: body.temperature ?? 0.7, maxOutputTokens: body.max_tokens ?? 4096 } }),
+    })
   }
 
-  const modelPath = modelId === 'gemini-flash' ? 'gemini-2.0-flash' : 'gemini-2.0-pro'
-  const url = `${apiUrl}/models/${modelPath}:generateContent${body.stream ? '?alt=sse' : ''}`
-
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify(geminiBody),
-  })
+  throw new Error('unknown format')
 }
 
 export async function POST(req: NextRequest) {
@@ -121,7 +89,6 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-
     const [userId, body] = await Promise.all([
       verifyToken(token),
       req.json(),
@@ -140,63 +107,45 @@ export async function POST(req: NextRequest) {
     const userPlan = await getUserPlan(userId)
     const { model: selectedModel, complexity, downgraded } = selectBestModel(userPlan, preferredModel as ModelId, messages)
 
-    const apiConfig = API_CONFIG[selectedModel.id]
-
-    if (!apiConfig) {
+    const route = API_ROUTES[selectedModel.id]
+    if (!route) {
       return NextResponse.json({ error: `Modèle ${selectedModel.id} non configuré` }, { status: 500 })
     }
 
-    const apiKey = process.env[apiConfig.keyEnv]
-
+    const apiKey = process.env[route.keyEnv]
     if (!apiKey) {
       return NextResponse.json({ error: 'Clé API serveur non configurée' }, { status: 500 })
     }
 
-    let aiResponse: Response
-
-    if (apiConfig.format === 'openai') {
-      aiResponse = await fetchOpenAI(apiConfig.baseUrl, apiKey, {
-        model: selectedModel.apiIdentifier,
-        messages,
-        stream,
-        ...rest,
-      })
-    } else if (apiConfig.format === 'anthropic') {
-      aiResponse = await fetchAnthropic(apiConfig.baseUrl, apiKey, body, selectedModel.apiIdentifier)
-    } else if (apiConfig.format === 'gemini') {
-      aiResponse = await fetchGemini(apiConfig.baseUrl, apiKey, body, selectedModel.id)
-    } else {
-      return NextResponse.json({ error: 'Format API inconnu' }, { status: 500 })
-    }
+    const aiResponse = await callAPI(route, apiKey, {
+      model: selectedModel.apiIdentifier,
+      messages,
+      stream,
+      ...rest,
+    }, selectedModel.apiIdentifier)
 
     if (!aiResponse.ok) {
-      const err = await aiResponse.text()
-      return NextResponse.json({ error: err }, { status: aiResponse.status })
+      return NextResponse.json({ error: await aiResponse.text() }, { status: aiResponse.status })
     }
-
-    const estimatedTokens = estimateTokens(messages)
 
     void supabase.from('usage_sessions').insert({
       user_id: userId,
       session_type: 'chat_proxy',
       model_id: null,
-      tokens_input: estimatedTokens,
-      metadata: {
-        plan: userPlan,
-        model: selectedModel.id,
-        preferred: preferredModel || null,
-        complexity,
-        downgraded,
-      },
+      tokens_input: estimateTokens(messages),
+      metadata: { plan: userPlan, model: selectedModel.id, preferred: preferredModel || null, complexity, downgraded },
     })
 
-    return new NextResponse(aiResponse.body, {
-      headers: {
-        'Content-Type': aiResponse.headers.get('Content-Type') || 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    const headers = new Headers({
+      'Content-Type': aiResponse.headers.get('Content-Type') || 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Model-Used': selectedModel.id,
+      'X-Model-Downgraded': String(downgraded),
+      'X-Complexity': String(complexity),
     })
+
+    return new NextResponse(aiResponse.body, { headers })
   } catch (err) {
     console.error('model-proxy error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

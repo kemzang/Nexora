@@ -227,31 +227,42 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {[
               {
-                name: 'Free', price: '0€', period: '', popular: false,
-                features: ['50 tokens', '50 req./jour', 'DeepSeek', 'Support communautaire'],
-                cta: 'Commencer', href: '/checkout?plan=free&price=0',
-                btn: 'outline'
+                name: 'Free', nameFr: 'Découverte', price: '0€', period: '', popular: false,
+                features: ['1K tokens/mois', '20 requêtes/jour', 'DeepSeek, Gemini Flash'],
+                models: 'DeepSeek, Gemini Flash',
+                cta: 'Commencer', href: '/checkout?plan=free',
+                btn: 'outline' as const
               },
               {
-                name: 'Pro', price: '9,99€', period: '/mois', popular: true,
-                features: ['10K tokens/mois', '500 req./jour', 'GPT-4o Mini, Claude, Gemini', 'Agent + Auto-complétion', 'Support prioritaire'],
-                cta: 'Choisir Pro', href: '/checkout?plan=pro&price=999',
-                btn: 'default'
+                name: 'Neo', nameFr: 'Neo', price: '4€', period: '/mois', popular: false,
+                features: ['15K tokens/mois', '150 requêtes/jour', '+ Gemini Pro', 'Auto-complétion'],
+                models: 'DeepSeek, Gemini Flash/Pro',
+                cta: 'Choisir Neo', href: '/checkout?plan=neo',
+                btn: 'outline' as const
               },
               {
-                name: 'Business', price: '29,99€', period: '/mois', popular: false,
-                features: ['50K tokens/mois', '2K req./jour', 'GPT-4o, Claude Sonnet', 'Mode équipe', 'Support prioritaire'],
-                cta: 'Choisir Business', href: '/checkout?plan=business&price=2999',
-                btn: 'outline'
+                name: 'Pro', nameFr: 'Pro', price: '9€', period: '/mois', popular: true,
+                features: ['50K tokens/mois', '500 requêtes/jour', '+ Grok, Claude Haiku', 'Mode Agent', 'Support prioritaire'],
+                models: 'DeepSeek, Gemini, Claude Haiku, Grok',
+                cta: 'Choisir Pro', href: '/checkout?plan=pro',
+                btn: 'default' as const
               },
               {
-                name: 'Enterprise', price: '99,99€', period: '/mois', popular: false,
-                features: ['200K tokens/mois', 'Req. illimitées', 'Tous les modèles + custom', 'SSO + Support 24/7'],
-                cta: 'Contacter', href: '/checkout?plan=enterprise&price=9999',
-                btn: 'outline'
+                name: 'Business', nameFr: 'Business', price: '17€', period: '/mois', popular: false,
+                features: ['200K tokens/mois', '2K requêtes/jour', '+ Claude Sonnet', 'Mode équipe', 'Support prioritaire'],
+                models: 'DeepSeek, Gemini, Claude, Grok',
+                cta: 'Choisir Business', href: '/checkout?plan=business',
+                btn: 'outline' as const
+              },
+              {
+                name: 'Enterprise', nameFr: 'Enterprise', price: '100€', period: '/mois', popular: false,
+                features: ['1M tokens/mois', 'Requêtes illimitées', '+ Claude Opus, GPT-5', 'Tous les modèles', 'SSO + Support 24/7'],
+                models: 'Tous les modèles',
+                cta: 'Contacter', href: '/checkout?plan=enterprise',
+                btn: 'outline' as const
               },
             ].map((plan, i) => (
               <motion.div
@@ -261,9 +272,9 @@ export default function HomePage() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className={`glass h-full relative ${plan.popular ? 'border-indigo-500/30 glow-indigo' : ''}`}>
+                <Card className={`glass h-full relative flex flex-col ${plan.popular ? 'border-indigo-500/30 glow-indigo' : ''}`}>
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <span className="bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg shadow-indigo-600/30">
                         Populaire
                       </span>
@@ -275,9 +286,10 @@ export default function HomePage() {
                       <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
                       {plan.period && <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>}
                     </div>
+                    <p className="text-xs text-indigo-400/70 mt-1">{plan.models}</p>
                   </CardHeader>
-                  <CardContent className="space-y-5">
-                    <div className="space-y-2.5">
+                  <CardContent className="space-y-5 flex-1 flex flex-col">
+                    <div className="space-y-2.5 flex-1">
                       {plan.features.map(f => (
                         <div key={f} className="flex items-center gap-2.5">
                           <CheckCircle className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -287,7 +299,7 @@ export default function HomePage() {
                     </div>
                     <Link href={plan.href}>
                       <Button
-                        variant={plan.btn as 'default' | 'outline'}
+                        variant={plan.btn}
                         className={`w-full ${plan.popular ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20' : ''}`}
                       >
                         {plan.cta}

@@ -213,7 +213,7 @@ export default function DashboardPage() {
               { label: 'Tokens disponibles', value: '50', icon: Zap, change: '+0 aujourd\'hui', color: 'text-amber-400', chart: 'from-amber-500/20 to-amber-500/5' },
               { label: 'API Keys', value: '0', icon: Key, change: 'Aucune clé active', color: 'text-blue-400', chart: 'from-blue-500/20 to-blue-500/5' },
               { label: 'Utilisation du mois', value: '0', icon: BarChart3, change: 'Sur 500 max', color: 'text-emerald-400', chart: 'from-emerald-500/20 to-emerald-500/5' },
-              { label: 'Plan actuel', value: 'Free', icon: Star, change: 'Passer en Pro →', color: 'text-violet-400', chart: 'from-violet-500/20 to-violet-500/5' },
+              { label: 'Plan actuel', value: 'Free', icon: Star, change: 'DeepSeek, Gemini Flash', color: 'text-violet-400', chart: 'from-violet-500/20 to-violet-500/5' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}

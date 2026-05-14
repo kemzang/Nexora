@@ -20,19 +20,23 @@ import { countries, validatePhone, type Country } from '@/lib/countries'
 const planDetails: Record<string, { name: string; price: string; priceXAF: number; features: string[] }> = {
   free: {
     name: 'Free', price: '0€', priceXAF: 0,
-    features: ['500 tokens/mois', '50 requêtes/jour', 'DeepSeek uniquement', 'Support communautaire'],
+    features: ['1K tokens/mois', '20 requêtes/jour', 'DeepSeek, Gemini Flash', 'Chat IA VS Code'],
+  },
+  neo: {
+    name: 'Neo', price: '4€', priceXAF: 2620,
+    features: ['15K tokens/mois', '150 requêtes/jour', '+ Gemini Pro', 'Auto-complétion'],
   },
   pro: {
-    name: 'Pro', price: '9,99€', priceXAF: 6550,
-    features: ['10 000 tokens/mois', '500 requêtes/jour', 'GPT-4o Mini, Claude Haiku, Gemini', 'Agent + Auto-complétion', 'Support prioritaire'],
+    name: 'Pro', price: '9€', priceXAF: 5900,
+    features: ['50K tokens/mois', '500 requêtes/jour', '+ Grok, Claude Haiku', 'Mode Agent', 'Support prioritaire'],
   },
   business: {
-    name: 'Business', price: '29,99€', priceXAF: 19650,
-    features: ['50 000 tokens/mois', '2 000 requêtes/jour', 'GPT-4o, Claude Sonnet', 'Mode équipe', 'Support prioritaire'],
+    name: 'Business', price: '17€', priceXAF: 11150,
+    features: ['200K tokens/mois', '2K requêtes/jour', '+ Claude Sonnet', 'Mode équipe', 'Support prioritaire'],
   },
   enterprise: {
-    name: 'Enterprise', price: '99,99€', priceXAF: 65500,
-    features: ['200 000 tokens/mois', 'Requêtes illimitées', 'Tous les modèles + custom', 'SSO + Support 24/7'],
+    name: 'Enterprise', price: '100€', priceXAF: 65550,
+    features: ['1M tokens/mois', 'Requêtes illimitées', '+ Claude Opus, GPT-5', 'Tous les modèles', 'SSO + Support 24/7'],
   },
 }
 
@@ -117,7 +121,7 @@ function CheckoutForm() {
   const router = useRouter()
   const { showToast } = useToast()
   const { user } = useAuth()
-  const plan = searchParams.get('plan') || 'pro'
+  const plan = searchParams.get('plan') || 'neo'
   const currentPlan = planDetails[plan] || planDetails.pro
 
   const [country, setCountry] = useState<Country>(countries[0])

@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userPlan = await getUserPlan(userId)
-    const { model: selectedModel, downgraded } = selectBestModel(userPlan, preferredModel as ModelId)
+    const { model: selectedModel, complexity, downgraded } = selectBestModel(userPlan, preferredModel as ModelId, messages)
 
     const apiConfig = API_CONFIG[selectedModel.id]
 
@@ -185,6 +185,7 @@ export async function POST(req: NextRequest) {
         plan: userPlan,
         model: selectedModel.id,
         preferred: preferredModel || null,
+        complexity,
         downgraded,
       },
     })

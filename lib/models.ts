@@ -11,6 +11,7 @@ export interface AIModel {
   inputCostPer1K: number
   outputCostPer1K: number
   contextWindow: number
+  capability: number
   sortOrder: number
 }
 
@@ -28,6 +29,16 @@ export interface Plan {
   popular?: boolean
 }
 
+interface ComplexMessage {
+  content?: string
+  role?: string
+}
+
+const GREETING_PATTERNS = /^(salut|bonjour|bonsoir|coucou|hello|hi|hey|merci|oui|non|ok|okay|d'accord|super|parfait)\b/i
+const CODE_PATTERNS = /```|\b(function|class|import\s|export\s|const\s+\w+\s*=\s*\(|=>|interface\s|type\s|async\s|await\s|Promise|new\s+\w+\(|\.map\(|\.filter\(|\.reduce\()/
+const TECHNICAL_TERMS = /\b(refactor|architecture|optimis|pattern\s+[a-z]|algorithme|asynchrone|performances?|sécurité|design\s+pattern|scalabilit|déploiement|microservice|api\s+rest|graphql|middleware|middleware|endpoint|thread|mutex|deadlock|race\s+condition|compliquit|big\s*o|time\s*complexity|espace\s*complexit)\b/i
+const COMPLEX_TERMS = /\b(architect|refactor|cache|cluster|load\s+balanc|index\s+compos|re-render|bundler|lazy\s+load|stream|webhook|orm|transaction|sharding|replicat|failover|container|docker|kubernetes|ci\/cd)\b/i
+
 export const MODELS: Record<ModelId, AIModel> = {
   'deepseek-chat': {
     id: 'deepseek-chat',
@@ -38,6 +49,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.0001,
     outputCostPer1K: 0.0002,
     contextWindow: 64000,
+    capability: 3,
     sortOrder: 1,
   },
   'gemini-flash': {
@@ -49,6 +61,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.00015,
     outputCostPer1K: 0.0005,
     contextWindow: 32000,
+    capability: 2,
     sortOrder: 2,
   },
   'gemini-pro': {
@@ -60,6 +73,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.001,
     outputCostPer1K: 0.002,
     contextWindow: 32000,
+    capability: 3,
     sortOrder: 3,
   },
   'claude-haiku': {
@@ -71,6 +85,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.0025,
     outputCostPer1K: 0.0125,
     contextWindow: 48000,
+    capability: 3,
     sortOrder: 4,
   },
   'grok-2': {
@@ -82,6 +97,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.002,
     outputCostPer1K: 0.01,
     contextWindow: 32000,
+    capability: 3,
     sortOrder: 5,
   },
   'claude-sonnet': {
@@ -93,6 +109,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.005,
     outputCostPer1K: 0.015,
     contextWindow: 64000,
+    capability: 4,
     sortOrder: 6,
   },
   'gpt-5': {
@@ -104,6 +121,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.01,
     outputCostPer1K: 0.04,
     contextWindow: 128000,
+    capability: 5,
     sortOrder: 7,
   },
   'claude-opus': {
@@ -115,6 +133,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     inputCostPer1K: 0.015,
     outputCostPer1K: 0.075,
     contextWindow: 64000,
+    capability: 5,
     sortOrder: 8,
   },
 }
@@ -211,27 +230,107 @@ export function getModelsForPlan(planId: PlanId): ModelId[] {
   return PLANS[planId].models
 }
 
+function getLastMessage(messages: ComplexMessage[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const content = messages[i]?.content
+    if (content && content.trim().length > 0) return content
+  }
+  return ''
+}
+
+function isGreeting(text: string): boolean {
+  return GREETING_PATTERNS.test(text.trim())
+}
+
+function hasCode(text: string): boolean {
+  return CODE_PATTERNS.test(text)
+}
+
+function countTechnicalTerms(text: string): number {
+  const techMatches = text.match(TECHNICAL_TERMS)
+  const complexMatches = text.match(COMPLEX_TERMS)
+  return (techMatches?.length || 0) + (complexMatches?.length || 0)
+}
+
+function hasCodeBlocks(text: string): boolean {
+  return (text.match(/```/g) || []).length >= 2
+}
+
+function estimateOutputLength(messages: ComplexMessage[]): number {
+  let totalChars = 0
+  for (const msg of messages) {
+    totalChars += msg.content?.length || 0
+  }
+  return totalChars
+}
+
+export function analyzeComplexity(messages: ComplexMessage[]): number {
+  const lastMsg = getLastMessage(messages)
+  const totalLen = estimateOutputLength(messages)
+  const msgCount = messages.length
+
+  let score = 0
+
+  // Axe 1 : Longueur du dernier message
+  if (lastMsg.length < 30) score += 1
+  else if (lastMsg.length < 100) score += 2
+  else if (lastMsg.length < 350) score += 3
+  else if (lastMsg.length < 1000) score += 4
+  else score += 5
+
+  // Axe 2 : Volume total de la conversation
+  if (totalLen > 5000) score += 1
+
+  // Axe 3 : Présence de code
+  if (hasCode(lastMsg)) score += 1
+  if (hasCodeBlocks(lastMsg)) score += 1
+
+  // Axe 4 : Termes techniques avancés
+  const techTermCount = countTechnicalTerms(lastMsg)
+  if (techTermCount >= 3) score += 2
+  else if (techTermCount >= 1) score += 1
+
+  // Axe 5 : Profondeur de la conversation
+  if (msgCount > 10) score += 2
+  else if (msgCount > 5) score += 1
+
+  // Axe 6 : Salutation simple → réduit la complexité
+  if (isGreeting(lastMsg) && msgCount <= 2) score -= 1
+
+  return Math.max(1, Math.min(5, score))
+}
+
 export function selectBestModel(
   userPlan: PlanId,
-  preferredModel?: ModelId
-): { model: AIModel; downgraded: boolean } {
+  preferredModel?: ModelId,
+  messages: ComplexMessage[] = []
+): { model: AIModel; complexity: number; downgraded: boolean } {
   const availableModels = getModelsForPlan(userPlan)
   const available = availableModels.map(id => MODELS[id])
+  const complexity = analyzeComplexity(messages)
 
   if (preferredModel && availableModels.includes(preferredModel)) {
-    return { model: MODELS[preferredModel], downgraded: false }
+    const chosen = MODELS[preferredModel]
+    if (chosen.capability >= complexity) {
+      return { model: chosen, complexity, downgraded: false }
+    }
   }
 
-  const sorted = available.sort((a, b) => a.sortOrder - b.sortOrder)
-  const best = sorted[0]
+  const sorted = [...available].sort((a, b) => {
+    const aEnough = a.capability >= complexity ? 0 : 1
+    const bEnough = b.capability >= complexity ? 0 : 1
+    if (aEnough !== bEnough) return aEnough - bEnough
+    return a.sortOrder - b.sortOrder
+  })
 
   return {
-    model: best,
+    model: sorted[0],
+    complexity,
     downgraded: preferredModel ? true : false,
   }
 }
 
-export function estimateTokens(messages: { content: string }[]): number {
+export function estimateTokens(messages: { content?: string }[]): number {
   let total = 0
   for (const msg of messages) {
     total += Math.ceil((msg.content?.length || 0) / 4)

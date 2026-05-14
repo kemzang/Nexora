@@ -62,11 +62,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: err }, { status: aiResponse.status })
     }
 
-    // Logger en arrière-plan sans bloquer
     void supabase.from('usage_sessions').insert({
       user_id: userId,
       session_type: 'chat_proxy',
-      metadata: { model: selectedModel, messages_count: messages.length }
+      model_id: null,
+      metadata: { model: selectedModel, messages_count: messages.length },
     })
 
     return new NextResponse(aiResponse.body, {

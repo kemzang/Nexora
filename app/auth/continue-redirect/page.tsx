@@ -9,22 +9,18 @@ export default function Page() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     if (!mounted) return
 
     const handleAuth = async () => {
       try {
-        // Import dynamique pour éviter les problèmes SSR
         const { supabase } = await import('@/lib/supabase')
-        
         const urlParams = new URLSearchParams(window.location.search)
         const state = urlParams.get('state')
         const error = urlParams.get('error')
-        
+
         if (error) {
           setStatus('error')
           setMessage(`Erreur d'authentification: ${error}`)
@@ -32,10 +28,8 @@ export default function Page() {
         }
 
         const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
         if (userError || !user) {
-          const loginUrl = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`
-          window.location.href = loginUrl
+          window.location.href = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`
           return
         }
 
@@ -44,7 +38,6 @@ export default function Page() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, state })
         })
-
         const data = await response.json()
 
         if (!response.ok || !data.success) {
@@ -60,10 +53,7 @@ export default function Page() {
         setStatus('success')
         setMessage('Authentification réussie! Redirection vers VS Code...')
 
-        setTimeout(() => {
-          window.location.href = vscodeUrl.toString()
-        }, 1500)
-
+        setTimeout(() => { window.location.href = vscodeUrl.toString() }, 1500)
       } catch (err) {
         console.error('Auth error:', err)
         setStatus('error')
@@ -76,60 +66,66 @@ export default function Page() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md w-full text-center">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full" />
+
+      <div className="glass rounded-2xl p-8 max-w-md w-full text-center relative z-10">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-2">Authentification VS Code</h1>
-          <div className="w-16 h-1 bg-purple-500 mx-auto rounded-full"></div>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Authentification VS Code</h1>
+          <div className="w-16 h-1 bg-indigo-500 mx-auto rounded-full" />
         </div>
 
         {status === 'loading' && (
           <div className="space-y-4">
-            <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-gray-300">Authentification en cours...</p>
+            <div className="relative inline-flex">
+              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+              <div className="absolute inset-0 w-8 h-8 border-2 border-violet-500 border-b-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+            </div>
+            <p className="text-muted-foreground">Authentification en cours...</p>
           </div>
         )}
 
         {status === 'success' && (
           <div className="space-y-4">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-green-400 font-medium">{message}</p>
-            <p className="text-gray-400 text-sm">
-              Si VS Code ne s'ouvre pas automatiquement, vous pouvez fermer cette fenêtre.
+            <p className="text-emerald-400 font-medium">{message}</p>
+            <p className="text-muted-foreground text-sm">
+              Si VS Code ne s'ouvre pas automatiquement, fermez cette fenêtre.
             </p>
           </div>
         )}
 
         {status === 'error' && (
           <div className="space-y-4">
-            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
             <p className="text-red-400 font-medium">{message}</p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Réessayer
             </button>
           </div>
         )}
 
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <p className="text-gray-400 text-sm">Nexora - Extension VS Code</p>
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <p className="text-muted-foreground text-sm">Nexora — Extension VS Code</p>
         </div>
       </div>
     </div>

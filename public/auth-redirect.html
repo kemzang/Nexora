@@ -204,44 +204,20 @@
                 
                 updateLoadingMessage('Vérification de la session...');
                 
-                // Vérifier si l'utilisateur est connecté via Supabase
-                const supabaseUrl = 'https://dgrrkeugniijfhagmplm.supabase.co';
-                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRncnJrZXVnbmlpamZoYWdtcGxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODkxODMsImV4cCI6MjA4OTk2NTE4M30.pbG93LZ4MPQR1dIAq2tyIAG1nfgScrSJHBsajYC0lLc';
+                // Vérifier si l'utilisateur est connecté via l'endpoint API
+                const sessionRes = await fetch('/api/auth/session-check');
+                const sessionData = await sessionRes.json();
                 
-                const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token')}`,
-                        'apikey': supabaseKey
-                    }
-                });
+                if (!sessionRes.ok || !sessionData.authenticated) {
                 
-                if (!authResponse.ok) {
-                    updateLoadingMessage('Redirection vers la connexion...');
-                    setTimeout(() => {
-                        const loginUrl = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`;
-                        window.location.href = loginUrl;
-                    }, 1000);
-                    return;
-                }
-                
-                const userData = await authResponse.json();
-                
-                if (!userData || !userData.id) {
-                    updateLoadingMessage('Redirection vers la connexion...');
-                    setTimeout(() => {
-                        const loginUrl = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`;
-                        window.location.href = loginUrl;
-                    }, 1000);
-                    return;
-                }
+                const userData = sessionData.user;
                 
                 updateLoadingMessage('Génération du code d\'authentification...');
-                
-                // Générer le code d'authentification
+
                 const codeResponse = await fetch('/api/auth/generate-auth-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userData.id, state })
+                    body: JSON.stringify({ userId: userData, state })
                 });
                 
                 const codeData = await codeResponse.json();

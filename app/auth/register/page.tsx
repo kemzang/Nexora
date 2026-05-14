@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, Zap, CheckCircle, Code, Rocket, ArrowRight } from 'lucide-react'
+import { Loader2, Sparkles, Zap, CheckCircle, Code, Rocket, ArrowRight, Brain } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 
 const registerSchema = z.object({
@@ -42,75 +42,53 @@ function RegisterForm() {
   const callback = searchParams.get('callback')
   const state = searchParams.get('state')
 
-  // Redirection si déjà connecté
   useEffect(() => {
     if (user && token && callback) {
-      if (!success) {
-        setSuccess(true)
-        setRedirectToken(token)
-      }
+      if (!success) { setSuccess(true); setRedirectToken(token) }
     } else if (user && token && !callback) {
       router.push('/dashboard')
     }
   }, [user, token, callback, router, success])
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<RegisterFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema)
   })
 
   const getRedirectUrl = (tokenValue: string) => {
     if (!callback) return null
-    // Utiliser le schéma correct : vscode://Nexora.nexora/auth
     const baseUrl = "vscode://Nexora.nexora/auth"
     const params = new URLSearchParams()
     params.append('token', tokenValue)
     if (state) params.append('state', state)
-    
     return `${baseUrl}?${params.toString()}`
   }
 
   const onSubmit = async (data: RegisterFormData) => {
     if (loading) return
-    
     setLoading(true)
     setError(null)
 
     try {
       const result = await signUp({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName
+        email: data.email, password: data.password,
+        firstName: data.firstName, lastName: data.lastName
       })
-      
       if (result.error) {
-        setError(result.error)
-        setLoading(false)
+        setError(result.error); setLoading(false)
       } else {
         showToast('Inscription réussie !', 'success')
-        
         if (callback && result.token) {
           setRedirectToken(result.token)
           const redirectUrl = getRedirectUrl(result.token)
-          if (redirectUrl) {
-            window.location.assign(redirectUrl)
-          }
+          if (redirectUrl) window.location.assign(redirectUrl)
           setSuccess(true)
         } else {
           setSuccess(true)
-          setTimeout(() => {
-            router.push('/auth/login')
-          }, 3000)
+          setTimeout(() => router.push('/auth/login'), 3000)
         }
       }
-    } catch (err) {
-      console.error('Registration error:', err)
-      setError('Une erreur inattendue est survenue lors de l\'inscription')
-      setLoading(false)
+    } catch {
+      setError('Une erreur inattendue est survenue'); setLoading(false)
     }
   }
 
@@ -118,72 +96,51 @@ function RegisterForm() {
     const finalToken = redirectToken || token
     const redirectUrl = callback && finalToken ? getRedirectUrl(finalToken) : null
     return (
-      <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 overflow-hidden relative">
-        {/* Animated Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/20 blur-[120px] rounded-full animate-pulse" />
-        </div>
-
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full" />
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center w-full max-w-md relative z-10"
         >
-          <Card className="backdrop-blur-2xl bg-white/[0.03] border-white/10 shadow-2xl p-10 rounded-[2rem]">
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0]
-              }}
+          <Card className="glass p-10">
+            <motion.div
+              animate={{ scale: [1, 1.05, 1], rotate: [0, 3, -3, 0] }}
               transition={{ duration: 4, repeat: Infinity }}
-              className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-500/40"
+              className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/30"
             >
-              <Code className="w-12 h-12 text-white" />
+              <Code className="w-10 h-10 text-white" />
             </motion.div>
-
-            <h1 className="text-3xl font-bold text-white mb-4 tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight mb-3">
               Inscription réussie !
             </h1>
-            
             {callback && redirectUrl ? (
               <>
-                <p className="text-gray-400 mb-10 leading-relaxed">
-                  Votre compte a été créé avec succès. Cliquez sur le bouton ci-dessous pour ouvrir VS Code et commencer à coder.
+                <p className="text-muted-foreground mb-8 leading-relaxed">
+                  Votre compte a été créé. Cliquez ci-dessous pour ouvrir VS Code.
                 </p>
-                <div className="space-y-4">
-                  {redirectUrl ? (
-                    <a 
-                      href={redirectUrl}
-                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-5 rounded-2xl text-lg shadow-xl shadow-indigo-600/20 group transition-all flex items-center justify-center no-underline"
-                    >
-                      Ouvrir VS Code
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  ) : (
-                    <Button 
-                      disabled
-                      className="w-full bg-gray-600 text-white font-bold py-7 rounded-2xl text-lg"
-                    >
-                      Lien non disponible
-                    </Button>
-                  )}
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => router.push('/dashboard')}
-                    className="w-full text-gray-500 hover:text-white hover:bg-white/5 py-6 rounded-2xl"
+                <div className="space-y-3">
+                  <a
+                    href={redirectUrl}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 rounded-xl text-sm shadow-lg shadow-indigo-600/25 group transition-all flex items-center justify-center no-underline"
                   >
+                    Ouvrir VS Code
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </a>
+                  <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full text-muted-foreground hover:text-foreground">
                     Aller au Dashboard web
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                <p className="text-gray-400 mb-8 leading-relaxed">
-                  Vérifiez votre email pour activer votre compte. Vous allez être redirigé vers la page de connexion...
+                <p className="text-muted-foreground mb-8 leading-relaxed">
+                  Vérifiez votre email pour activer votre compte. Redirection vers la connexion...
                 </p>
                 <div className="flex justify-center">
-                  <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
                 </div>
               </>
             )}
@@ -194,203 +151,138 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      {/* Background Animation */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20 -top-48 -left-48 animate-pulse"></div>
-        <div className="absolute w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-20 -bottom-48 -right-48 animate-pulse delay-1000"></div>
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/8 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-600/8 blur-[120px] rounded-full" />
 
       <div className="relative z-10 w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl">
-            <CardHeader className="text-center space-y-6">
-              {/* Logo */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="flex justify-center"
-            >
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/20">
-                  <Sparkles className="w-8 h-8 text-white" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Card className="glass">
+            <CardHeader className="text-center space-y-5 pt-10">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.15, type: "spring" }}
+                className="flex justify-center"
+              >
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-500 flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                    <Sparkles className="w-7 h-7 text-white" />
+                  </div>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute -top-1 -right-1"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  </motion.div>
                 </div>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute -top-1 -right-1"
-                >
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                </motion.div>
-              </div>
-            </motion.div>
-
-              <div className="space-y-2">
-                <CardTitle className="text-2xl font-bold text-white">
+              </motion.div>
+              <div className="space-y-1.5">
+                <CardTitle className="text-2xl font-bold tracking-tight">
                   Rejoindre <span className="gradient-text">Nexora</span>
                 </CardTitle>
-                <CardDescription className="text-gray-300">
+                <CardDescription className="text-muted-foreground">
                   Créez votre compte et transformez votre développement
                 </CardDescription>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5 p-8 pt-4">
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <Alert variant="destructive" className="bg-red-500/20 border-red-500/50 text-white">
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                  <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-400 rounded-xl">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 </motion.div>
               )}
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-white">Prénom</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="Jean"
-                      {...register('firstName')}
-                      className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
-                    />
-                    {errors.firstName && (
-                      <p className="text-red-400 text-sm">{errors.firstName.message}</p>
-                    )}
+                    <Label htmlFor="firstName" className="text-sm ml-0.5">Prénom</Label>
+                    <Input id="firstName" placeholder="Jean" {...register('firstName')}
+                      className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 h-11 rounded-xl transition-all" />
+                    {errors.firstName && <p className="text-red-400 text-xs ml-1">{errors.firstName.message}</p>}
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-white">Nom</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Dupont"
-                      {...register('lastName')}
-                      className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-400 text-sm">{errors.lastName.message}</p>
-                    )}
+                    <Label htmlFor="lastName" className="text-sm ml-0.5">Nom</Label>
+                    <Input id="lastName" placeholder="Dupont" {...register('lastName')}
+                      className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 h-11 rounded-xl transition-all" />
+                    {errors.lastName && <p className="text-red-400 text-xs ml-1">{errors.lastName.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="vous@exemple.com"
-                    {...register('email')}
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
-                  />
-                  {errors.email && (
-                    <p className="text-red-400 text-sm">{errors.email.message}</p>
-                  )}
+                  <Label htmlFor="email" className="text-sm ml-0.5">Email</Label>
+                  <Input id="email" type="email" placeholder="vous@exemple.com" {...register('email')}
+                    className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 h-11 rounded-xl transition-all" />
+                  {errors.email && <p className="text-red-400 text-xs ml-1">{errors.email.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">Mot de passe</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register('password')}
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
-                  />
-                  {errors.password && (
-                    <p className="text-red-400 text-sm">{errors.password.message}</p>
-                  )}
+                  <Label htmlFor="password" className="text-sm ml-0.5">Mot de passe</Label>
+                  <Input id="password" type="password" placeholder="••••••••" {...register('password')}
+                    className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 h-11 rounded-xl transition-all" />
+                  {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-white">Confirmer le mot de passe</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register('confirmPassword')}
-                    className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-purple-400"
-                  />
-                  {errors.confirmPassword && (
-                    <p className="text-red-400 text-sm">{errors.confirmPassword.message}</p>
-                  )}
+                  <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirmer le mot de passe</Label>
+                  <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')}
+                    className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 h-11 rounded-xl transition-all" />
+                  {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 transition-all duration-300 hover:scale-105"
-                >
+                <Button type="submit" disabled={loading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 rounded-xl shadow-lg shadow-indigo-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]">
                   {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Inscription en cours...
-                    </>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Inscription...</>
                   ) : (
-                    <>
-                      <Rocket className="mr-2 h-4 w-4" />
-                      Créer mon compte
-                    </>
+                    <><Rocket className="mr-2 h-4 w-4" />Créer mon compte</>
                   )}
                 </Button>
               </form>
 
-              <div className="text-center">
-                <div className="text-gray-300">
+              <div className="text-center pt-1">
+                <p className="text-sm text-muted-foreground">
                   Déjà un compte ?{' '}
-                  <Link 
-                    href={`/auth/login${callback ? `?callback=${encodeURIComponent(callback)}` : ''}`} 
-                    className="text-purple-400 hover:text-purple-300 transition-colors font-semibold"
-                  >
+                  <Link href={`/auth/login${callback ? `?callback=${encodeURIComponent(callback)}` : ''}`}
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
                     Se connecter
                   </Link>
-                </div>
+                </p>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
 
-        {/* Features Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8"
-        >
-          <Card className="backdrop-blur-xl bg-white/5 border border-white/10">
-            <CardContent className="p-6">
-              <h3 className="text-white font-semibold mb-4 text-center">
-                Ce que vous obtenez avec Nexora :
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  </div>
-                  <span className="text-gray-300 text-sm">50 tokens gratuits avec le plan Free</span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6"
+          >
+            <Card className="glass">
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-center mb-4">Ce que vous obtenez avec Nexora :</h3>
+                <div className="space-y-3">
+                  {[
+                    { icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10', text: '50 tokens gratuits avec le plan Free' },
+                    { icon: Code, color: 'text-blue-400', bg: 'bg-blue-500/10', text: 'Chat IA intégré dans VS Code' },
+                    { icon: Brain, color: 'text-violet-400', bg: 'bg-violet-500/10', text: 'IA puissante multi-modèles' },
+                  ].map(item => (
+                    <div key={item.text} className="flex items-center gap-3">
+                      <div className={`w-7 h-7 ${item.bg} rounded-lg flex items-center justify-center`}>
+                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                      </div>
+                      <span className="text-sm text-muted-foreground">{item.text}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                    <Code className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <span className="text-gray-300 text-sm">Chat IA intégré dans VS Code</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-purple-400" />
-                  </div>
-                  <span className="text-gray-300 text-sm">Auto-complétion intelligente</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       </div>
     </div>
@@ -400,8 +292,8 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
       </div>
     }>
       <RegisterForm />

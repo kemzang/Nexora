@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,17 +16,18 @@ import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
 
 const sidebarLinks = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard', active: true },
-  { icon: Key, label: 'API Keys', href: '#', active: false },
-  { icon: Activity, label: 'Utilisation', href: '#', active: false },
-  { icon: Wallet, label: 'Abonnement', href: '#', active: false },
-  { icon: FileText, label: 'Factures', href: '#', active: false },
-  { icon: HelpCircle, label: 'Aide', href: '#', active: false },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: Key, label: 'API Keys', href: '/dashboard/api-keys' },
+  { icon: Activity, label: 'Utilisation', href: '/dashboard/utilisation' },
+  { icon: Wallet, label: 'Abonnement', href: '/dashboard/abonnement' },
+  { icon: FileText, label: 'Factures', href: '/dashboard/factures' },
+  { icon: HelpCircle, label: 'Aide', href: '/dashboard/aide' },
 ]
 
 export default function DashboardPage() {
   const { user, signOut, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -109,21 +110,24 @@ export default function DashboardPage() {
         </div>
 
         <nav className="p-3 space-y-1">
-          {sidebarLinks.map(link => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                link.active
-                  ? 'bg-indigo-500/10 text-indigo-300 font-medium'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              }`}
-            >
-              <link.icon className="w-4 h-4 shrink-0" />
-              <span>{link.label}</span>
-              {link.active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-indigo-400" />}
-            </Link>
-          ))}
+          {sidebarLinks.map(link => {
+            const isActive = pathname === link.href
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                  isActive
+                    ? 'bg-indigo-500/10 text-indigo-300 font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                }`}
+              >
+                <link.icon className="w-4 h-4 shrink-0" />
+                <span>{link.label}</span>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 ml-auto text-indigo-400" />}
+              </Link>
+            )
+          })}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border/50">
@@ -158,7 +162,10 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+              <button
+                onClick={() => router.push('/dashboard/aide')}
+                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
                 <Search className="w-4 h-4" />
               </button>
               <button className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
@@ -169,6 +176,7 @@ export default function DashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => router.push('/dashboard/aide')}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <Settings className="w-4 h-4" />
@@ -255,13 +263,14 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
-                      { icon: Key, label: 'Créer une API Key', desc: 'Générer pour VS Code', color: 'text-indigo-400', bg: 'bg-indigo-500/10', hover: 'hover:bg-indigo-500/20' },
-                      { icon: Zap, label: 'Upgrade Pro', desc: 'Débloquer plus de tokens', color: 'text-amber-400', bg: 'bg-amber-500/10', hover: 'hover:bg-amber-500/20' },
-                      { icon: Bot, label: 'Documentation', desc: 'Tutoriels & guides', color: 'text-emerald-400', bg: 'bg-emerald-500/10', hover: 'hover:bg-emerald-500/20' },
+                      { icon: Key, label: 'Créer une API Key', desc: 'Générer pour VS Code', color: 'text-indigo-400', bg: 'bg-indigo-500/10', hover: 'hover:bg-indigo-500/20', href: '/dashboard/api-keys' },
+                      { icon: Zap, label: 'Upgrade Pro', desc: 'Débloquer plus de tokens', color: 'text-amber-400', bg: 'bg-amber-500/10', hover: 'hover:bg-amber-500/20', href: '/dashboard/abonnement' },
+                      { icon: Bot, label: 'Documentation', desc: 'Tutoriels & guides', color: 'text-emerald-400', bg: 'bg-emerald-500/10', hover: 'hover:bg-emerald-500/20', href: '/dashboard/aide' },
                     ].map(action => (
                       <button
                         key={action.label}
-                        className={`flex flex-col items-center gap-3 p-6 rounded-xl border border-border/50 bg-card/50 ${action.hover} transition-all group text-left`}
+                        onClick={() => router.push(action.href)}
+                        className={`flex flex-col items-center gap-3 p-6 rounded-xl border border-border/50 bg-card/50 ${action.hover} transition-all group text-left cursor-pointer`}
                       >
                         <div className={`w-10 h-10 ${action.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                           <action.icon className={`w-5 h-5 ${action.color}`} />
@@ -302,7 +311,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                  <Link href="#">
+                  <Link href="/dashboard/aide">
                     <Button variant="outline" className="w-full mt-2 border-border/50 text-muted-foreground hover:text-foreground group">
                       Voir le guide complet
                       <ArrowRight className="ml-2 w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

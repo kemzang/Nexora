@@ -41,9 +41,9 @@ function getModelsForPlan(plan: string, token: string) {
 
   switch (plan) {
     case 'pro':
-      return { models: [proModel, deepseekModel, miniModel], autocomplete: miniModel }
+      return { models: [proModel, deepseekModel, miniModel], autocomplete: deepseekModel }
     case 'enterprise':
-      return { models: [proModel, deepseekModel, miniModel], autocomplete: miniModel }
+      return { models: [proModel, deepseekModel, miniModel], autocomplete: deepseekModel }
     default: // free
       return { models: [deepseekModel, miniModel], autocomplete: deepseekModel }
   }

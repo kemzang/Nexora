@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 // Cache en mémoire (valide pendant la durée de vie du serveur)
 const tokenCache = new Map<string, { userId: string; expiresAt: number }>()
 
@@ -12,16 +17,10 @@ async function sha256(text: string): Promise<string> {
 }
 
 export async function verifyToken(token: string): Promise<string | null> {
-  // Vérifier le cache d'abord (évite une requête Supabase)
   const cached = tokenCache.get(token)
   if (cached && cached.expiresAt > Date.now()) {
     return cached.userId
   }
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
 
   // Token custom nxr_
   if (token.startsWith('nxr_')) {

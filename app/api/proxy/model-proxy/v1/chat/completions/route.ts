@@ -12,6 +12,14 @@ const supabase = createClient(
 
 const planCache = new Map<string, { plan: PlanId; expiresAt: number }>()
 
+const MAX_TOKENS_PER_PLAN: Record<PlanId, number> = {
+  free: 1024,
+  neo: 2048,
+  pro: 4096,
+  business: 8192,
+  enterprise: 16384,
+}
+
 async function getUserPlan(userId: string): Promise<PlanId> {
   const cached = planCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) return cached.plan
@@ -117,11 +125,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Clé API serveur non configurée' }, { status: 500 })
     }
 
+    const maxTokens = MAX_TOKENS_PER_PLAN[userPlan] ?? 4096
+
     const aiResponse = await callAPI(route, apiKey, {
       model: selectedModel.apiIdentifier,
       messages,
       stream,
       ...rest,
+      max_tokens: Math.min(rest.max_tokens ?? maxTokens, maxTokens),
     }, selectedModel.apiIdentifier)
 
     if (!aiResponse.ok) {

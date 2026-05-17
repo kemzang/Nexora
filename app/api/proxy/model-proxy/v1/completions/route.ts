@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
+import { PLANS, type PlanId } from '@/lib/models'
 
 export const runtime = 'nodejs'
 
@@ -11,6 +12,51 @@ const supabase = createClient(
 
 const FIM_MODEL = 'deepseek-chat'
 const FIM_API_URL = 'https://api.deepseek.com/completions'
+
+const planCache = new Map<string, { plan: PlanId; expiresAt: number }>()
+const usageCache = new Map<string, { total: number; expiresAt: number }>()
+
+async function getUserPlan(userId: string): Promise<PlanId> {
+  const cached = planCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) return cached.plan
+
+  const { data } = await supabase
+    .from('user_subscriptions')
+    .select('subscription_plans!inner(slug)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const plan = (data?.subscription_plans as any)?.slug as PlanId || 'free'
+  planCache.set(userId, { plan, expiresAt: Date.now() + 300_000 })
+  return plan
+}
+
+async function checkFimLimit(userId: string, plan: PlanId): Promise<string | null> {
+  const planLimit = PLANS[plan]?.tokensPerMonth ?? 1000
+  if (planLimit <= 0) return null
+
+  const cached = usageCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) {
+    if (cached.total >= planLimit) return planLimit.toString()
+    return null
+  }
+
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const { data } = await supabase
+    .from('usage_sessions')
+    .select('tokens_input, tokens_total')
+    .gte('started_at', startOfMonth)
+    .eq('user_id', userId)
+
+  const usage = (data ?? []).reduce((sum, row) => sum + (row.tokens_total ?? row.tokens_input ?? 0), 0)
+  usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
+
+  if (usage >= planLimit) return planLimit.toString()
+  return null
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +81,17 @@ export async function POST(req: NextRequest) {
 
     if (model !== FIM_MODEL) {
       return NextResponse.json({ error: `FIM non supporté pour le modèle ${model}` }, { status: 400 })
+    }
+
+    const userPlan = await getUserPlan(userId)
+    const limitReached = await checkFimLimit(userId, userPlan)
+    if (limitReached) {
+      return NextResponse.json({
+        error: `Limite de tokens mensuelle atteinte (${limitReached} tokens). Passez au plan supérieur pour continuer à utiliser Nexora.`,
+        code: 'MONTHLY_LIMIT_REACHED',
+        plan: userPlan,
+        limit: Number(limitReached),
+      }, { status: 403 })
     }
 
     const apiKey = process.env.DEEPSEEK_API_KEY

@@ -28,8 +28,11 @@ interface UserInfo {
 }
 
 function formatCurrency(amount: number, currency: string) {
+  // `invoices.amount` est stocké en unité pleine (ex. 5.00 = $5), pas en
+  // centimes — voir webhooks/paddle: totalCents / 100 au moment de l'insert.
   if (currency === 'XAF') return `${amount.toLocaleString('fr-FR')} FCFA`
-  return `${(amount / 100).toFixed(2)} ${currency === 'EUR' ? '€' : currency}`
+  if (currency === 'EUR') return `${amount.toFixed(2)} €`
+  return `$${amount.toFixed(2)}`
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -156,11 +159,30 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
 }
 
 export default function FacturesSection() {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [userInfo, setUserInfo] = useState<UserInfo>({ email: '', firstName: '', lastName: '' })
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  async function handleDownloadPdf(invoiceId: string) {
+    setDownloadError(null)
+    setDownloadingId(invoiceId)
+    try {
+      const res = await fetch(`/api/payments/paddle/invoice-pdf?id=${invoiceId}`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.url) throw new Error(data.error || 'PDF indisponible')
+      window.open(data.url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'PDF indisponible')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   useEffect(() => {
     if (user?.id) fetchInvoices(user.id, user.email || '')
@@ -204,6 +226,12 @@ export default function FacturesSection() {
         <h1 className="text-2xl font-bold tracking-tight">Factures</h1>
         <p className="text-muted-foreground text-sm mt-1">Historique de facturation et téléchargement</p>
       </div>
+
+      {downloadError && (
+        <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          {downloadError}
+        </div>
+      )}
 
       <Card className="glass">
         <CardHeader className="pb-4">
@@ -294,24 +322,16 @@ export default function FacturesSection() {
                       <Eye className="w-3.5 h-3.5" />
                       Voir
                     </Button>
-                    {inv.pdf_url ? (
-                      <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="ghost" className="text-foreground/70 hover:text-foreground gap-1.5 text-xs">
-                          <Download className="w-3.5 h-3.5" />
-                          PDF
-                        </Button>
-                      </a>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSelectedInvoice(inv)}
-                        className="text-muted-foreground hover:text-foreground gap-1.5 text-xs"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                        Imprimer
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDownloadPdf(inv.id)}
+                      disabled={downloadingId === inv.id}
+                      className="text-foreground/70 hover:text-foreground gap-1.5 text-xs"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {downloadingId === inv.id ? '...' : 'PDF'}
+                    </Button>
                   </div>
                 </motion.div>
               ))}

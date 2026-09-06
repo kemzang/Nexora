@@ -3,13 +3,15 @@ import crypto from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { PLANS, type PlanId } from '@/lib/models'
 import { captureServerError } from '@/lib/sentry'
+import { sendPaymentConfirmation } from '@/lib/resend'
 
 // ── Paddle webhook ───────────────────────────────────────────────────────────
 // Configure in the Paddle dashboard (Developer Tools > Notifications) pointing
 // at this route, subscribed to at least: subscription.created,
-// subscription.updated, subscription.canceled. Like the Lemon Squeezy webhook,
-// this is the ONLY place that actually grants a paid plan — Paddle.js's
-// client-side "success" callback is just UX, never trusted for access.
+// subscription.updated, subscription.canceled, transaction.completed. Like
+// the Lemon Squeezy webhook, this is the ONLY place that actually grants a
+// paid plan — Paddle.js's client-side "success" callback is just UX, never
+// trusted for access.
 export const runtime = 'nodejs'
 
 const admin = createClient(
@@ -40,10 +42,15 @@ interface PaddlePayload {
   data: {
     id: string
     status?: string
+    subscription_id?: string | null
+    invoice_number?: string | null
+    currency_code?: string
     custom_data?: { user_id?: string; plan?: string } | null
     next_billed_at?: string | null
     current_billing_period?: { ends_at?: string } | null
+    billing_period?: { starts_at?: string; ends_at?: string } | null
     scheduled_change?: { action?: string; effective_at?: string } | null
+    details?: { totals?: { total?: string; tax?: string } }
   }
 }
 
@@ -132,6 +139,88 @@ async function deactivateSubscription(reference: string): Promise<void> {
   if (error) console.error('[paddle webhook] deactivate failed:', error.message)
 }
 
+/**
+ * Un événement transaction.completed = un paiement réellement encaissé
+ * (premier paiement ou renouvellement) : c'est ce qui doit produire une
+ * facture, pas subscription.created/updated qui ne reflètent que le cycle
+ * de vie de l'abonnement. Le PDF n'est pas stocké ici (les liens Paddle
+ * expirent après 1h) — voir app/api/payments/paddle/invoice-pdf, qui le
+ * régénère à la demande à partir de `stripe_payment_intent_id` (id de
+ * transaction Paddle, réutilisé comme les autres colonnes stripe_*).
+ */
+async function recordInvoiceAndNotify(txn: PaddlePayload['data']): Promise<void> {
+  const subReference = txn.subscription_id ? `paddle_sub_${txn.subscription_id}` : undefined
+  if (!subReference) {
+    console.warn('[paddle webhook] transaction.completed without subscription_id, skipping invoice')
+    return
+  }
+
+  // Idempotent : cette transaction a-t-elle déjà généré une facture ?
+  const { data: existing } = await admin
+    .from('invoices')
+    .select('id')
+    .eq('stripe_payment_intent_id', txn.id)
+    .limit(1)
+  if (existing && existing.length > 0) return
+
+  const { data: sub } = await admin
+    .from('user_subscriptions')
+    .select('id, user_id, subscription_plans(name)')
+    .eq('stripe_subscription_id', subReference)
+    .maybeSingle()
+  if (!sub) {
+    console.warn(`[paddle webhook] no user_subscriptions row for ${subReference}, skipping invoice`)
+    return
+  }
+
+  const totalCents = Number(txn.details?.totals?.total ?? 0)
+  const taxCents = Number(txn.details?.totals?.tax ?? 0)
+  const now = new Date()
+  const periodStart = txn.billing_period?.starts_at ? new Date(txn.billing_period.starts_at) : now
+  const periodEnd = txn.billing_period?.ends_at ? new Date(txn.billing_period.ends_at) : now
+
+  const { error } = await admin.from('invoices').insert({
+    user_id: sub.user_id,
+    subscription_id: sub.id,
+    invoice_number: txn.invoice_number || `NEXORA-${txn.id}`,
+    amount: totalCents / 100,
+    tax_amount: taxCents / 100,
+    currency: txn.currency_code || 'USD',
+    status: 'paid',
+    billing_period_start: periodStart.toISOString(),
+    billing_period_end: periodEnd.toISOString(),
+    stripe_payment_intent_id: txn.id,
+  })
+  if (error) {
+    console.error('[paddle webhook] insert invoice failed:', error.message)
+    return
+  }
+
+  try {
+    const { data: authUser } = await admin.auth.admin.getUserById(sub.user_id)
+    const email = authUser?.user?.email
+    if (email) {
+      const { data: profile } = await admin
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', sub.user_id)
+        .maybeSingle()
+      const planName = (sub as any).subscription_plans?.name || 'Nexora'
+      await sendPaymentConfirmation({
+        to: email,
+        userName: (profile as any)?.display_name || email.split('@')[0],
+        planName,
+        amount: `${(totalCents / 100).toFixed(2)} ${txn.currency_code || 'USD'}`,
+        cardLast4: '••••',
+      })
+    }
+  } catch (err) {
+    // Best-effort : une facture sans email n'est pas bloquant, mais on le trace.
+    console.error('[paddle webhook] payment confirmation email failed:', err)
+    captureServerError(err, { context: 'transaction.completed email', txnId: txn.id })
+  }
+}
+
 export async function POST(req: NextRequest) {
   const secret = process.env.PADDLE_WEBHOOK_SECRET
   if (!secret) {
@@ -173,6 +262,14 @@ export async function POST(req: NextRequest) {
           } else if (payload.data.status === 'canceled' || payload.data.status === 'paused') {
             await deactivateSubscription(reference)
           }
+          break
+        case 'transaction.completed':
+          // `reference` ci-dessus vaut `paddle_sub_<id de la transaction>`,
+          // inutilisable ici (data.id est l'id de la TRANSACTION, pas de
+          // l'abonnement) — recordInvoiceAndNotify lit le bon id lui-même
+          // via `data.subscription_id`. Seule la garde `if (!reference)`
+          // au-dessus nous intéressait (elle passe, data.id existe toujours).
+          await recordInvoiceAndNotify(payload.data)
           break
         case 'subscription.canceled':
           await deactivateSubscription(reference)

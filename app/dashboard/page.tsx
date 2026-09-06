@@ -18,6 +18,7 @@ import AbonnementSection from '@/app/dashboard/sections/AbonnementSection'
 import FacturesSection from '@/app/dashboard/sections/FacturesSection'
 import AideSection from '@/app/dashboard/sections/AideSection'
 import CollaborationsSection from '@/app/dashboard/sections/CollaborationsSection'
+import ParametresSection from '@/app/dashboard/sections/ParametresSection'
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Vue d\'ensemble', section: 'dashboard' },
@@ -37,6 +38,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   abonnement: ({ onNavigate }) => <AbonnementSection onNavigate={onNavigate} />,
   factures: () => <FacturesSection />,
   aide: () => <AideSection />,
+  parametres: () => <ParametresSection />,
 }
 
 function NexoraLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
@@ -72,7 +74,8 @@ export default function DashboardPage() {
     setSidebarOpen(false)
   }
 
-  const sectionTitle = sidebarLinks.find(l => l.section === activeSection)?.label || 'Vue d\'ensemble'
+  const sectionTitle = sidebarLinks.find(l => l.section === activeSection)?.label
+    || (activeSection === 'parametres' ? 'Paramètres' : 'Vue d\'ensemble')
   const ActiveComponent = sections[activeSection] || sections.dashboard
 
   if (loading || !user) {
@@ -181,7 +184,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => handleNavigate('aide')}
+              onClick={() => handleNavigate('parametres')}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.05] transition-colors border border-transparent hover:border-border/40"
             >
               <Settings className="w-3.5 h-3.5" />

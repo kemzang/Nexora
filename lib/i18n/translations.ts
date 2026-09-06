@@ -26,10 +26,20 @@ export type Translations = {
     items: { title: string; desc: string }[]
   }
   statsSection: {
-    developers: string
-    requests: string
-    models: string
-    uptime: string
+    poweredBy: string
+  }
+  faq: {
+    badge: string
+    title: string
+    subtitle: string
+    items: { q: string; a: string }[]
+  }
+  comparison: {
+    badge: string
+    title: string
+    subtitle: string
+    feature: string
+    rows: { label: string; nexora: string; copilot: string; cursor: string }[]
   }
   pricing: {
     badge: string
@@ -126,10 +136,48 @@ const fr: Translations = {
     ],
   },
   statsSection: {
-    developers: 'Développeurs actifs',
-    requests: 'Requêtes traitées',
-    models: 'Modèles IA',
-    uptime: 'Uptime',
+    poweredBy: 'Propulsé par les meilleurs modèles IA',
+  },
+  faq: {
+    badge: 'FAQ',
+    title: 'Questions fréquentes',
+    subtitle: 'Tout ce qu\'il faut savoir avant de commencer',
+    items: [
+      {
+        q: 'Ai-je besoin d\'un abonnement séparé aux APIs des modèles IA ?',
+        a: 'Non. Ton abonnement Nexora inclut l\'accès aux modèles (DeepSeek, Gemini, Claude selon le plan) — aucune clé API à fournir ni facture séparée chez les fournisseurs.',
+      },
+      {
+        q: 'Mon code est-il stocké ou utilisé pour entraîner des modèles ?',
+        a: 'Non. Tes données sont chiffrées en transit et ne sont jamais utilisées pour entraîner un modèle, ni par Nexora ni par les fournisseurs d\'IA connectés.',
+      },
+      {
+        q: 'Puis-je changer de plan ou annuler à tout moment ?',
+        a: 'Oui, sans engagement. Un changement de plan s\'applique immédiatement, et l\'annulation du renouvellement automatique te laisse l\'accès jusqu\'à la fin de la période déjà payée.',
+      },
+      {
+        q: 'Nexora fonctionne-t-il seulement sur VS Code ?',
+        a: 'Non — Nexora est aussi disponible sur toute la suite JetBrains (IntelliJ IDEA, PyCharm, WebStorm...) et en ligne de commande (CLI) pour les scripts et le CI/CD.',
+      },
+      {
+        q: 'Que se passe-t-il si je dépasse mon quota mensuel de crédits ?',
+        a: 'Tu es prévenu dans le tableau de bord dès que tu approches de la limite. Le quota se réinitialise chaque mois, et tu peux upgrader à tout moment pour en obtenir davantage.',
+      },
+    ],
+  },
+  comparison: {
+    badge: 'Comparatif',
+    title: 'Pourquoi choisir Nexora',
+    subtitle: 'Comparaison basée sur les offres publiques au moment de la rédaction, susceptible d\'évoluer.',
+    feature: 'Fonctionnalité',
+    rows: [
+      { label: 'Choix du modèle (Claude, Gemini, DeepSeek...)', nexora: 'Oui', copilot: 'Limité', cursor: 'Limité' },
+      { label: 'Fonctionne dans ton IDE existant (VS Code, JetBrains)', nexora: 'Oui', copilot: 'Oui', cursor: 'Non (IDE dédié)' },
+      { label: 'Mode Agent autonome', nexora: 'Oui', copilot: 'Partiel', cursor: 'Oui' },
+      { label: 'Agent en ligne de commande (CLI)', nexora: 'Oui', copilot: 'Limité', cursor: 'Oui' },
+      { label: 'Plan gratuit sans carte bancaire', nexora: 'Oui', copilot: 'Oui', cursor: 'Limité' },
+      { label: 'Support JetBrains complet', nexora: 'Oui', copilot: 'Oui', cursor: 'Non' },
+    ],
   },
   pricing: {
     badge: 'Tarifs',
@@ -263,10 +311,48 @@ const en: Translations = {
     ],
   },
   statsSection: {
-    developers: 'Active developers',
-    requests: 'Requests processed',
-    models: 'AI Models',
-    uptime: 'Uptime',
+    poweredBy: 'Powered by the best AI models',
+  },
+  faq: {
+    badge: 'FAQ',
+    title: 'Frequently asked questions',
+    subtitle: 'Everything you need to know before getting started',
+    items: [
+      {
+        q: 'Do I need a separate subscription to the AI model APIs?',
+        a: 'No. Your Nexora subscription includes access to the models (DeepSeek, Gemini, Claude depending on your plan) — no API key to provide, no separate bill from providers.',
+      },
+      {
+        q: 'Is my code stored or used to train models?',
+        a: 'No. Your data is encrypted in transit and never used to train a model, neither by Nexora nor by the connected AI providers.',
+      },
+      {
+        q: 'Can I change plans or cancel anytime?',
+        a: 'Yes, no commitment. A plan change applies immediately, and cancelling auto-renewal keeps your access until the end of the period you already paid for.',
+      },
+      {
+        q: 'Does Nexora only work on VS Code?',
+        a: 'No — Nexora is also available across the whole JetBrains suite (IntelliJ IDEA, PyCharm, WebStorm...) and as a CLI agent for scripts and CI/CD.',
+      },
+      {
+        q: 'What happens if I exceed my monthly credit quota?',
+        a: 'You get warned in the dashboard as you approach the limit. The quota resets every month, and you can upgrade anytime to get more.',
+      },
+    ],
+  },
+  comparison: {
+    badge: 'Comparison',
+    title: 'Why choose Nexora',
+    subtitle: 'Comparison based on public offerings at the time of writing, subject to change.',
+    feature: 'Feature',
+    rows: [
+      { label: 'Model choice (Claude, Gemini, DeepSeek...)', nexora: 'Yes', copilot: 'Limited', cursor: 'Limited' },
+      { label: 'Works in your existing IDE (VS Code, JetBrains)', nexora: 'Yes', copilot: 'Yes', cursor: 'No (dedicated IDE)' },
+      { label: 'Autonomous Agent mode', nexora: 'Yes', copilot: 'Partial', cursor: 'Yes' },
+      { label: 'Command-line agent (CLI)', nexora: 'Yes', copilot: 'Limited', cursor: 'Yes' },
+      { label: 'Free plan, no credit card', nexora: 'Yes', copilot: 'Yes', cursor: 'Limited' },
+      { label: 'Full JetBrains support', nexora: 'Yes', copilot: 'Yes', cursor: 'No' },
+    ],
   },
   pricing: {
     badge: 'Pricing',
@@ -400,10 +486,48 @@ const es: Translations = {
     ],
   },
   statsSection: {
-    developers: 'Desarrolladores activos',
-    requests: 'Solicitudes procesadas',
-    models: 'Modelos de IA',
-    uptime: 'Disponibilidad',
+    poweredBy: 'Impulsado por los mejores modelos de IA',
+  },
+  faq: {
+    badge: 'Preguntas frecuentes',
+    title: 'Preguntas frecuentes',
+    subtitle: 'Todo lo que necesitas saber antes de empezar',
+    items: [
+      {
+        q: '¿Necesito una suscripción aparte a las APIs de los modelos de IA?',
+        a: 'No. Tu suscripción a Nexora incluye acceso a los modelos (DeepSeek, Gemini, Claude según el plan) — sin clave API que proporcionar ni factura aparte de los proveedores.',
+      },
+      {
+        q: '¿Se almacena mi código o se usa para entrenar modelos?',
+        a: 'No. Tus datos se cifran en tránsito y nunca se usan para entrenar un modelo, ni por Nexora ni por los proveedores de IA conectados.',
+      },
+      {
+        q: '¿Puedo cambiar de plan o cancelar en cualquier momento?',
+        a: 'Sí, sin compromiso. Un cambio de plan se aplica de inmediato, y cancelar la renovación automática te deja el acceso hasta el final del período ya pagado.',
+      },
+      {
+        q: '¿Nexora solo funciona en VS Code?',
+        a: 'No — Nexora también está disponible en toda la suite JetBrains (IntelliJ IDEA, PyCharm, WebStorm...) y como agente de línea de comandos (CLI) para scripts y CI/CD.',
+      },
+      {
+        q: '¿Qué pasa si supero mi cuota mensual de créditos?',
+        a: 'Se te avisa en el panel al acercarte al límite. La cuota se reinicia cada mes, y puedes mejorar de plan en cualquier momento para obtener más.',
+      },
+    ],
+  },
+  comparison: {
+    badge: 'Comparativa',
+    title: 'Por qué elegir Nexora',
+    subtitle: 'Comparación basada en las ofertas públicas al momento de redactar esto, sujeta a cambios.',
+    feature: 'Función',
+    rows: [
+      { label: 'Elección de modelo (Claude, Gemini, DeepSeek...)', nexora: 'Sí', copilot: 'Limitado', cursor: 'Limitado' },
+      { label: 'Funciona en tu IDE actual (VS Code, JetBrains)', nexora: 'Sí', copilot: 'Sí', cursor: 'No (IDE dedicado)' },
+      { label: 'Modo Agente autónomo', nexora: 'Sí', copilot: 'Parcial', cursor: 'Sí' },
+      { label: 'Agente en línea de comandos (CLI)', nexora: 'Sí', copilot: 'Limitado', cursor: 'Sí' },
+      { label: 'Plan gratuito sin tarjeta', nexora: 'Sí', copilot: 'Sí', cursor: 'Limitado' },
+      { label: 'Soporte JetBrains completo', nexora: 'Sí', copilot: 'Sí', cursor: 'No' },
+    ],
   },
   pricing: {
     badge: 'Precios',
@@ -537,10 +661,48 @@ const pt: Translations = {
     ],
   },
   statsSection: {
-    developers: 'Desenvolvedores ativos',
-    requests: 'Requisições processadas',
-    models: 'Modelos de IA',
-    uptime: 'Disponibilidade',
+    poweredBy: 'Desenvolvido pelos melhores modelos de IA',
+  },
+  faq: {
+    badge: 'Perguntas frequentes',
+    title: 'Perguntas frequentes',
+    subtitle: 'Tudo o que você precisa saber antes de começar',
+    items: [
+      {
+        q: 'Preciso de uma assinatura separada para as APIs dos modelos de IA?',
+        a: 'Não. Sua assinatura Nexora inclui acesso aos modelos (DeepSeek, Gemini, Claude conforme o plano) — sem chave de API para fornecer, sem fatura separada dos provedores.',
+      },
+      {
+        q: 'Meu código é armazenado ou usado para treinar modelos?',
+        a: 'Não. Seus dados são criptografados em trânsito e nunca usados para treinar um modelo, nem pela Nexora nem pelos provedores de IA conectados.',
+      },
+      {
+        q: 'Posso mudar de plano ou cancelar a qualquer momento?',
+        a: 'Sim, sem compromisso. Uma mudança de plano é aplicada imediatamente, e cancelar a renovação automática mantém seu acesso até o fim do período já pago.',
+      },
+      {
+        q: 'A Nexora funciona só no VS Code?',
+        a: 'Não — a Nexora também está disponível em toda a suite JetBrains (IntelliJ IDEA, PyCharm, WebStorm...) e como agente de linha de comando (CLI) para scripts e CI/CD.',
+      },
+      {
+        q: 'O que acontece se eu ultrapassar minha cota mensal de créditos?',
+        a: 'Você é avisado no painel ao se aproximar do limite. A cota é reiniciada todo mês, e você pode fazer upgrade a qualquer momento para obter mais.',
+      },
+    ],
+  },
+  comparison: {
+    badge: 'Comparativo',
+    title: 'Por que escolher a Nexora',
+    subtitle: 'Comparação baseada nas ofertas públicas no momento da redação, sujeita a mudanças.',
+    feature: 'Recurso',
+    rows: [
+      { label: 'Escolha do modelo (Claude, Gemini, DeepSeek...)', nexora: 'Sim', copilot: 'Limitado', cursor: 'Limitado' },
+      { label: 'Funciona no seu IDE atual (VS Code, JetBrains)', nexora: 'Sim', copilot: 'Sim', cursor: 'Não (IDE dedicado)' },
+      { label: 'Modo Agente autônomo', nexora: 'Sim', copilot: 'Parcial', cursor: 'Sim' },
+      { label: 'Agente de linha de comando (CLI)', nexora: 'Sim', copilot: 'Limitado', cursor: 'Sim' },
+      { label: 'Plano gratuito sem cartão', nexora: 'Sim', copilot: 'Sim', cursor: 'Limitado' },
+      { label: 'Suporte JetBrains completo', nexora: 'Sim', copilot: 'Sim', cursor: 'Não' },
+    ],
   },
   pricing: {
     badge: 'Preços',

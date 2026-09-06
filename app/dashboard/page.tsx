@@ -228,9 +228,13 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Page content — sections stay mounted (no re-fetch on tab switch) */}
+        {/* Page content — sections stay mounted (no re-fetch on tab switch).
+            "parametres" n'est pas dans sidebarLinks (accessible seulement via
+            le bouton en bas de la sidebar), donc rendu séparément ici — sinon
+            aucun <div> n'est jamais créé pour lui et la section ne s'affiche
+            jamais, quel que soit activeSection. */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-          {sidebarLinks.map(link => {
+          {[...sidebarLinks, { icon: Settings, label: 'Paramètres', section: 'parametres' }].map(link => {
             const Section = sections[link.section]
             return (
               <div

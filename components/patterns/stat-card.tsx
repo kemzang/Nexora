@@ -2,13 +2,16 @@
 
 import * as React from "react"
 import { useRef, useEffect, useState } from "react"
-import { motion, useInView } from "framer-motion"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-function useCounter(target: number, duration = 1800, active = true) {
+// Anime au montage plutôt que d'attendre un déclenchement au scroll (ex-
+// useInView) : sur cette section, un compteur resté bloqué à 0 (ex. jamais
+// scrollée assez profondément, ou timing d'hydratation raté) donnait
+// l'impression d'un site cassé/inactif — pire que pas d'animation du tout.
+function useCounter(target: number, duration = 1600) {
   const [value, setValue] = useState(0)
   useEffect(() => {
-    if (!active) return
     let start = 0
     const step = target / (duration / 16)
     const timer = setInterval(() => {
@@ -17,7 +20,7 @@ function useCounter(target: number, duration = 1800, active = true) {
       else setValue(Math.floor(start))
     }, 16)
     return () => clearInterval(timer)
-  }, [target, duration, active])
+  }, [target, duration])
   return value
 }
 
@@ -30,8 +33,7 @@ interface StatCardProps {
 
 export function StatCard({ value, suffix = "", label, className }: StatCardProps) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
-  const count = useCounter(value, 1600, isInView)
+  const count = useCounter(value, 1600)
 
   return (
     <motion.div

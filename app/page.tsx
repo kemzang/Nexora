@@ -10,15 +10,15 @@ import { GlassCard } from '@/components/ui/glass-card'
 import { Badge } from '@/components/ui/badge'
 import { SectionLayout } from '@/components/patterns/section-layout'
 import { FeatureCard } from '@/components/patterns/feature-card'
-import { StatCard } from '@/components/patterns/stat-card'
 import { PricingCard } from '@/components/patterns/pricing-card'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 import { PLANS } from '@/lib/models'
 import {
   Sparkles, Zap, Code, TrendingUp, CheckCircle, ArrowRight,
-  Rocket, Shield, Globe, Terminal, Cpu, Brain, Star,
+  Rocket, Shield, Globe, Terminal, Cpu, Brain, Star, ChevronDown, Check, Minus,
 } from 'lucide-react'
+import { useState } from 'react'
 
 const featureIcons = [Brain, Zap, Code, TrendingUp, Globe, Shield]
 
@@ -82,6 +82,35 @@ function TerminalMockup() {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+function FaqItem({ item }: { item: { q: string; a: string } }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-border/50 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/[0.03] transition-colors"
+      >
+        <span className="text-sm font-medium text-foreground">{item.q}</span>
+        <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <p className="px-5 pb-4 text-sm text-muted-foreground leading-relaxed border-t border-border/50 pt-3">{item.a}</p>
+      )}
+    </div>
+  )
+}
+
+function ComparisonCell({ value }: { value: string }) {
+  const positive = /^(oui|yes|sí|sim)$/i.test(value)
+  const negative = /^(non|no|não)\b/i.test(value)
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-sm ${positive ? 'text-emerald-400' : negative ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>
+      {positive ? <Check className="w-3.5 h-3.5 shrink-0" /> : negative ? <Minus className="w-3.5 h-3.5 shrink-0" /> : null}
+      {value}
+    </span>
   )
 }
 
@@ -226,13 +255,18 @@ export default function HomePage() {
 
       <PlatformsSection lang={lang} />
 
-      <section className="relative py-20 border-y border-border overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <StatCard value={10000} suffix="+" label={t.statsSection.developers} />
-            <StatCard value={1000000} suffix="+" label={t.statsSection.requests} />
-            <StatCard value={15} suffix="+" label={t.statsSection.models} />
-            <StatCard value={99} suffix=".9%" label={t.statsSection.uptime} />
+      <section className="relative py-16 border-y border-border overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-6">{t.statsSection.poweredBy}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {['Anthropic Claude', 'Google Gemini', 'DeepSeek'].map(name => (
+              <span
+                key={name}
+                className="px-4 py-2 rounded-full border border-border bg-card/60 text-sm font-medium text-foreground/80"
+              >
+                {name}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -274,6 +308,71 @@ export default function HomePage() {
                 models={t.pricing.models[plan.key]}
                 ctaText={t.pricing.cta[plan.key]}
               />
+            </motion.div>
+          ))}
+        </div>
+      </SectionLayout>
+
+      {/* Comparison vs competitors */}
+      <SectionLayout background="muted">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <Badge variant="primary" className="mb-5">
+            <Sparkles className="w-3 h-3" />
+            {t.comparison.badge}
+          </Badge>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">{t.comparison.title}</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.comparison.subtitle}</p>
+        </motion.div>
+        <div className="max-w-4xl mx-auto overflow-x-auto">
+          <table className="w-full text-sm border-separate border-spacing-0">
+            <thead>
+              <tr>
+                <th className="text-left px-4 py-3 text-muted-foreground font-medium text-xs uppercase tracking-wide">{t.comparison.feature}</th>
+                <th className="text-left px-4 py-3 font-semibold">Nexora</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">GitHub Copilot</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Cursor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {t.comparison.rows.map((row, ri) => (
+                <tr key={row.label} className={ri % 2 === 0 ? 'bg-white/[0.02]' : ''}>
+                  <td className="px-4 py-3 text-muted-foreground border-t border-border/50">{row.label}</td>
+                  <td className="px-4 py-3 border-t border-border/50"><ComparisonCell value={row.nexora} /></td>
+                  <td className="px-4 py-3 border-t border-border/50"><ComparisonCell value={row.copilot} /></td>
+                  <td className="px-4 py-3 border-t border-border/50"><ComparisonCell value={row.cursor} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionLayout>
+
+      {/* FAQ */}
+      <SectionLayout background="default">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <Badge variant="primary" className="mb-5">
+            <Sparkles className="w-3 h-3" />
+            {t.faq.badge}
+          </Badge>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">{t.faq.title}</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.faq.subtitle}</p>
+        </motion.div>
+        <div className="max-w-2xl mx-auto space-y-2.5">
+          {t.faq.items.map((item, i) => (
+            <motion.div key={item.q} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
+              <FaqItem item={item} />
             </motion.div>
           ))}
         </div>

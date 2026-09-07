@@ -71,7 +71,7 @@ DECLARE
   free_tokens INTEGER;
 BEGIN
   INSERT INTO user_profiles (id, display_name)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'first_name' || ' ' || NEW.raw_user_meta_data->>'last_name', NEW.email));
+  VALUES (NEW.id, COALESCE((NEW.raw_user_meta_data)::jsonb->>'first_name' || ' ' || (NEW.raw_user_meta_data)::jsonb->>'last_name', NEW.email));
 
   SELECT id, tokens_per_month INTO free_plan_id, free_tokens
   FROM subscription_plans

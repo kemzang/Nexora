@@ -15,7 +15,7 @@ interface CollabMessage {
   id: string
   sender_id: string
   sender_name: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'agent_status'
   content: string
   model_id: string | null
   created_at: string
@@ -33,6 +33,19 @@ function NexoraLogo() {
   return (
     <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
       <span className="text-white font-bold text-sm tracking-tight select-none">N</span>
+    </div>
+  )
+}
+
+// ── Agent activity line (statut discret, pas une vraie bulle de chat) ──────────
+
+function AgentActivityLine({ msg }: { msg: CollabMessage }) {
+  const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return (
+    <div className="flex justify-center mb-2">
+      <span className="text-xs text-slate-400 bg-slate-100 rounded-full px-3 py-1">
+        {msg.content} · {time}
+      </span>
     </div>
   )
 }
@@ -394,7 +407,9 @@ export default function CollabRoomPage() {
               </div>
             )}
             {messages.map(msg => (
-              <MessageBubble key={msg.id} msg={msg} myUserId={user.id} />
+              msg.role === 'agent_status'
+                ? <AgentActivityLine key={msg.id} msg={msg} />
+                : <MessageBubble key={msg.id} msg={msg} myUserId={user.id} />
             ))}
             <div ref={bottomRef} />
           </div>

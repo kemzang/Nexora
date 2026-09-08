@@ -111,6 +111,7 @@ export async function middleware(req: NextRequest) {
     '/api/proxy/web',
     '/api/proxy/crawl',
     '/api/collab/rooms',
+    '/api/collab/search',
     '/api/keys/create',
   ]
   if (RATE_LIMITED_PREFIXES.some((p) => pathname.startsWith(p))) {

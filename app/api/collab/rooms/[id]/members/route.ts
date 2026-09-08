@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/auth-verify'
+import { captureServerError } from '@/lib/sentry'
 
 export const runtime = 'nodejs'
 
@@ -52,7 +53,10 @@ export async function GET(
     .gte('last_seen_at', cutoff)
     .order('joined_at')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    captureServerError(error, { route: 'collab/members', roomId })
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ members: members ?? [] })
 }

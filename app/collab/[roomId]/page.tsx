@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
-import { Send, Users, Wifi, WifiOff, ExternalLink, Copy, Check, LogIn } from 'lucide-react'
+import { Send, Users, Wifi, WifiOff, ExternalLink, Copy, Check, LogIn, MessageCircle } from 'lucide-react'
 
 const PRESENCE_TIMEOUT_MS = 30_000
 const HEARTBEAT_INTERVAL_MS = 10_000
@@ -25,6 +25,15 @@ interface CollabMember {
   user_id: string
   display_name: string
   last_seen_at: string
+}
+
+interface Annotation {
+  id: string
+  message_id: string
+  author_id: string
+  author_name: string
+  content: string
+  created_at: string
 }
 
 // ── Logo ───────────────────────────────────────────────────────────────────────
@@ -52,10 +61,34 @@ function AgentActivityLine({ msg }: { msg: CollabMessage }) {
 
 // ── Message bubble ─────────────────────────────────────────────────────────────
 
-function MessageBubble({ msg, myUserId }: { msg: CollabMessage; myUserId: string }) {
+function MessageBubble({
+  msg, myUserId, annotations, roomActive, onAddAnnotation,
+}: {
+  msg: CollabMessage
+  myUserId: string
+  annotations: Annotation[]
+  roomActive: boolean
+  onAddAnnotation: (content: string) => Promise<void>
+}) {
   const isMe = msg.sender_id === myUserId
   const isAI = msg.role === 'assistant'
   const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  const [expanded, setExpanded] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [posting, setPosting] = useState(false)
+
+  const handlePost = async () => {
+    const content = draft.trim()
+    if (!content || posting) return
+    setPosting(true)
+    try {
+      await onAddAnnotation(content)
+      setDraft('')
+    } finally {
+      setPosting(false)
+    }
+  }
 
   return (
     <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-3`}>
@@ -82,6 +115,50 @@ function MessageBubble({ msg, myUserId }: { msg: CollabMessage; myUserId: string
           )}
           {msg.content}
         </div>
+
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 px-1 mt-0.5 transition-colors"
+        >
+          <MessageCircle className="w-3 h-3" />
+          {annotations.length > 0 ? annotations.length : 'Commenter'}
+        </button>
+
+        {expanded && (
+          <div className="w-full max-w-xs bg-slate-50 border border-slate-100 rounded-xl p-2.5 mt-1 space-y-2">
+            {annotations.map(a => (
+              <div key={a.id} className="text-xs">
+                <span className="font-semibold text-slate-600">{a.author_name}</span>{' '}
+                <span className="text-slate-400">
+                  {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <p className="text-slate-700 leading-relaxed">{a.content}</p>
+              </div>
+            ))}
+            {annotations.length === 0 && (
+              <p className="text-xs text-slate-400">Aucun commentaire pour l'instant.</p>
+            )}
+            {roomActive && (
+              <div className="flex gap-1.5 pt-1">
+                <input
+                  type="text"
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && void handlePost()}
+                  placeholder="Ajouter un commentaire…"
+                  className="flex-1 px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                />
+                <button
+                  onClick={() => void handlePost()}
+                  disabled={!draft.trim() || posting}
+                  className="px-2 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -98,13 +175,16 @@ export default function CollabRoomPage() {
   const { user, token: authToken, loading: authLoading } = useAuth()
 
   const [joined, setJoined] = useState(false)
+  const [checkingMembership, setCheckingMembership] = useState(true)
   const [displayName, setDisplayName] = useState('')
   const [joinError, setJoinError] = useState('')
   const [roomName, setRoomName] = useState('Session Nexora')
+  const [roomActive, setRoomActive] = useState(true)
   const [joining, setJoining] = useState(false)
 
   const [messages, setMessages] = useState<CollabMessage[]>([])
   const [members, setMembers] = useState<CollabMember[]>([])
+  const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [connected, setConnected] = useState(false)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -117,6 +197,33 @@ export default function CollabRoomPage() {
     if (user?.firstName) setDisplayName(user.firstName)
     else if (user?.email) setDisplayName(user.email.split('@')[0])
   }, [user])
+
+  // ── Reprise directe pour un membre déjà connu du salon (ex: lien depuis
+  // l'historique) — évite de redemander le token d'invitation, et permet de
+  // rouvrir un salon fermé (is_active=false) en lecture seule.
+  useEffect(() => {
+    if (!roomId || !authToken) {
+      if (!authLoading && !authToken) setCheckingMembership(false)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/collab/rooms/${roomId}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+        if (!cancelled && res.ok) {
+          const data = await res.json()
+          setRoomName(data.room.name)
+          setRoomActive(data.room.is_active)
+          setJoined(true)
+        }
+      } finally {
+        if (!cancelled) setCheckingMembership(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [roomId, authToken, authLoading])
 
   // ── Présence : snapshot des membres actifs (last_seen_at < 30s) ──
   const refreshMembers = useCallback(async () => {
@@ -144,6 +251,14 @@ export default function CollabRoomPage() {
         .limit(200)
       if (msgs) setMessages(msgs as CollabMessage[])
       await refreshMembers()
+
+      if (authToken) {
+        const res = await fetch(`/api/collab/rooms/${roomId}/annotations`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }).catch(() => null)
+        const data = await res?.json().catch(() => null)
+        if (data?.annotations) setAnnotations(data.annotations as Annotation[])
+      }
     })()
 
     const channel = supabase
@@ -161,16 +276,25 @@ export default function CollabRoomPage() {
         { event: '*', schema: 'public', table: 'room_members', filter: `room_id=eq.${roomId}` },
         () => { void refreshMembers() },
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'collab_annotations', filter: `room_id=eq.${roomId}` },
+        (payload: { new: Annotation }) => {
+          const a = payload.new
+          setAnnotations(prev => (prev.some(x => x.id === a.id) ? prev : [...prev, a]))
+        },
+      )
       .subscribe((status: string) => setConnected(status === 'SUBSCRIBED'))
 
     return () => { void supabase.removeChannel(channel) }
-  }, [joined, roomId, user, refreshMembers])
+  }, [joined, roomId, user, authToken, refreshMembers])
 
   // ── Heartbeat : signale qu'on est toujours actif (comme le fait déjà
   // l'extension VS Code côté client desktop) — sans ça, un participant qui
   // rejoint depuis le web disparaissait de la liste "en ligne" au bout de 30s.
+  // Inutile (et trompeur) sur un salon fermé consulté en lecture seule.
   useEffect(() => {
-    if (!joined || !roomId || !authToken) return
+    if (!joined || !roomId || !authToken || !roomActive) return
 
     const beat = () => {
       fetch(`/api/collab/rooms/${roomId}/heartbeat`, {
@@ -181,7 +305,7 @@ export default function CollabRoomPage() {
     beat()
     const t = setInterval(beat, HEARTBEAT_INTERVAL_MS)
     return () => clearInterval(t)
-  }, [joined, roomId, authToken])
+  }, [joined, roomId, authToken, roomActive])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -234,6 +358,22 @@ export default function CollabRoomPage() {
     }
   }
 
+  const handleAddAnnotation = async (messageId: string, content: string) => {
+    if (!authToken) return
+    const res = await fetch(`/api/collab/rooms/${roomId}/annotations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ messageId, content, authorName: displayName }),
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.annotation) {
+      setAnnotations(prev => (prev.some(a => a.id === data.annotation.id) ? prev : [...prev, data.annotation]))
+    }
+  }
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setCopied(true)
@@ -275,6 +415,15 @@ export default function CollabRoomPage() {
             </a>
           </p>
         </div>
+      </div>
+    )
+  }
+
+  // ── Vérification d'appartenance en cours ──
+  if (checkingMembership) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-muted flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-foreground/30 border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -346,12 +495,18 @@ export default function CollabRoomPage() {
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-slate-900 text-sm truncate">{roomName}</h1>
           <div className="flex items-center gap-1.5 mt-0.5">
-            {connected
-              ? <Wifi className="w-3 h-3 text-emerald-500" />
-              : <WifiOff className="w-3 h-3 text-slate-300 animate-pulse" />}
-            <span className={`text-xs ${connected ? 'text-emerald-600' : 'text-slate-400'}`}>
-              {connected ? 'Connecté' : 'Reconnexion…'}
-            </span>
+            {roomActive ? (
+              <>
+                {connected
+                  ? <Wifi className="w-3 h-3 text-emerald-500" />
+                  : <WifiOff className="w-3 h-3 text-slate-300 animate-pulse" />}
+                <span className={`text-xs ${connected ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  {connected ? 'Connecté' : 'Reconnexion…'}
+                </span>
+              </>
+            ) : (
+              <span className="text-xs text-slate-400">Session fermée · lecture seule</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1.5 text-slate-500">
@@ -409,35 +564,52 @@ export default function CollabRoomPage() {
             {messages.map(msg => (
               msg.role === 'agent_status'
                 ? <AgentActivityLine key={msg.id} msg={msg} />
-                : <MessageBubble key={msg.id} msg={msg} myUserId={user.id} />
+                : (
+                  <MessageBubble
+                    key={msg.id}
+                    msg={msg}
+                    myUserId={user.id}
+                    roomActive={roomActive}
+                    annotations={annotations.filter(a => a.message_id === msg.id)}
+                    onAddAnnotation={(content) => handleAddAnnotation(msg.id, content)}
+                  />
+                )
             ))}
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t border-slate-100 bg-white px-4 py-3">
-            <div className="flex gap-2 items-end">
-              <textarea
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend() }
-                }}
-                placeholder="Message… (Entrée pour envoyer)"
-                rows={1}
-                className="flex-1 resize-none px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/30 max-h-32 leading-relaxed"
-              />
-              <button
-                onClick={() => void handleSend()}
-                disabled={!input.trim() || sending}
-                className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+          {roomActive ? (
+            <div className="border-t border-slate-100 bg-white px-4 py-3">
+              <div className="flex gap-2 items-end">
+                <textarea
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend() }
+                  }}
+                  placeholder="Message… (Entrée pour envoyer)"
+                  rows={1}
+                  className="flex-1 resize-none px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/30 max-h-32 leading-relaxed"
+                />
+                <button
+                  onClick={() => void handleSend()}
+                  disabled={!input.trim() || sending}
+                  className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1.5 px-1">
+                Les réponses IA s'affichent en temps réel depuis VS Code
+              </p>
             </div>
-            <p className="text-xs text-slate-400 mt-1.5 px-1">
-              Les réponses IA s'affichent en temps réel depuis VS Code
-            </p>
-          </div>
+          ) : (
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 text-center">
+              <p className="text-xs text-slate-400">
+                Cette session est fermée — consultation en lecture seule uniquement
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </div>

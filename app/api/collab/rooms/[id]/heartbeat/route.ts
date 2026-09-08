@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/auth-verify'
+import { captureServerError } from '@/lib/sentry'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,6 +36,7 @@ export async function POST(
     .eq('user_id', userId)
 
   if (error) {
+    captureServerError(error, { route: 'collab/heartbeat', roomId })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 

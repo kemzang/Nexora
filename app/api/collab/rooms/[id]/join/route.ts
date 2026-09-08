@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/auth-verify'
+import { captureServerError } from '@/lib/sentry'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,6 +69,7 @@ export async function POST(
 
     return NextResponse.json({ room, members: members ?? [], joined: true })
   } catch (err) {
+    captureServerError(err, { route: 'collab/join' })
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

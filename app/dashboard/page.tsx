@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import {
   Settings, LogOut, LayoutDashboard, Key, FileText, HelpCircle, ChevronRight,
-  Bell, Menu, X, Activity, Wallet, Users
+  Bell, Menu, X, Activity, Wallet, Users, History, Radio
 } from 'lucide-react'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
@@ -18,12 +18,16 @@ import AbonnementSection from '@/app/dashboard/sections/AbonnementSection'
 import FacturesSection from '@/app/dashboard/sections/FacturesSection'
 import AideSection from '@/app/dashboard/sections/AideSection'
 import CollaborationsSection from '@/app/dashboard/sections/CollaborationsSection'
+import HistoriqueSection from '@/app/dashboard/sections/HistoriqueSection'
+import ActiviteSection from '@/app/dashboard/sections/ActiviteSection'
 import ParametresSection from '@/app/dashboard/sections/ParametresSection'
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Vue d\'ensemble', section: 'dashboard' },
   { icon: Key, label: 'Clés API', section: 'api-keys' },
   { icon: Users, label: 'Collaborations', section: 'collaborations' },
+  { icon: Radio, label: 'Activité', section: 'activite' },
+  { icon: History, label: 'Historique', section: 'historique' },
   { icon: Activity, label: 'Utilisation', section: 'utilisation' },
   { icon: Wallet, label: 'Abonnement', section: 'abonnement' },
   { icon: FileText, label: 'Factures', section: 'factures' },
@@ -34,6 +38,8 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   dashboard: ({ user, onNavigate }) => <OverviewSection user={user} onNavigate={onNavigate} />,
   'api-keys': ({ user }) => <ApiKeysSection />,
   collaborations: () => <CollaborationsSection />,
+  activite: () => <ActiviteSection />,
+  historique: () => <HistoriqueSection />,
   utilisation: () => <UtilisationSection />,
   abonnement: ({ onNavigate }) => <AbonnementSection onNavigate={onNavigate} />,
   factures: () => <FacturesSection />,

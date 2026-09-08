@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/auth-verify'
+import { captureServerError } from '@/lib/sentry'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,10 +52,14 @@ export async function GET(
     if (since) query = query.gt('created_at', since)
 
     const { data: messages, error } = await query
-    if (error) return NextResponse.json({ error: 'Erreur lecture messages' }, { status: 500 })
+    if (error) {
+      captureServerError(error, { route: 'collab/messages', method: 'GET', roomId })
+      return NextResponse.json({ error: 'Erreur lecture messages' }, { status: 500 })
+    }
 
     return NextResponse.json({ messages: messages ?? [] })
   } catch (err) {
+    captureServerError(err, { route: 'collab/messages', method: 'GET' })
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
@@ -92,10 +97,14 @@ export async function POST(
       .select()
       .single()
 
-    if (error || !message) return NextResponse.json({ error: 'Erreur envoi message' }, { status: 500 })
+    if (error || !message) {
+      captureServerError(error, { route: 'collab/messages', method: 'POST', roomId })
+      return NextResponse.json({ error: 'Erreur envoi message' }, { status: 500 })
+    }
 
     return NextResponse.json({ message }, { status: 201 })
   } catch (err) {
+    captureServerError(err, { route: 'collab/messages', method: 'POST' })
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

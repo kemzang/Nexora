@@ -47,28 +47,52 @@ export default function CollaborationsSection() {
 
     const list = (data as Omit<Room, 'memberCount'>[]) || []
 
-    // Count online members (last_seen < 30s) per room
-    const withCounts = await Promise.all(
-      list.map(async (room) => {
-        const cutoff = new Date(Date.now() - 30_000).toISOString()
-        const { count } = await (supabase.from('room_members') as any)
-          .select('*', { count: 'exact', head: true })
-          .eq('room_id', room.id)
-          .gte('last_seen_at', cutoff)
-        return { ...room, memberCount: count ?? 0 }
-      }),
-    )
-    setRooms(withCounts)
+    if (list.length === 0) {
+      setRooms([])
+      setLoading(false)
+      return
+    }
+
+    // Une seule requête pour tous les salons (au lieu d'une par salon) : on
+    // récupère les membres actifs (last_seen_at < 30s) de tous les salons du
+    // propriétaire d'un coup, puis on compte côté client.
+    const cutoff = new Date(Date.now() - 30_000).toISOString()
+    const { data: activeMembers } = await (supabase.from('room_members') as any)
+      .select('room_id')
+      .in('room_id', list.map(r => r.id))
+      .gte('last_seen_at', cutoff)
+
+    const counts = new Map<string, number>()
+    for (const m of (activeMembers as { room_id: string }[]) || []) {
+      counts.set(m.room_id, (counts.get(m.room_id) ?? 0) + 1)
+    }
+
+    setRooms(list.map(room => ({ ...room, memberCount: counts.get(room.id) ?? 0 })))
     setLoading(false)
   }, [])
 
   useEffect(() => {
-    if (user?.id) fetchRooms(user.id)
-    // refresh presence every 15s
-    const t = setInterval(() => {
-      if (user?.id) fetchRooms(user.id)
-    }, 15_000)
-    return () => clearInterval(t)
+    if (!user?.id) return
+    fetchRooms(user.id)
+
+    // Realtime : dès qu'un membre rejoint/quitte ou que son heartbeat met à
+    // jour last_seen_at, on recompte immédiatement — plus besoin d'attendre
+    // le prochain sondage. Un sondage de secours (60s) reste en filet, au
+    // cas où la connexion websocket serait momentanément coupée.
+    const channel = supabase
+      .channel(`dashboard-collab:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'room_members' },
+        () => { if (user.id) void fetchRooms(user.id) },
+      )
+      .subscribe()
+
+    const t = setInterval(() => { if (user.id) fetchRooms(user.id) }, 60_000)
+    return () => {
+      clearInterval(t)
+      void supabase.removeChannel(channel)
+    }
   }, [user?.id, fetchRooms])
 
   const webLink = (room: Room) =>

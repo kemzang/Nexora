@@ -3,7 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { Send, Users, Wifi, WifiOff, ExternalLink, Copy, Check, LogIn } from 'lucide-react'
+
+const PRESENCE_TIMEOUT_MS = 30_000
+const HEARTBEAT_INTERVAL_MS = 10_000
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -94,8 +98,6 @@ export default function CollabRoomPage() {
   const [copied, setCopied] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
-  const esRef = useRef<EventSource | null>(null)
-  const cursorRef = useRef(new Date(Date.now() - 5000).toISOString())
 
   // Pré-remplir le displayName depuis le profil Supabase
   useEffect(() => {
@@ -103,56 +105,70 @@ export default function CollabRoomPage() {
     else if (user?.email) setDisplayName(user.email.split('@')[0])
   }, [user])
 
-  // ── SSE ──
-  const connect = useCallback(() => {
-    if (!joined || !roomId || !authToken) return
-    esRef.current?.close()
+  // ── Présence : snapshot des membres actifs (last_seen_at < 30s) ──
+  const refreshMembers = useCallback(async () => {
+    if (!roomId) return
+    const cutoff = new Date(Date.now() - PRESENCE_TIMEOUT_MS).toISOString()
+    const { data } = await (supabase.from('room_members') as any)
+      .select('user_id, display_name, last_seen_at')
+      .eq('room_id', roomId)
+      .gte('last_seen_at', cutoff)
+    if (data) setMembers(data as CollabMember[])
+  }, [roomId])
 
-    const url = `/api/collab/rooms/${roomId}/stream?since=${encodeURIComponent(cursorRef.current)}`
-    const es = new EventSource(url)
-    esRef.current = es
-
-    es.addEventListener('messages', (e) => {
-      const newMsgs: CollabMessage[] = JSON.parse(e.data)
-      if (newMsgs.length > 0) {
-        cursorRef.current = newMsgs[newMsgs.length - 1].created_at
-        setMessages(prev => {
-          const ids = new Set(prev.map(m => m.id))
-          return [...prev, ...newMsgs.filter(m => !ids.has(m.id))]
-        })
-      }
-    })
-
-    es.addEventListener('presence', (e) => setMembers(JSON.parse(e.data)))
-
-    es.addEventListener('reconnect', (e) => {
-      const data = JSON.parse(e.data)
-      if (data.since) cursorRef.current = data.since
-      es.close()
-      setConnected(false)
-      setTimeout(connect, 100)
-    })
-
-    es.addEventListener('error', (e) => {
-      const data = JSON.parse((e as MessageEvent).data ?? '{}')
-      if (data.code === 'room_inactive') {
-        setConnected(false)
-        es.close()
-      }
-    })
-
-    es.onopen = () => setConnected(true)
-    es.onerror = () => {
-      setConnected(false)
-      es.close()
-      setTimeout(connect, 3000)
-    }
-  }, [joined, roomId, authToken])
-
+  // ── Connexion temps réel : Supabase Realtime remplace le sondage SSE.
+  // room_members reste la source de vérité commune avec le client VS Code
+  // (qui met à jour last_seen_at via son propre heartbeat) — Realtime nous
+  // notifie juste instantanément au lieu de re-sonder toutes les 5s.
   useEffect(() => {
-    if (joined) connect()
-    return () => esRef.current?.close()
-  }, [joined, connect])
+    if (!joined || !roomId || !user) return
+
+    ;(async () => {
+      const { data: msgs } = await (supabase.from('collab_messages') as any)
+        .select('id, sender_id, sender_name, role, content, model_id, created_at')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(200)
+      if (msgs) setMessages(msgs as CollabMessage[])
+      await refreshMembers()
+    })()
+
+    const channel = supabase
+      .channel(`room:${roomId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'collab_messages', filter: `room_id=eq.${roomId}` },
+        (payload: { new: CollabMessage }) => {
+          const msg = payload.new
+          setMessages(prev => (prev.some(m => m.id === msg.id) ? prev : [...prev, msg]))
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'room_members', filter: `room_id=eq.${roomId}` },
+        () => { void refreshMembers() },
+      )
+      .subscribe((status: string) => setConnected(status === 'SUBSCRIBED'))
+
+    return () => { void supabase.removeChannel(channel) }
+  }, [joined, roomId, user, refreshMembers])
+
+  // ── Heartbeat : signale qu'on est toujours actif (comme le fait déjà
+  // l'extension VS Code côté client desktop) — sans ça, un participant qui
+  // rejoint depuis le web disparaissait de la liste "en ligne" au bout de 30s.
+  useEffect(() => {
+    if (!joined || !roomId || !authToken) return
+
+    const beat = () => {
+      fetch(`/api/collab/rooms/${roomId}/heartbeat`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authToken}` },
+      }).catch(() => {})
+    }
+    beat()
+    const t = setInterval(beat, HEARTBEAT_INTERVAL_MS)
+    return () => clearInterval(t)
+  }, [joined, roomId, authToken])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

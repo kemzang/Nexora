@@ -75,10 +75,12 @@ export const MODELS: Record<ModelId, AIModel> = {
     id: 'gemini-flash',
     name: 'Gemini Flash',
     provider: 'Google',
-    apiIdentifier: 'gemini-2.0-flash',
-    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-    inputCostPer1K: 0.00015,
-    outputCostPer1K: 0.0005,
+    // gemini-2.0-flash a été arrêté par Google le 1er juin 2026 (404 sur
+    // generateContent) - gemini-3.8-flash est le modèle Flash stable actuel.
+    apiIdentifier: 'gemini-3.8-flash',
+    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
+    inputCostPer1K: 0.00075,
+    outputCostPer1K: 0.00375,
     contextWindow: 32000,
     capability: 2,
     sortOrder: 2,
@@ -89,10 +91,14 @@ export const MODELS: Record<ModelId, AIModel> = {
     id: 'gemini-pro',
     name: 'Gemini Pro',
     provider: 'Google',
-    apiIdentifier: 'gemini-2.0-pro',
-    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent',
-    inputCostPer1K: 0.001,
-    outputCostPer1K: 0.002,
+    // gemini-2.0-pro n'existe plus (404 sur generateContent, c'était le bug
+    // vu par l'utilisateur). gemini-2.5-pro est le Pro stable actuel, mais
+    // Google a annoncé son arrêt pour le 16 oct. 2026 - à surveiller, il
+    // faudra remigrer avant cette date.
+    apiIdentifier: 'gemini-2.5-pro',
+    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+    inputCostPer1K: 0.00125,
+    outputCostPer1K: 0.01,
     contextWindow: 32000,
     capability: 3,
     sortOrder: 3,

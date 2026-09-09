@@ -28,7 +28,7 @@ declare global {
           items: { priceId: string; quantity: number }[]
           customer?: { email: string }
           customData?: Record<string, unknown>
-          settings?: { successUrl?: string }
+          settings?: { successUrl?: string; theme?: 'light' | 'dark'; locale?: string }
         }) => void
       }
     }
@@ -162,6 +162,11 @@ function CheckoutForm() {
         customData: { user_id: user.id, plan },
         settings: {
           successUrl: `${appUrl}/checkout/callback?provider=paddle&plan=${encodeURIComponent(plan)}`,
+          // Paddle overlay = iframe hébergé sur leur domaine (PCI-DSS) : pas
+          // de CSS custom possible, seul ce thème "dark" intégré est
+          // disponible pour se rapprocher du thème sombre de Nexora plutôt
+          // que le blanc par défaut de Paddle.
+          theme: 'dark',
         },
       })
       setLoading(false)

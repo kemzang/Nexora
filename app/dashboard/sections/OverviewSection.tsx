@@ -102,9 +102,13 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
 
   const statCards = [
     {
+      // Un gros nombre brut ("4 000 000") en avant donne une impression de
+      // trop-beau-pour-être-vrai — le pourcentage restant est ce qui compte
+      // pour décider, le détail brut passe en sous-texte (même logique que
+      // le badge de l'extension : plan + % d'abord, chiffres au clic).
       label: 'Crédits restants',
-      value: stats.tokensRemaining.toLocaleString('fr-FR'),
-      sub: `Sur ${stats.tokensTotal.toLocaleString('fr-FR')} ce mois`,
+      value: `${Math.max(0, 100 - usagePercent)}%`,
+      sub: `${stats.tokensRemaining.toLocaleString('fr-FR')} sur ${stats.tokensTotal.toLocaleString('fr-FR')} ce mois`,
       icon: Zap,
       color: 'text-amber-400',
       bg: 'from-amber-500/20 to-amber-500/5',
@@ -121,8 +125,8 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
     },
     {
       label: 'Utilisation du mois',
-      value: stats.monthlyTokens.toLocaleString('fr-FR'),
-      sub: `${stats.monthlyRequests} requête${stats.monthlyRequests > 1 ? 's' : ''} · ${usagePercent}% du quota`,
+      value: `${usagePercent}%`,
+      sub: `${stats.monthlyRequests} requête${stats.monthlyRequests > 1 ? 's' : ''} · ${stats.monthlyTokens.toLocaleString('fr-FR')} tokens`,
       icon: BarChart3,
       color: 'text-emerald-400',
       bg: 'from-emerald-500/20 to-emerald-500/5',

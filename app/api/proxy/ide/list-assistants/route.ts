@@ -25,11 +25,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://nexora-mu-henna.ver
 function buildModels(plan: PlanId, token: string) {
   const apiBase = `${BASE_URL}/api/proxy/model-proxy`
 
-  // vision = true → la capacité uploadImage est déclarée explicitement, ce que
-  // l'extension lit en priorité pour autoriser l'envoi d'images (sinon bloqué).
+  // capabilities est un TABLEAU de chaînes dans le schéma Zod de
+  // @continuedev/config-yaml (modelCapabilitySchema.array()) - un objet
+  // { uploadImage: true } y échouait avec "Expected array, received object",
+  // erreur FATALE qui invalidait tout le config (donc TOUS les modèles,
+  // quel que soit celui sélectionné - c'est le bug "No chat model selected"
+  // persistant peu importe le choix). tool_use pour tous : sans elle,
+  // modelSupportsNativeTools retombe sur la détection par provider, qui
+  // échoue pour un modèle non-OpenAI servi en API compatible (deepseek-chat
+  // perdait les appels d'outils natifs). image_input en plus pour la vision.
   function m(name: string, model: string, vision = false, provider = 'openai') {
-    const base = { name, model, provider, apiBase, apiKey: token }
-    return vision ? { ...base, capabilities: { uploadImage: true } } : base
+    const capabilities = vision ? ['tool_use', 'image_input'] : ['tool_use']
+    return { name, model, provider, apiBase, apiKey: token, capabilities }
   }
 
   const deepseek    = m('Nexora DeepSeek V3',      'deepseek-chat')           // pas de vision
@@ -104,9 +111,8 @@ export async function GET(req: NextRequest) {
       `models:`,
       ...models.map(m =>
         `  - name: ${m.name}\n    model: ${m.model}\n    provider: ${m.provider}\n    apiBase: ${m.apiBase}` +
-        ((m as { capabilities?: { uploadImage?: boolean } }).capabilities?.uploadImage
-          ? `\n    capabilities:\n      uploadImage: true`
-          : '')
+        `\n    capabilities:\n` +
+        m.capabilities.map(c => `      - ${c}`).join('\n')
       ),
     ].join('\n')
 

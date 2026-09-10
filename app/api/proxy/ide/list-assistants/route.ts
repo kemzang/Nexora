@@ -23,7 +23,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://nexora-mu-henna.ver
 // Each model entry becomes a ModelConfig (AssistantUnrolled.models[]).
 // provider: 'openai' covers all OpenAI-compatible APIs (DeepSeek, etc.).
 function buildModels(plan: PlanId, token: string) {
-  const apiBase = `${BASE_URL}/api/proxy/model-proxy`
+  // L'extension (client OpenAI-compatible) fait apiBase + "/chat/completions"
+  // - il manquait le segment "v1" (la vraie route est
+  // app/api/proxy/model-proxy/v1/chat/completions/route.ts), donc chaque
+  // appel tombait sur le 404 HTML de Next.js au lieu du JSON attendu (d'où
+  // "Unexpected token '<'" côté extension - jamais un JSON valide, quel que
+  // soit le modèle). Un slash final éventuel sur NEXT_PUBLIC_APP_URL est
+  // aussi retiré pour éviter un double "//" dans l'URL finale.
+  const apiBase = `${BASE_URL.replace(/\/$/, '')}/api/proxy/model-proxy/v1`
 
   // capabilities est un TABLEAU de chaînes dans le schéma Zod de
   // @continuedev/config-yaml (modelCapabilitySchema.array()) - un objet

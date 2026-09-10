@@ -39,24 +39,29 @@ function buildModels(plan: PlanId, token: string) {
     return { name, model, provider, apiBase, apiKey: token, capabilities }
   }
 
-  const deepseek    = m('Nexora DeepSeek V3',      'deepseek-chat')           // pas de vision
-  const geminiFlash = m('Nexora Gemini Flash',      'gemini-flash',    true)
-  const geminiPro   = m('Nexora Gemini Pro',        'gemini-pro',      true)
-  const haiku       = m('Nexora Claude Haiku',      'claude-haiku',    true)
-  const sonnet      = m('Nexora Claude Sonnet',     'claude-sonnet',   true)
-  const opus        = m('Nexora Claude Opus',       'claude-opus',     true)
+  const deepseek    = m('DeepSeek V3',      'deepseek-chat')           // pas de vision
+  const geminiFlash = m('Gemini Flash',      'gemini-flash',    true)
+  const geminiPro   = m('Gemini Pro',        'gemini-pro',      true)
+  const haiku       = m('Claude Haiku',      'claude-haiku',    true)
+  const sonnet      = m('Claude Sonnet',     'claude-sonnet',   true)
+  const opus        = m('Claude Opus',       'claude-opus',     true)
 
-  // L'extension prend le 1er modèle de la liste comme défaut → on met le MEILLEUR
-  // modèle (rapport qualité/coût) accessible au plan en tête. DeepSeek reste
-  // disponible (en fin de liste) pour qui veut économiser ses crédits, et sert
-  // toujours d'autocomplétion (FIM rapide et peu coûteux).
+  // Tous les modèles sont toujours visibles et sélectionnables, quel que soit
+  // le plan : selectBestModel() (lib/models.ts, appelé par
+  // /v1/chat/completions) vérifie déjà côté serveur si le modèle choisi fait
+  // partie du plan de l'utilisateur et bascule silencieusement vers le
+  // meilleur modèle disponible sinon (voir preferredModel dans ce fichier).
+  // Cacher certains modèles ici créait une seconde barrière redondante,
+  // contraire à l'intention d'origine : liste ouverte, restriction à
+  // l'usage. Seul l'ORDRE (donc le modèle proposé par défaut) varie selon le
+  // plan, pas la liste elle-même.
   switch (plan) {
     case 'starter':
       // Gemini Flash par défaut (capable, multimodal, peu cher)
-      return { models: [geminiFlash, geminiPro, deepseek], autocomplete: deepseek }
+      return { models: [geminiFlash, geminiPro, deepseek, sonnet, opus, haiku], autocomplete: deepseek }
     case 'pro':
       // Claude Sonnet par défaut (excellent pour l'agent / le code)
-      return { models: [sonnet, geminiPro, haiku, geminiFlash, deepseek], autocomplete: deepseek }
+      return { models: [sonnet, geminiPro, haiku, geminiFlash, deepseek, opus], autocomplete: deepseek }
     case 'business':
       // Claude Sonnet par défaut ; Opus disponible pour le maximum
       return { models: [sonnet, opus, geminiPro, haiku, geminiFlash, deepseek], autocomplete: deepseek }
@@ -65,7 +70,7 @@ function buildModels(plan: PlanId, token: string) {
       return { models: [sonnet, opus, geminiPro, haiku, geminiFlash, deepseek], autocomplete: deepseek }
     default: // free
       // Gemini Flash par défaut au lieu de DeepSeek → bien meilleure 1re impression
-      return { models: [geminiFlash, deepseek], autocomplete: deepseek }
+      return { models: [geminiFlash, deepseek, geminiPro, sonnet, opus, haiku], autocomplete: deepseek }
   }
 }
 

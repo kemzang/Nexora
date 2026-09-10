@@ -91,14 +91,16 @@ export const MODELS: Record<ModelId, AIModel> = {
     id: 'gemini-pro',
     name: 'Gemini Pro',
     provider: 'Google',
-    // gemini-2.0-pro n'existe plus (404 sur generateContent, c'était le bug
-    // vu par l'utilisateur). gemini-2.5-pro est le Pro stable actuel, mais
-    // Google a annoncé son arrêt pour le 16 oct. 2026 - à surveiller, il
-    // faudra remigrer avant cette date.
-    apiIdentifier: 'gemini-2.5-pro',
-    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
-    inputCostPer1K: 0.00125,
-    outputCostPer1K: 0.01,
+    // gemini-2.0-pro puis gemini-2.5-pro (fix précédent) n'existent plus -
+    // Google renvoie désormais lui-même dans son erreur 404 le nom du
+    // modèle de remplacement ("update your code to use
+    // models/gemini-3.1-pro-preview"). Les modèles Gemini tournent vite :
+    // si ça recasse, vérifier le message d'erreur exact de Google avant de
+    // deviner un nom.
+    apiIdentifier: 'gemini-3.1-pro-preview',
+    apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent',
+    inputCostPer1K: 0.001,
+    outputCostPer1K: 0.006,
     contextWindow: 32000,
     capability: 3,
     sortOrder: 3,

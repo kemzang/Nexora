@@ -4,7 +4,13 @@ import { NextRequest, NextResponse } from 'next/server'
 // Uses Upstash Redis when UPSTASH_REDIS_REST_URL is configured (production),
 // falls back to in-memory sliding window for local dev.
 const RATE_WINDOW_MS = 60_000
-const RATE_MAX_REQUESTS = 120
+// Un seul message de chat peut déclencher plusieurs appels sur ce même seau
+// "default" : la complétion elle-même, PLUS une génération de titre
+// (chatDescriber/describe) sur le premier message de chaque session - et
+// si le modèle échoue, le fallback interne (core.ts, llm/complete) retente
+// jusqu'à 2 modèles de plus, chacun comptant à part. 120/60s laissait trop
+// peu de marge pour ce genre de cascade légitime en usage normal.
+const RATE_MAX_REQUESTS = 300
 
 // L'autocomplétion (FIM) tourne en tâche de fond pendant que l'utilisateur
 // tape dans son éditeur — des dizaines de requêtes courtes par minute sont

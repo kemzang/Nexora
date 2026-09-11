@@ -428,10 +428,15 @@ export function selectBestModel(
   const complexity = analyzeComplexity(messages)
   const needsVision = hasImageContent(messages as any[])
 
-  // Si le modèle préféré est disponible dans ce plan et supporte la vision si nécessaire
+  // Le modèle choisi par l'utilisateur est toujours respecté tant qu'il fait
+  // partie de son plan - la "complexité" du message ne doit JAMAIS l'écraser
+  // silencieusement (c'était le bug : un message un peu technique suffisait à
+  // rebasculer vers un autre modèle sans le dire à l'utilisateur). Seule
+  // l'absence de support vision peut forcer un changement, pour éviter
+  // d'envoyer une image à un modèle qui ne peut pas la lire.
   if (preferredModel && availableModels.includes(preferredModel)) {
     const chosen = MODELS[preferredModel]
-    if (chosen.capability >= complexity && (!needsVision || chosen.supportsVision)) {
+    if (!needsVision || chosen.supportsVision) {
       return { model: chosen, complexity, downgraded: false }
     }
   }

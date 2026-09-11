@@ -6,25 +6,52 @@ import { NextRequest, NextResponse } from 'next/server'
 const RATE_WINDOW_MS = 60_000
 const RATE_MAX_REQUESTS = 120
 
+// L'autocomplétion (FIM) tourne en tâche de fond pendant que l'utilisateur
+// tape dans son éditeur — des dizaines de requêtes courtes par minute sont
+// normales et attendues. Avant ce correctif, elle partageait le MÊME
+// compteur `rl:${ip}` que le chat (et web/crawl/collab/keys/payments) :
+// une session de code active pouvait épuiser à elle seule les 120
+// requêtes/60s, laissant le chat bloqué en "429 Rate limit exceeded" en
+// permanence, même après une longue attente — ce n'était jamais une vraie
+// rafale de chat, juste l'autocomplétion qui remplissait le même seau en
+// continu. Seau séparé, plus généreux, pour ne plus jamais affamer le chat.
+const RATE_LIMIT_BUCKETS: Record<string, number> = {
+  autocomplete: 600,
+  default: RATE_MAX_REQUESTS,
+}
+
+function getRateLimitBucket(pathname: string): { bucket: string; max: number } {
+  const isCompletionsPath =
+    pathname.includes('/model-proxy/v1/fim/completions') ||
+    (pathname.includes('/model-proxy/v1/completions') && !pathname.includes('/chat/completions'))
+  if (isCompletionsPath) {
+    return { bucket: 'autocomplete', max: RATE_LIMIT_BUCKETS.autocomplete }
+  }
+  return { bucket: 'default', max: RATE_LIMIT_BUCKETS.default }
+}
+
 // In-memory fallback (single-instance only)
 const localWindows = new Map<string, number[]>()
 
-function localRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+function localRateLimit(ip: string, bucket: string, max: number): { allowed: boolean; remaining: number; resetIn: number } {
   const now = Date.now()
-  const hits = (localWindows.get(ip) ?? []).filter(t => t > now - RATE_WINDOW_MS)
+  const key = `${ip}:${bucket}`
+  const hits = (localWindows.get(key) ?? []).filter(t => t > now - RATE_WINDOW_MS)
   hits.push(now)
-  localWindows.set(ip, hits)
-  const remaining = Math.max(0, RATE_MAX_REQUESTS - hits.length)
+  localWindows.set(key, hits)
+  const remaining = Math.max(0, max - hits.length)
   const resetIn = Math.ceil(((hits[0] ?? now) + RATE_WINDOW_MS - now) / 1000)
-  return { allowed: hits.length <= RATE_MAX_REQUESTS, remaining, resetIn }
+  return { allowed: hits.length <= max, remaining, resetIn }
 }
 
 async function upstashRateLimit(
   ip: string,
+  bucket: string,
+  max: number,
   url: string,
   token: string,
 ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
-  const key = `rl:${ip}`
+  const key = `rl:${ip}:${bucket}`
   const now = Math.floor(Date.now() / 1000)
   const windowStart = now - 60
 
@@ -44,23 +71,23 @@ async function upstashRateLimit(
 
   if (!res.ok) {
     // Upstash unavailable — fail open with in-memory fallback
-    return localRateLimit(ip)
+    return localRateLimit(ip, bucket, max)
   }
 
   const results: { result: number }[] = await res.json()
   const count = results[2]?.result ?? 0
-  const remaining = Math.max(0, RATE_MAX_REQUESTS - count)
-  return { allowed: count <= RATE_MAX_REQUESTS, remaining, resetIn: 60 }
+  const remaining = Math.max(0, max - count)
+  return { allowed: count <= max, remaining, resetIn: 60 }
 }
 
-async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
+async function checkRateLimit(ip: string, bucket: string, max: number): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
   const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
   const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
   if (upstashUrl && upstashToken) {
-    return upstashRateLimit(ip, upstashUrl, upstashToken)
+    return upstashRateLimit(ip, bucket, max, upstashUrl, upstashToken)
   }
-  return localRateLimit(ip)
+  return localRateLimit(ip, bucket, max)
 }
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
@@ -138,7 +165,8 @@ export async function middleware(req: NextRequest) {
       req.headers.get('x-real-ip') ||
       '127.0.0.1'
 
-    const { allowed, remaining, resetIn } = await checkRateLimit(ip)
+    const { bucket, max } = getRateLimitBucket(pathname)
+    const { allowed, remaining, resetIn } = await checkRateLimit(ip, bucket, max)
 
     if (!allowed) {
       return NextResponse.json(
@@ -148,7 +176,7 @@ export async function middleware(req: NextRequest) {
           headers: {
             ...corsHeaders,
             'Retry-After': String(resetIn),
-            'X-RateLimit-Limit': String(RATE_MAX_REQUESTS),
+            'X-RateLimit-Limit': String(max),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + resetIn),
           },
@@ -159,7 +187,7 @@ export async function middleware(req: NextRequest) {
     const res = NextResponse.next()
     Object.entries({
       ...corsHeaders,
-      'X-RateLimit-Limit': String(RATE_MAX_REQUESTS),
+      'X-RateLimit-Limit': String(max),
       'X-RateLimit-Remaining': String(remaining),
       'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + resetIn),
       'X-Accel-Buffering': 'no',
@@ -190,7 +218,9 @@ export async function middleware(req: NextRequest) {
       req.headers.get('x-real-ip') ||
       '127.0.0.1'
 
-    const { allowed, remaining, resetIn } = await checkRateLimit(ip)
+    // Seau dédié : ne partage plus le compteur avec le chat/autocomplete
+    // (avant ce correctif, tout passait par la même clé `rl:${ip}`).
+    const { allowed, remaining, resetIn } = await checkRateLimit(ip, 'payments', RATE_MAX_REQUESTS)
 
     if (!allowed) {
       return NextResponse.json(

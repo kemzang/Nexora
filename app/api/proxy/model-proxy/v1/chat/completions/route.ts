@@ -741,10 +741,15 @@ export async function POST(req: NextRequest) {
 
     if (!upstreamResp.ok) {
       const errorText = await upstreamResp.text()
+      console.error(`[model-proxy] upstream ${upstreamResp.status} from ${selectedModel.id}:`, errorText)
       if (upstreamResp.status === 429) {
         const retryAfter = upstreamResp.headers.get('retry-after') ?? '60'
+        // Le SDK OpenAI ne lit que le champ "error" (chaîne courte) sur les
+        // erreurs de streaming - il ignore silencieusement "details". Sans
+        // le vrai message dedans, la console ne montre jamais que "Upstream
+        // rate limit exceeded" et on ne sait pas CE QUE dit le fournisseur.
         return NextResponse.json(
-          { error: 'Upstream rate limit exceeded', retry_after: parseInt(retryAfter), details: errorText },
+          { error: `Upstream rate limit exceeded (${selectedModel.id}): ${errorText.slice(0, 300)}`, retry_after: parseInt(retryAfter), details: errorText },
           { status: 429, headers: { 'Retry-After': retryAfter } }
         )
       }

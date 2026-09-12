@@ -46,12 +46,16 @@ AS $$
   )::BIGINT
   FROM usage_sessions
   WHERE user_id = p_user_id
-    AND started_at >= p_since;
+    AND started_at >= p_since
+    -- SECURITY DEFINER contourne les policies RLS de usage_sessions : sans ce
+    -- filtre, un utilisateur authentifié pouvait passer l'UUID de n'importe
+    -- qui en p_user_id et lire sa consommation mensuelle (IDOR). Le service
+    -- role (utilisé par le proxy) garde un accès complet.
+    AND (auth.role() = 'service_role' OR auth.uid() = p_user_id);
 $$;
 
 -- Le proxy appelle cette fonction avec la service-role key. On autorise aussi
 -- l'utilisateur authentifié à lire SON propre total (le dashboard en a besoin) ;
--- SECURITY DEFINER est sans risque ici car la fonction filtre sur p_user_id et
--- ne renvoie qu'un agrégat.
+-- le filtre ci-dessus garantit qu'il ne peut lire que sa propre ligne.
 REVOKE ALL ON FUNCTION get_monthly_usage(UUID, TIMESTAMP) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION get_monthly_usage(UUID, TIMESTAMP) TO authenticated, service_role;

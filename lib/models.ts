@@ -329,10 +329,27 @@ export function getEffectiveTokenLimit(planId: PlanId, userCreatedAt?: string): 
   return PLANS[planId].tokensPerMonth
 }
 
+/**
+ * Un message multimodal (image jointe) a un `content` en tableau de parts
+ * ({type: "text"|"image_url", ...}), pas une chaîne - .trim() dessus levait
+ * une TypeError et faisait planter tout /chat/completions en 500 dès qu'une
+ * image était envoyée. On n'en extrait que le texte.
+ */
+function extractText(content: unknown): string {
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) {
+    return content
+      .filter((p: any) => p?.type === 'text' && typeof p.text === 'string')
+      .map((p: any) => p.text)
+      .join(' ')
+  }
+  return ''
+}
+
 function getLastMessage(messages: ComplexMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
-    const content = messages[i]?.content
-    if (content && content.trim().length > 0) return content
+    const content = extractText(messages[i]?.content)
+    if (content.trim().length > 0) return content
   }
   return ''
 }
@@ -418,12 +435,26 @@ export function hasImageContent(messages: any[]): boolean {
   })
 }
 
+/**
+ * Modèles temporairement coupés côté opérations (ex: panne de facturation
+ * chez un fournisseur) - liste d'ids séparés par des virgules dans la var
+ * d'env DISABLED_MODELS. Permet de retirer un modèle en panne du routage
+ * sans déploiement de code, et de le réactiver dès que le fournisseur va
+ * mieux. Lu à chaque appel (pas de cache) pour pouvoir couper/rétablir sans
+ * redémarrer.
+ */
+function getDisabledModels(): Set<string> {
+  const raw = process.env.DISABLED_MODELS ?? ''
+  return new Set(raw.split(',').map(s => s.trim()).filter(Boolean))
+}
+
 export function selectBestModel(
   userPlan: PlanId,
   preferredModel?: ModelId,
   messages: ComplexMessage[] = []
 ): { model: AIModel; complexity: number; downgraded: boolean } {
-  const availableModels = getModelsForPlan(userPlan)
+  const disabled = getDisabledModels()
+  const availableModels = getModelsForPlan(userPlan).filter(id => !disabled.has(id))
   const available = availableModels.map(id => MODELS[id])
   const complexity = analyzeComplexity(messages)
   const needsVision = hasImageContent(messages as any[])

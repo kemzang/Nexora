@@ -66,6 +66,30 @@ jobs:
           path: .next/
           retention-days: 3
 
+  # ── Unit tests ───────────────────────────────────────────────────
+  # Pure functions, no live server needed - runs on every push/PR and
+  # actually gates deploy (unlike the integration job below, which hits
+  # live prod and can't meaningfully block a deploy that hasn't happened
+  # yet). This is what would have caught the selectBestModel bug where an
+  # explicitly-chosen model got silently overridden by a complexity score.
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npx tsx tests/unit/models.test.ts
+
   # ── Integration tests ─────────────────────────────────────────────
   integration:
     name: Proxy Integration Tests
@@ -85,17 +109,21 @@ jobs:
         run: npm ci
 
       - name: Run proxy integration tests
+        # Ces tests tapent la prod déjà en ligne, en parallèle du déploiement
+        # du nouveau code (pas un vrai gate pré-déploiement possible ici) -
+        # mais avant, un échec total passait inaperçu (continue-on-error).
+        # On le garde visible : ce n'est plus silencieux, même si ça ne
+        # bloque encore rien.
         run: npx tsx tests/integration/proxy.test.ts
         env:
           PROXY_URL: https://nexora-mu-henna.vercel.app
           TEST_TOKEN: ${{ secrets.NEXORA_TEST_TOKEN }}
-        continue-on-error: true  # Don't fail CI if integration tests are flaky
 
   # ── Deploy to Vercel (main branch only) ───────────────────────────
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    needs: [typecheck, build]
+    needs: [typecheck, build, unit]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4

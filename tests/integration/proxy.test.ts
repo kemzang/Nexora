@@ -169,6 +169,25 @@ if (TOKEN) {
     expect(body.data.length).toBeGreaterThanOrEqual(1)
   })
 
+  await test('GET /api/proxy/ide/list-assistants → capabilities est un tableau (pas un objet)', async () => {
+    // Régression exacte du bug qui a invalidé TOUS les modèles d'un coup :
+    // le schéma Zod de @continuedev/config-yaml exige capabilities: string[]
+    // - un objet comme {uploadImage: true} fait échouer TOUT le assistantConfig
+    // (donc chaque modèle, quel que soit celui sélectionné), silencieusement
+    // côté extension.
+    const res = await fetch(`${BASE}/api/proxy/ide/list-assistants`, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    const models = body?.[0]?.configResult?.config?.models
+    expect(Array.isArray(models)).toBeTruthy()
+    expect(models.length).toBeGreaterThanOrEqual(1)
+    for (const m of models) {
+      expect(Array.isArray(m.capabilities)).toBeTruthy()
+    }
+  })
+
   await test('POST /api/proxy/model-proxy/v1/chat/completions → 200 (stream=false)', async () => {
     const res = await fetch(`${BASE}/api/proxy/model-proxy/v1/chat/completions`, {
       method: 'POST',

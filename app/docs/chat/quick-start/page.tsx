@@ -133,7 +133,7 @@ export default function ChatQuickStartPage() {
 
       <h2 className="text-xl font-bold mb-4">Sélection automatique du modèle</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Nexora analyse automatiquement la complexité de votre question et sélectionne le modèle le plus adapté parmi ceux disponibles sur votre plan. Pour forcer un modèle précis, utilisez le sélecteur manuel en haut du Chat.
+        Le modèle que vous sélectionnez manuellement en haut du Chat est toujours celui utilisé, tant qu'il fait partie de votre plan — Nexora ne le change jamais tout seul. L'analyse automatique de complexité ne sert qu'en l'absence de choix explicite, ou si le modèle sélectionné n'est plus inclus dans votre plan (bascule alors vers le meilleur modèle disponible).
       </p>
 
       <Callout type="info">

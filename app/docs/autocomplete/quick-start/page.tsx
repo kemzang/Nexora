@@ -154,8 +154,8 @@ export default function AutocompleteQuickStartPage() {
         <Link href="/docs/chat/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
           ← Chat
         </Link>
-        <Link href="/docs/guides/codebase-documentation-awareness" className="text-foreground/70 hover:text-foreground transition-colors">
-          Guide : Documentation projet →
+        <Link href="/docs/agent/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
+          Mode Agent →
         </Link>
       </div>
     </article>

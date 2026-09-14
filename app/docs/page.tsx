@@ -167,11 +167,13 @@ export default function DocsIndexPage() {
           icon={Bot}
           title="Mode Agent"
           desc="Déléguez des tâches de développement complètes à l'IA : création de fichiers, exécution de commandes, modifications multi-fichiers."
+          href="/docs/agent/quick-start"
         />
         <FeatureDocCard
           icon={PenLine}
           title="Édition inline"
           desc="Modifiez une sélection de code directement dans votre fichier courant à partir d'instructions en langage naturel."
+          href="/docs/edit/quick-start"
         />
       </div>
 

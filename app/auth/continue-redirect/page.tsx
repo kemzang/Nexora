@@ -81,9 +81,20 @@ export default function Page() {
 
         const ALLOWED_SCHEMES = ['vscode', 'vscode-insiders', 'vscodium', 'cursor', 'windsurf', 'code-oss', 'trae']
         const rawScheme = urlParams.get('uriScheme') || 'vscode'
-        const scheme = ALLOWED_SCHEMES.includes(rawScheme) ? rawScheme : 'vscode'
 
-        const editorUrl = new URL(`${scheme}://Nexora.nexora/auth`)
+        if (!ALLOWED_SCHEMES.includes(rawScheme)) {
+          // Pas de gestionnaire d'URI personnalise pour cet editeur (JetBrains,
+          // CLI...) : impossible de le relancer via un deep link. On envoie
+          // plutot vers la page qui affiche la cle a copier-coller.
+          const onboarding = urlParams.get('onboarding') === 'true'
+          const target = new URL(`${window.location.origin}/tokens/${onboarding ? 'onboarding-' : ''}callback`)
+          target.searchParams.set('code', data.code)
+          if (state) target.searchParams.set('state', state)
+          window.location.href = target.toString()
+          return
+        }
+
+        const editorUrl = new URL(`${rawScheme}://Nexora.nexora/auth`)
         editorUrl.searchParams.set('code', data.code)
         if (state) editorUrl.searchParams.set('state', state)
 

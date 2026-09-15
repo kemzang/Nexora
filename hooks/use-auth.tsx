@@ -71,7 +71,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (credentials: LoginCredentials) => {
     setLoading(true)
     try {
-      const result = await AuthService.signIn(credentials)
+      // Meme filet de securite que getSession() ailleurs dans le code :
+      // signInWithPassword() peut rester bloque indefiniment (verrou
+      // navigator.locks partage entre onglets du meme navigateur) sans
+      // jamais resoudre ni rejeter, laissant le bouton "Connexion..."
+      // tourner pour toujours sans la moindre erreur.
+      const result = await Promise.race([
+        AuthService.signIn(credentials),
+        new Promise<{ user: null; session: null; error: string }>((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                user: null,
+                session: null,
+                error:
+                  'La connexion prend trop de temps. Ferme les autres onglets Nexora ouverts et réessaie.',
+              }),
+            10000,
+          ),
+        ),
+      ])
       if (result.error) {
         return { error: result.error }
       }

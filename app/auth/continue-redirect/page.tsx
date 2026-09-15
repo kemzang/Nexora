@@ -31,7 +31,17 @@ export default function Page() {
         // getSession() lit la session localement. getUser() faisait un aller-retour
         // reseau sous verrou : quand il ne rendait pas la main, la page restait
         // bloquee sur « Authentification en cours… » indefiniment, sans erreur.
-        const { data: { session } } = await supabase.auth.getSession()
+        // getSession() peut lui aussi rester bloque (verrou navigator.locks
+        // partage entre onglets du meme navigateur, vecu avec plusieurs onglets
+        // ouverts sur le site) : meme filet de securite que pour l'appel reseau
+        // plus bas, sinon le spinner tourne indefiniment sans jamais d'erreur.
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<{ data: { session: null } }>((resolve) =>
+            setTimeout(() => resolve({ data: { session: null } }), 8000),
+          ),
+        ])
+        const { data: { session } } = sessionResult
         if (!session?.access_token) {
           window.location.href = `/auth/login?redirect=${encodeURIComponent(window.location.href)}`
           return

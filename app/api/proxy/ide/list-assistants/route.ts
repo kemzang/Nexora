@@ -41,12 +41,34 @@ function buildModels(plan: PlanId, token: string) {
   // modelSupportsNativeTools retombe sur la détection par provider, qui
   // échoue pour un modèle non-OpenAI servi en API compatible (deepseek-chat
   // perdait les appels d'outils natifs). image_input en plus pour la vision.
-  function m(name: string, model: string, vision = false, provider = 'openai') {
+  // `roles` DOIT être explicite. Sans lui, loadYaml.ts applique
+  // `defaultModelRoles = ["chat", "summarize", "apply", "edit"]` — qui ne
+  // contient PAS "autocomplete". Aucun modèle ne portait donc ce rôle,
+  // `selectedModelByRole.autocomplete` restait vide et l'autocomplétion
+  // retombait sur le modèle de chat (gemini-flash en Free) : elle appelait
+  // alors /v1/completions avec un modèle sans route FIM → HTTP 400
+  // « FIM not supported for model "gemini-flash" ». Seul deepseek-chat a une
+  // route FIM (voir FIM_ROUTES dans v1/completions/route.ts), donc lui seul
+  // porte le rôle autocomplete. À noter : `tabAutocompleteModel` plus bas est
+  // un champ de l'ère config.json, totalement ignoré par le chargeur YAML —
+  // il ne pouvait pas jouer ce rôle.
+  const CHAT_ROLES = ['chat', 'edit', 'apply', 'summarize']
+  const FIM_ROLES = [...CHAT_ROLES, 'autocomplete']
+
+  function m(
+    name: string,
+    model: string,
+    vision = false,
+    provider = 'openai',
+    roles: string[] = CHAT_ROLES,
+  ) {
     const capabilities = vision ? ['tool_use', 'image_input'] : ['tool_use']
-    return { name, model, provider, apiBase, apiKey: token, capabilities }
+    return { name, model, provider, apiBase, apiKey: token, capabilities, roles }
   }
 
-  const deepseek    = m('DeepSeek V3',      'deepseek-chat')           // pas de vision
+  // Seul modèle avec une route FIM côté serveur → seul porteur du rôle
+  // autocomplete.
+  const deepseek    = m('DeepSeek V3',      'deepseek-chat', false, 'openai', FIM_ROLES)
   const geminiFlash = m('Gemini Flash',      'gemini-flash',    true)
   const geminiPro   = m('Gemini Pro',        'gemini-pro',      true)
   const haiku       = m('Claude Haiku',      'claude-haiku',    true)
@@ -124,7 +146,11 @@ export async function GET(req: NextRequest) {
       ...models.map(m =>
         `  - name: ${m.name}\n    model: ${m.model}\n    provider: ${m.provider}\n    apiBase: ${m.apiBase}` +
         `\n    capabilities:\n` +
-        m.capabilities.map(c => `      - ${c}`).join('\n')
+        m.capabilities.map(c => `      - ${c}`).join('\n') +
+        // Les rôles apparaissent aussi dans le YAML affiché, sinon ce que voit
+        // l'utilisateur ne correspond pas à la config réellement appliquée.
+        `\n    roles:\n` +
+        m.roles.map(r => `      - ${r}`).join('\n')
       ),
     ].join('\n')
 

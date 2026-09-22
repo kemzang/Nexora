@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, processLock } from '@supabase/supabase-js'
 import type { Database } from '@/types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -16,5 +16,13 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // Verrou limite a CET onglet. Par defaut Supabase utilise navigator.locks,
+    // partage entre tous les onglets de la meme origine : un onglet Nexora
+    // laisse ouvert retient le verrou, et signInWithPassword() dans un autre
+    // onglet attend indefiniment sans jamais resoudre ni rejeter. Le bouton
+    // tourne, puis le garde-fou de 10 s affiche « la connexion prend trop de
+    // temps ». processLock ne serialise que dans le meme contexte JS, ce qui
+    // suffit ici : chaque onglet a sa propre instance du client.
+    lock: processLock,
   },
 })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendPasswordResetEmail } from '@/lib/resend'
 import { supabase } from '@/lib/supabase/client'
+import { appUrlFromRequest } from '@/lib/appUrl'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Générer le lien de reset via Supabase
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = appUrlFromRequest(req)
     const { error: supaError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${appUrl}/auth/reset-password`,
     })

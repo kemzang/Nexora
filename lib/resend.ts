@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { APP_URL } from '@/lib/appUrl'
 
 export const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -40,7 +41,7 @@ export async function sendPaymentConfirmation({
         </div>
         <p>Votre abonnement est maintenant actif. Profitez de toutes les fonctionnalités de Nexora !</p>
         <div style="text-align: center; margin-top: 32px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Accéder au Dashboard</a>
+          <a href="${APP_URL}/dashboard" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Accéder au Dashboard</a>
         </div>
         <p style="color: #64748b; font-size: 12px; margin-top: 40px; text-align: center;">© 2025 Nexora. Tous droits réservés.</p>
       </div>
@@ -110,7 +111,7 @@ export async function sendWelcomeEmail({
           <li>🔑 Générer votre clé API</li>
         </ul>
         <div style="text-align: center; margin-top: 32px;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Commencer</a>
+          <a href="${APP_URL}/dashboard" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Commencer</a>
         </div>
         <p style="color: #64748b; font-size: 12px; margin-top: 40px; text-align: center;">© 2025 Nexora. Tous droits réservés.</p>
       </div>

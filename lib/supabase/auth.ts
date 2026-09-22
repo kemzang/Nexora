@@ -126,7 +126,14 @@ export class AuthService {
 
   static async resetPassword(request: PasswordResetRequest): Promise<{ error?: string }> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(request.email)
+      // Sans redirectTo explicite, Supabase renvoie vers la « Site URL » du
+      // projet, qui pointe encore sur localhost.
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        request.email,
+        typeof window !== 'undefined'
+          ? { redirectTo: `${window.location.origin}/auth/reset-password` }
+          : undefined,
+      )
       return { error: error?.message }
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' }

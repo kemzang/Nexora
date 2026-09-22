@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { appUrlFromRequest } from '@/lib/appUrl'
 
 // ── Config ───────────────────────────────────────────────────────────────────
 // Card payments only, via Lemon Squeezy's overlay checkout (Lemon.js) — the
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     }
     const name = String(user.user_metadata?.full_name || user.user_metadata?.name || '').slice(0, 100) || undefined
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = appUrlFromRequest(req)
 
     // ── Create the checkout upstream ─────────────────────────────────────────
     let upstreamResp: Response

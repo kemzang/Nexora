@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { initializePayment } from '@/lib/payment'
 import { createClient } from '@supabase/supabase-js'
+import { appUrlFromRequest } from '@/lib/appUrl'
 
 function makeClient(userToken?: string) {
   return createClient(
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Initialize payment ────────────────────────────────────────
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = appUrlFromRequest(req)
     // reference uses only safe chars to avoid injection in Notchpay metadata
     const safePlan = String(plan || 'unknown').replace(/[^a-z0-9_-]/gi, '')
     const reference = `nexora_${safePlan}_${Date.now()}`

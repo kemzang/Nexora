@@ -89,6 +89,41 @@ export default function Page() {
           return
         }
 
+        // Le CLI n'a pas de gestionnaire d'URI : il ouvre un petit serveur sur
+        // la boucle locale et nous passe son adresse. On lui renvoie le code
+        // directement, ce qui lui evite de demander un copier-coller.
+        //
+        // La cible est restreinte a la boucle locale (RFC 8252). Accepter une
+        // adresse quelconque ferait de cette page une redirection ouverte : un
+        // lien piege renverrait le code d'authentification a un tiers, qui
+        // n'aurait plus qu'a l'echanger contre un jeton du compte.
+        const rawRedirect = urlParams.get('redirect_uri')
+        if (rawRedirect) {
+          let loopback: URL | null = null
+          try {
+            const candidate = new URL(rawRedirect)
+            const isLoopback =
+              candidate.protocol === 'http:' &&
+              ['127.0.0.1', 'localhost', '[::1]', '::1'].includes(candidate.hostname)
+            if (isLoopback) loopback = candidate
+          } catch {
+            loopback = null
+          }
+
+          if (!loopback) {
+            setStatus('error')
+            setMessage("Adresse de redirection refusée : seule la boucle locale est autorisée.")
+            return
+          }
+
+          loopback.searchParams.set('code', data.code)
+          if (state) loopback.searchParams.set('state', state)
+          setStatus('success')
+          setMessage('Authentification réussie ! Tu peux revenir à ton terminal.')
+          window.location.href = loopback.toString()
+          return
+        }
+
         const ALLOWED_SCHEMES = ['vscode', 'vscode-insiders', 'vscodium', 'cursor', 'windsurf', 'code-oss', 'trae']
         const rawScheme = urlParams.get('uriScheme') || 'vscode'
 

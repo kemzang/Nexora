@@ -102,7 +102,6 @@ function buildResponse(plan: PlanId, used: number, periodEnd: string | null) {
     // Nexora-specific extras consumed by UsageSection
     plan,
     planLabel: planConfig?.name ?? 'Free',
-    isTestPlan: planConfig?.isTest ?? false,
     tokensUsed: used,
     tokensLimit: limit,
     tokensRemaining: remaining,

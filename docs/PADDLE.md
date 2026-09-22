@@ -112,12 +112,10 @@ Ce n'est qu'une fois ce parcours complet que `PADDLE_ENV=production` a du sens.
 
 ## Plans de test à 1 € et 2 €
 
-`lib/models.ts` définit deux plans courts (`Test 1 semaine` à 1 €, `Test 2
-semaines` à 2 €) qui n'ont **pas** d'identifiant de prix dans
-`PADDLE_PRICE_IDS` (`lib/paddle.ts`). Ils ne sont donc pas achetables en
-l'état.
+Retirés. Ils s'affichaient sur la page de prix avec un bouton actif alors
+qu'aucun identifiant de prix Paddle ne leur correspondait — le checkout ne
+pouvait qu'échouer, et un forfait visible mais non achetable est un motif de
+refus en revue.
 
-Deux options selon ton intention : leur créer un produit dans le catalogue
-Paddle et ajouter les variables correspondantes, ou les retirer de la page de
-prix tant qu'ils ne sont pas branchés — un plan affiché mais non achetable est
-exactement le genre de détail qui fait échouer une revue Paddle.
+La migration `007-remove-test-plans.sql` les supprime de la base. Elle reste à
+exécuter dans le SQL Editor de Supabase.

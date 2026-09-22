@@ -1,7 +1,6 @@
 export type ModelId = 'deepseek-chat' | 'gemini-flash' | 'gemini-pro' | 'claude-haiku' | 'claude-sonnet' | 'claude-opus'
 
-// test1 / test2 : forfaits temporaires de TEST (à désactiver après les tests).
-export type PlanId = 'free' | 'test1' | 'test2' | 'starter' | 'pro' | 'business' | 'enterprise'
+export type PlanId = 'free' | 'starter' | 'pro' | 'business' | 'enterprise'
 
 export interface AIModel {
   id: ModelId
@@ -37,13 +36,11 @@ export interface Plan {
   maxCollaborators: number
   // Durée de l'abonnement en jours. Absent = mensuel (≈30j). Utilisé pour les
   // forfaits test (7j / 14j).
-  durationDays?: number
   models: ModelId[]
   modelsLabel?: string
   features: string[]
   popular?: boolean
   // Forfait de test temporaire (à désactiver après les tests).
-  isTest?: boolean
 }
 
 interface ComplexMessage {
@@ -170,50 +167,6 @@ export const PLANS: Record<PlanId, Plan> = {
       'DeepSeek V3 & Gemini Flash',
       'Chat IA + Autocomplétion',
       'Mode Agent basique',
-    ],
-  },
-  // ── Forfaits de TEST (temporaires, à désactiver après les tests) ──────────
-  test1: {
-    id: 'test1',
-    name: 'Test 1 semaine',
-    nameFr: 'Test 1 semaine',
-    price: 1,
-    priceLabel: '$1',
-    // Petit budget volontaire : sert juste à tester le parcours payant.
-    tokensPerMonth: 30000,
-    maxRequestsPerDay: 200,
-    webSearchesPerMonth: 50,
-    webCrawlsPerMonth: 8,
-    maxCollaborators: 2,
-    durationDays: 7,
-    isTest: true,
-    models: ['deepseek-chat', 'gemini-flash', 'gemini-pro', 'claude-haiku'],
-    features: [
-      'Forfait de test — 1 semaine',
-      '30K crédits (test)',
-      'DeepSeek, Gemini, Claude Haiku',
-      'Jusqu’à 2 personnes en collaboration',
-    ],
-  },
-  test2: {
-    id: 'test2',
-    name: 'Test 2 semaines',
-    nameFr: 'Test 2 semaines',
-    price: 2,
-    priceLabel: '$2',
-    tokensPerMonth: 50000,
-    maxRequestsPerDay: 200,
-    webSearchesPerMonth: 80,
-    webCrawlsPerMonth: 12,
-    maxCollaborators: 2,
-    durationDays: 14,
-    isTest: true,
-    models: ['deepseek-chat', 'gemini-flash', 'gemini-pro', 'claude-haiku'],
-    features: [
-      'Forfait de test — 2 semaines',
-      '50K crédits (test)',
-      'DeepSeek, Gemini, Claude Haiku',
-      'Jusqu’à 2 personnes en collaboration',
     ],
   },
   starter: {

@@ -38,8 +38,6 @@ declare global {
 /* ─── Plan config ────────────────────────────────────────────────── */
 const PLAN_COLORS: Record<string, string> = {
   free: '#94a3b8',
-  test1: '#94a3b8',
-  test2: '#94a3b8',
   starter: '#38bdf8',
   pro: '#f59e0b',
   business: '#10b981',

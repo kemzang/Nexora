@@ -95,8 +95,6 @@ const createdAtCache = new BoundedTtlMap<{
  */
 const MAX_TOKENS_PER_PLAN: Record<PlanId, number> = {
   free: 4096,
-  test1: 8192,
-  test2: 8192,
   starter: 8192,
   pro: 16384,
   business: 32768,

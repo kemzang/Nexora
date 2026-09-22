@@ -18,8 +18,6 @@ const PLAN_ORDER: PlanId[] = ['free', 'starter', 'pro', 'business', 'enterprise'
 
 const CTA_TEXT: Record<PlanId, string> = {
   free: 'Commencer gratuitement',
-  test1: 'Choisir',
-  test2: 'Choisir',
   starter: 'Choisir Starter',
   pro: 'Choisir Pro',
   business: 'Choisir Business',

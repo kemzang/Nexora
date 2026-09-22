@@ -11,6 +11,7 @@
 appliqué en réduction sur l'ABONNEMENT du parrain. Ce ne sont PAS des tokens.**
 
 Conséquences directes :
+
 - ❌ Aucune logique de tokens / modèles / quotas à toucher.
 - ❌ **Aucun changement côté extension** (VS Code / JetBrains / CLI).
 - ✅ C'est **uniquement de la facturation côté site** (appliqué au checkout).
@@ -26,16 +27,15 @@ Le parrain reçoit un crédit **quand son filleul effectue son 1er paiement d'un
 vrai plan**, selon le plan souscrit :
 
 | Plan souscrit par le filleul | Crédit donné au parrain |
-|------------------------------|-------------------------|
+| ---------------------------- | ----------------------- |
 | Starter ($5)                 | **$0.50**               |
 | Pro ($12)                    | **$1.00**               |
 | Business ($30)               | **$1.00**               |
 | Enterprise ($80)             | **$1.00**               |
 | Free                         | **$0** (exclu)          |
-| test1 / test2 ($1 / $2)      | **$0** (exclus — sinon perte) |
 
 > Mapping à coder (slug → montant) :
-> `{ starter: 0.50, pro: 1, business: 1, enterprise: 1, free: 0, test1: 0, test2: 0 }`
+> `{ starter: 0.50, pro: 1, business: 1, enterprise: 1, free: 0 }`
 
 ---
 
@@ -79,15 +79,18 @@ vrai plan**, selon le plan souscrit :
 ## 5. Modèle de données (Supabase)
 
 ### a) `user_profiles` (ou table équivalente) — ajouts
+
 ```sql
 ALTER TABLE user_profiles ADD COLUMN referral_code VARCHAR(16) UNIQUE;     -- code du user
 ALTER TABLE user_profiles ADD COLUMN referred_by UUID REFERENCES auth.users(id); -- qui l'a parrainé
 ALTER TABLE user_profiles ADD COLUMN referral_balance NUMERIC(10,2) NOT NULL DEFAULT 0; -- solde $ utilisable
 ALTER TABLE user_profiles ADD COLUMN referral_reward_granted BOOLEAN NOT NULL DEFAULT false; -- récompense déjà versée pour CE filleul ?
 ```
+
 > Générer `referral_code` à la création du compte (ex: 8 caractères alphanum).
 
 ### b) `referrals` — journal des récompenses (audit + idempotence)
+
 ```sql
 CREATE TABLE referrals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -106,6 +109,7 @@ CREATE TABLE referrals (
 ## 6. Intégration au checkout (déduction du solde)
 
 Dans `app/api/payments/initialize` (ou au moment de fixer le montant) :
+
 - récupérer `referral_balance` du payeur,
 - `montant_final = max(0, prix_plan - referral_balance)`,
 - si `montant_final == 0` : activer l'abonnement directement sans passer par
@@ -130,6 +134,7 @@ si (le filleul a un referred_by)
      -> user_profiles[referred_by].referral_balance += reward
      -> user_profiles[filleul].referral_reward_granted = true
 ```
+
 Idempotent grâce à `referrals.UNIQUE(referred_id)`.
 
 ---

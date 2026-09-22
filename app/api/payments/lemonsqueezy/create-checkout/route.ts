@@ -12,8 +12,6 @@ const UPSTREAM_TIMEOUT_MS = 15_000
 
 // One product variant per paid plan, created in the Lemon Squeezy dashboard.
 const VARIANT_ENV: Record<string, string | undefined> = {
-  test1: process.env.LEMONSQUEEZY_VARIANT_TEST1,
-  test2: process.env.LEMONSQUEEZY_VARIANT_TEST2,
   starter: process.env.LEMONSQUEEZY_VARIANT_STARTER,
   pro: process.env.LEMONSQUEEZY_VARIANT_PRO,
   business: process.env.LEMONSQUEEZY_VARIANT_BUSINESS,

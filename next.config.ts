@@ -2,6 +2,28 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        // L'ancienne adresse de demonstration reste servie par Vercel : elle
+        // est encore codee dans les extensions deja installees, qui cesseraient
+        // de fonctionner si on la debranchait. Mais un utilisateur ne doit plus
+        // y atterrir — un lien d'e-mail un peu ancien y menait encore, et il y
+        // restait ensuite, toute la navigation etant relative.
+        //
+        // Les chemins /api/ sont volontairement EXCLUS : une redirection sur un
+        // POST fait perdre le corps de la requete selon le client HTTP, ce qui
+        // casserait les appels au proxy de modeles depuis les extensions
+        // installees. Elles continuent donc d'etre servies directement.
+        source: '/((?!api/).*)',
+        has: [{ type: 'host', value: 'nexora-mu-henna.vercel.app' }],
+        destination: 'https://nexoracoding.com/:1',
+        // Temporaire : tant que d'anciennes versions pointent encore ici, on ne
+        // veut pas que les navigateurs memorisent la redirection pour toujours.
+        permanent: false,
+      },
+    ]
+  },
   async headers() {
     // Ces pages font partie du flux d'authentification des editeurs
     // (IntelliJ/CLI/VS Code) : un cache CDN qui sert une version perimee

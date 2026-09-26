@@ -15,7 +15,7 @@ tant qu'ils ne sont pas faits.
 
 Paddle vérifie **le site à l'adresse que tu déclares**. Deux conséquences :
 
-1. Si tu soumets `nexora-mu-henna.vercel.app` puis déménages vers
+1. Si tu soumets `nexoracoding.com` puis déménages vers
    `nexoracoding.com`, la vérification est à refaire — et elle prend plusieurs
    jours ouvrés.
 2. Paddle.js refuse d'ouvrir le checkout depuis un domaine absent de la liste

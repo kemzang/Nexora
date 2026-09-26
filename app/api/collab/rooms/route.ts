@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { verifyToken } from '@/lib/auth-verify'
 import { PLANS, type PlanId } from '@/lib/models'
 import { captureServerError } from '@/lib/sentry'
+import { appUrlFromRequest } from '@/lib/appUrl'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
       display_name: displayName?.trim() || 'Propriétaire',
     })
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nexora-mu-henna.vercel.app'
+    const baseUrl = appUrlFromRequest(req)
     const inviteLink = `vscode://nexora/collab?room=${room.id}&token=${inviteToken}`
     const webLink = `${baseUrl}/collab/${room.id}?token=${inviteToken}`
 

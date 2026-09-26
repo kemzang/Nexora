@@ -42,7 +42,7 @@ vrai plan**, selon le plan souscrit :
 ## 3. Flux complet
 
 1. **Chaque utilisateur a un code de parrainage** unique (ex: `BRYAN42`) et un
-   lien : `https://nexora-mu-henna.vercel.app/?ref=BRYAN42`.
+   lien : `https://nexoracoding.com/?ref=BRYAN42`.
 2. Un visiteur arrive via ce lien → on stocke le code (cookie/localStorage)
    jusqu'à l'inscription.
 3. À l'**inscription**, on enregistre `referred_by = <id du parrain>` sur le

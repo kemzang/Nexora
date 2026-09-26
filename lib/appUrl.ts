@@ -14,11 +14,20 @@
  * À changer ici lors du passage au domaine definitif — comme
  * `DEFAULT_SITE_URL` cote extensions (core/nexora/urls.ts et NexoraUrls.kt).
  */
-const PRODUCTION_URL = 'https://nexora-mu-henna.vercel.app'
+const PRODUCTION_URL = 'https://nexoracoding.com'
 
-/** Adresse du site, sans barre oblique finale. */
+/**
+ * Adresse du site, sans barre oblique finale.
+ *
+ * Deux noms de variable coexistaient dans le code — NEXT_PUBLIC_APP_URL et
+ * NEXT_PUBLIC_SITE_URL — selon les fichiers. Les deux sont acceptes ici pour
+ * qu'aucune configuration existante ne se retrouve ignoree au passage a cette
+ * source unique.
+ */
 export const APP_URL: string = (
-  process.env.NEXT_PUBLIC_APP_URL || PRODUCTION_URL
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  PRODUCTION_URL
 ).replace(/\/+$/, '')
 
 /**
@@ -32,7 +41,7 @@ export function appUrlFromRequest(req: {
   headers: { get(name: string): string | null }
   nextUrl?: { origin: string }
 }): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
+  if (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL) {
     return APP_URL
   }
   const origin = req.headers.get('origin') ?? req.nextUrl?.origin

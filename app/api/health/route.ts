@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     services: checks,
     providers,
-    proxy: 'nexora-mu-henna.vercel.app',
+    proxy: 'nexoracoding.com',
   }
 
   return NextResponse.json(body, {

@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/components/ui/toast'
+import { APP_URL } from '@/lib/appUrl'
 
 interface Room {
   id: string
@@ -21,7 +22,7 @@ interface Room {
 }
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://nexora-mu-henna.vercel.app'
+  APP_URL
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('fr-FR', {

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/auth-verify'
 import { type PlanId } from '@/lib/models'
+import { APP_URL } from '@/lib/appUrl'
 
 export const runtime = 'nodejs'
 
@@ -18,7 +19,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://nexora-mu-henna.vercel.app'
+const BASE_URL = APP_URL
 
 // Each model entry becomes a ModelConfig (AssistantUnrolled.models[]).
 // provider: 'openai' covers all OpenAI-compatible APIs (DeepSeek, etc.).

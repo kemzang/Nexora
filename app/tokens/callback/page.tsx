@@ -173,7 +173,7 @@ function CallbackContent() {
 
           <div className="h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
           <div className="px-8 py-4 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground/50">nexora-mu-henna.vercel.app</p>
+            <p className="text-xs text-muted-foreground/50">nexoracoding.com</p>
             <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span>Secure</span>

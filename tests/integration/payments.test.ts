@@ -2,10 +2,10 @@
  * Integration tests for payment routes (runs against live deployment).
  *
  * Usage:
- *   PROXY_URL=https://nexora-mu-henna.vercel.app npx tsx tests/integration/payments.test.ts
+ *   PROXY_URL=https://nexoracoding.com npx tsx tests/integration/payments.test.ts
  */
 
-const BASE = process.env.PROXY_URL || 'https://nexora-mu-henna.vercel.app'
+const BASE = process.env.PROXY_URL || 'https://nexoracoding.com'
 
 type TestResult = { name: string; passed: boolean; ms: number; info?: string }
 const results: TestResult[] = []

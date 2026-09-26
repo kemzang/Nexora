@@ -2,13 +2,13 @@
  * Integration tests for the Nexora proxy (runs against live deployment).
  *
  * Usage:
- *   PROXY_URL=https://nexora-mu-henna.vercel.app TEST_TOKEN=nxr_... npx tsx tests/integration/proxy.test.ts
+ *   PROXY_URL=https://nexoracoding.com TEST_TOKEN=nxr_... npx tsx tests/integration/proxy.test.ts
  *
  * In CI:
  *   npx tsx tests/integration/proxy.test.ts
  */
 
-const BASE = process.env.PROXY_URL || 'https://nexora-mu-henna.vercel.app'
+const BASE = process.env.PROXY_URL || 'https://nexoracoding.com'
 const TOKEN = process.env.TEST_TOKEN || ''
 
 type TestResult = { name: string; passed: boolean; ms: number; info?: string }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
-import { selectBestModel, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, type ModelId, type PlanId } from '@/lib/models'
+import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, type AIModel, type ModelId, type PlanId } from '@/lib/models'
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
 
@@ -682,77 +682,127 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { model: selectedModel, complexity, downgraded } = selectBestModel(userPlan, preferredModel as ModelId, messages)
-    const route = API_ROUTES[selectedModel.id]
-    if (!route) return NextResponse.json({ error: `Model ${selectedModel.id} not configured` }, { status: 500 })
+    const { candidates, complexity, downgraded: plannedDowngrade } =
+      getFailoverCandidates(userPlan, preferredModel as ModelId, messages)
 
-    // Si le modèle retenu ne supporte pas la vision mais que les messages contiennent des images,
-    // on strip les parties image pour éviter une erreur 400 côté provider.
-    // Si le modèle retenu ne supporte pas la vision, stripper les images pour éviter une erreur 400.
-    const effectiveMessages = (hasImageContent(messages) && !selectedModel.supportsVision)
-      ? (messages as any[]).map((msg: any) => {
-          if (!Array.isArray(msg.content)) return msg
-          const textParts = msg.content.filter((p: any) => p.type !== 'image_url' && p.type !== 'image')
-          const text = textParts.map((p: any) => p.text ?? '').join(' ').trim()
-          return { ...msg, content: text || '[Image non supportée par ce modèle]' }
-        })
-      : messages
-
-    const apiKey = process.env[route.keyEnv]
-    if (!apiKey) return NextResponse.json({ error: 'Server API key not configured' }, { status: 500 })
+    if (candidates.length === 0) {
+      return NextResponse.json({ error: 'No model available for this plan' }, { status: 500 })
+    }
 
     const maxTokens = Math.min(rest.max_tokens ?? MAX_TOKENS_PER_PLAN[userPlan] ?? 4096, MAX_TOKENS_PER_PLAN[userPlan] ?? 4096)
 
-    // Build and send upstream request
-    let upstreamResp: Response
+    /** Retire les images quand le modèle retenu ne sait pas les lire (sinon 400 côté provider). */
+    const messagesFor = (model: AIModel) =>
+      hasImageContent(messages) && !model.supportsVision
+        ? (messages as any[]).map((msg: any) => {
+            if (!Array.isArray(msg.content)) return msg
+            const textParts = msg.content.filter((p: any) => p.type !== 'image_url' && p.type !== 'image')
+            const text = textParts.map((p: any) => p.text ?? '').join(' ').trim()
+            return { ...msg, content: text || '[Image non supportée par ce modèle]' }
+          })
+        : messages
 
-    if (route.format === 'openai') {
-      upstreamResp = await fetch(route.baseUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({ ...rest, model: selectedModel.apiIdentifier, messages: effectiveMessages, stream, max_tokens: maxTokens }),
-      })
-    } else if (route.format === 'anthropic') {
-      const anthropicBody = buildAnthropicBody({ ...rest, messages: effectiveMessages, stream, max_tokens: maxTokens }, selectedModel.apiIdentifier)
-      upstreamResp = await fetch(route.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify(anthropicBody),
-      })
-    } else {
-      // Gemini
-      const geminiBody = buildGeminiBody({ ...rest, messages: effectiveMessages, max_tokens: maxTokens })
-      const modelPath = selectedModel.apiIdentifier
+    const sendUpstream = (model: AIModel, modelRoute: any, apiKey: string, msgs: any[]) => {
+      if (modelRoute.format === 'openai') {
+        return fetch(modelRoute.baseUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({ ...rest, model: model.apiIdentifier, messages: msgs, stream, max_tokens: maxTokens }),
+        })
+      }
+      if (modelRoute.format === 'anthropic') {
+        const anthropicBody = buildAnthropicBody({ ...rest, messages: msgs, stream, max_tokens: maxTokens }, model.apiIdentifier)
+        return fetch(modelRoute.baseUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify(anthropicBody),
+        })
+      }
+      const geminiBody = buildGeminiBody({ ...rest, messages: msgs, max_tokens: maxTokens })
       const endpoint = stream
-        ? `${route.baseUrl}/models/${modelPath}:streamGenerateContent?alt=sse`
-        : `${route.baseUrl}/models/${modelPath}:generateContent`
-      upstreamResp = await fetch(endpoint, {
+        ? `${modelRoute.baseUrl}/models/${model.apiIdentifier}:streamGenerateContent?alt=sse`
+        : `${modelRoute.baseUrl}/models/${model.apiIdentifier}:generateContent`
+      return fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify(geminiBody),
       })
     }
 
-    if (!upstreamResp.ok) {
-      const errorText = await upstreamResp.text()
-      console.error(`[model-proxy] upstream ${upstreamResp.status} from ${selectedModel.id}:`, errorText)
-      if (upstreamResp.status === 429) {
-        const retryAfter = upstreamResp.headers.get('retry-after') ?? '60'
+    // Une panne de fournisseur ne doit pas remonter a l'utilisateur tant qu'un
+    // autre modele de son plan peut repondre. On se limite a trois tentatives :
+    // au-dela, l'attente cumulee coute plus cher a l'utilisateur que l'echec.
+    const MAX_ATTEMPTS = 3
+    /** 429 = quota fournisseur, 5xx = panne passagere. Les deux valent un autre modele. */
+    const worthRetrying = (status: number) => status === 429 || status >= 500
+
+    let selectedModel: AIModel | null = null
+    let route: any = null
+    let upstreamResp: Response | null = null
+    let effectiveMessages: any[] = messages
+    let lastFailure: { status: number; text: string; modelId: string } | null = null
+    const attempted: string[] = []
+
+    for (const candidate of candidates.slice(0, MAX_ATTEMPTS)) {
+      const candidateRoute = API_ROUTES[candidate.id]
+      if (!candidateRoute) continue
+
+      const apiKey = process.env[candidateRoute.keyEnv]
+      // Cle absente = modele non deployable : on passe au suivant plutot que
+      // de renvoyer une erreur serveur alors qu'un autre modele repondrait.
+      if (!apiKey) continue
+
+      attempted.push(candidate.id)
+      const msgs = messagesFor(candidate)
+      const resp = await sendUpstream(candidate, candidateRoute, apiKey, msgs)
+
+      if (resp.ok) {
+        selectedModel = candidate
+        route = candidateRoute
+        upstreamResp = resp
+        effectiveMessages = msgs
+        break
+      }
+
+      const errorText = await resp.text()
+      console.error(`[model-proxy] upstream ${resp.status} from ${candidate.id}:`, errorText)
+      lastFailure = { status: resp.status, text: errorText, modelId: candidate.id }
+
+      // Erreur imputable a la requete (400, 401, 403...) : reessayer ailleurs
+      // donnerait le meme resultat.
+      if (!worthRetrying(resp.status)) break
+    }
+
+    if (!selectedModel || !route || !upstreamResp) {
+      if (!lastFailure) {
+        return NextResponse.json({ error: 'No model available for this plan' }, { status: 500 })
+      }
+      if (lastFailure.status === 429) {
         // Le SDK OpenAI ne lit que le champ "error" (chaîne courte) sur les
         // erreurs de streaming - il ignore silencieusement "details". Sans
         // le vrai message dedans, la console ne montre jamais que "Upstream
         // rate limit exceeded" et on ne sait pas CE QUE dit le fournisseur.
         return NextResponse.json(
-          { error: `Upstream rate limit exceeded (${selectedModel.id}): ${errorText.slice(0, 300)}`, retry_after: parseInt(retryAfter), details: errorText },
-          { status: 429, headers: { 'Retry-After': retryAfter } }
+          {
+            error: `Tous les modèles disponibles sont saturés (essayés : ${attempted.join(', ')}). Dernier retour de ${lastFailure.modelId} : ${lastFailure.text.slice(0, 200)}`,
+            retry_after: 60,
+            models_attempted: attempted,
+            details: lastFailure.text,
+          },
+          { status: 429, headers: { 'Retry-After': '60' } }
         )
       }
-      return NextResponse.json({ error: errorText }, { status: upstreamResp.status })
+      return NextResponse.json({ error: lastFailure.text }, { status: lastFailure.status })
     }
+
+    // Vrai pour l'utilisateur : le modele qui repond n'est pas celui demande,
+    // que ce soit a cause du plan ou d'un fournisseur saturé.
+    const downgraded = plannedDowngrade || (!!preferredModel && selectedModel.id !== preferredModel)
+    const failedOver = attempted.length > 1
 
     // Usage tracking context — credits are weighted by the model's cost multiplier
     const inputTokens = estimateTokens(messages)
@@ -774,6 +824,11 @@ export async function POST(req: NextRequest) {
       'X-Nexora-Model': selectedModel.id,
       'X-Nexora-Downgraded': String(downgraded),
       'X-Nexora-Complexity': String(complexity),
+      // Distingue « pas dans ton plan » de « le fournisseur etait saturé » :
+      // le client peut ainsi l'expliquer au lieu de laisser croire que le
+      // modele demande a repondu.
+      'X-Nexora-Failover': String(failedOver),
+      'X-Nexora-Requested-Model': (preferredModel as string) || selectedModel.id,
     }
 
     // Helper: estimate output tokens from a non-streamed OpenAI-format completion
@@ -793,7 +848,14 @@ export async function POST(req: NextRequest) {
       }
       const json = await upstreamResp.json()
       await recordFromJson(json)
-      return NextResponse.json(json, { headers: { 'X-Nexora-Model': selectedModel.id } })
+      return NextResponse.json(json, {
+        headers: {
+          'X-Nexora-Model': selectedModel.id,
+          'X-Nexora-Downgraded': String(downgraded),
+          'X-Nexora-Failover': String(failedOver),
+          'X-Nexora-Requested-Model': (preferredModel as string) || selectedModel.id,
+        },
+      })
     }
 
     // For Anthropic: convert SSE or JSON to OpenAI format

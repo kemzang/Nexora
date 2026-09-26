@@ -445,6 +445,50 @@ export function selectBestModel(
   }
 }
 
+/**
+ * Modèles à essayer, dans l'ordre, pour une requête donnée.
+ *
+ * Le premier élément est celui que `selectBestModel` aurait retenu ; les
+ * suivants sont les autres modèles du plan, du plus adapté au moins adapté.
+ *
+ * Pourquoi une liste plutôt qu'un seul modèle : le choix se faisait une fois
+ * pour toutes avant l'appel. Si le fournisseur retenu était saturé (429 de
+ * Google, d'Anthropic…), l'erreur brute repartait telle quelle vers
+ * l'utilisateur — alors que d'autres modèles de son plan, chez d'autres
+ * fournisseurs, étaient disponibles. Le repli par plan existait, le repli par
+ * panne n'existait pas.
+ */
+export function getFailoverCandidates(
+  userPlan: PlanId,
+  preferredModel?: ModelId,
+  messages: ComplexMessage[] = []
+): { candidates: AIModel[]; complexity: number; downgraded: boolean } {
+  const { model: first, complexity, downgraded } = selectBestModel(
+    userPlan,
+    preferredModel,
+    messages
+  )
+
+  const disabled = getDisabledModels()
+  const needsVision = hasImageContent(messages as any[])
+
+  const rest = getModelsForPlan(userPlan)
+    .filter(id => !disabled.has(id) && id !== first.id)
+    .map(id => MODELS[id])
+    // Une requête avec image ne doit pas retomber sur un modèle aveugle : il
+    // répondrait à côté au lieu d'échouer franchement.
+    .filter(m => m && (!needsVision || m.supportsVision))
+    .sort((a, b) => {
+      const aEnough = a.capability >= complexity ? 0 : 1
+      const bEnough = b.capability >= complexity ? 0 : 1
+      if (aEnough !== bEnough) return aEnough - bEnough
+      if (aEnough === 0) return a.sortOrder - b.sortOrder
+      return b.capability - a.capability
+    })
+
+  return { candidates: [first, ...rest], complexity, downgraded }
+}
+
 export function estimateTokens(messages: { content?: string }[]): number {
   let total = 0
   for (const msg of messages) {

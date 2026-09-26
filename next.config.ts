@@ -15,9 +15,12 @@ const nextConfig: NextConfig = {
         // POST fait perdre le corps de la requete selon le client HTTP, ce qui
         // casserait les appels au proxy de modeles depuis les extensions
         // installees. Elles continuent donc d'etre servies directement.
-        source: '/((?!api/).*)',
+        // Groupe NOMME obligatoire : avec une capture anonyme `/((?!api/).*)`,
+        // Next.js ne substitue rien et la destination sort litteralement
+        // « /:1 » — verifie en production.
+        source: '/:path((?!api/).*)',
         has: [{ type: 'host', value: 'nexora-mu-henna.vercel.app' }],
-        destination: 'https://nexoracoding.com/:1',
+        destination: 'https://nexoracoding.com/:path',
         // Temporaire : tant que d'anciennes versions pointent encore ici, on ne
         // veut pas que les navigateurs memorisent la redirection pour toujours.
         permanent: false,

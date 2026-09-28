@@ -60,6 +60,7 @@ const DICT: Record<Lang, {
   vscodeCta: string
   jetbrainsDesc: string
   jetbrainsCta: string
+  comingSoon: string
   cliDesc: string
   cliHint: string
   copied: string
@@ -72,6 +73,7 @@ const DICT: Record<Lang, {
     vscodeCta: 'Installer sur VS Code',
     jetbrainsDesc: 'Un seul plugin pour IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion et plus.',
     jetbrainsCta: 'JetBrains Marketplace',
+    comingSoon: 'Bientôt disponible',
     cliDesc: 'L\'agent Nexora directement dans ton terminal — idéal pour les scripts, le CI/CD et les serveurs distants.',
     cliHint: 'Installe en une commande',
     copied: 'Copié !',
@@ -84,6 +86,7 @@ const DICT: Record<Lang, {
     vscodeCta: 'Install on VS Code',
     jetbrainsDesc: 'One plugin for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion and more.',
     jetbrainsCta: 'JetBrains Marketplace',
+    comingSoon: 'Coming soon',
     cliDesc: 'The Nexora agent right in your terminal — perfect for scripts, CI/CD and remote servers.',
     cliHint: 'Install in one command',
     copied: 'Copied!',
@@ -96,6 +99,7 @@ const DICT: Record<Lang, {
     vscodeCta: 'Instalar en VS Code',
     jetbrainsDesc: 'Un solo plugin para IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion y más.',
     jetbrainsCta: 'JetBrains Marketplace',
+    comingSoon: 'Próximamente',
     cliDesc: 'El agente Nexora en tu terminal — ideal para scripts, CI/CD y servidores remotos.',
     cliHint: 'Instala con un comando',
     copied: '¡Copiado!',
@@ -108,6 +112,7 @@ const DICT: Record<Lang, {
     vscodeCta: 'Instalar no VS Code',
     jetbrainsDesc: 'Um único plugin para IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion e mais.',
     jetbrainsCta: 'JetBrains Marketplace',
+    comingSoon: 'Em breve',
     cliDesc: 'O agente Nexora no seu terminal — ideal para scripts, CI/CD e servidores remotos.',
     cliHint: 'Instale com um comando',
     copied: 'Copiado!',
@@ -119,9 +124,16 @@ const JETBRAINS_IDES = [
   'GoLand', 'Rider', 'CLion', 'RubyMine', 'DataGrip', 'Android Studio',
 ]
 
-const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=Nexora.nexora'
+const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=nexoracoding.nexora'
 const JETBRAINS_URL = 'https://plugins.jetbrains.com/plugin/nexora'
-const CLI_INSTALL = 'npm install -g @nexora/cli'
+
+// Ces deux places de marche ne servent pas encore l'extension : les liens
+// renvoyaient un 404 a quiconque cliquait « Installer sur VS Code ». Promettre
+// trois installations dont deux mènent a une page d'erreur est pire que d'en
+// annoncer une seule. Passer a `true` le jour de la publication.
+const VSCODE_PUBLISHED = false
+const JETBRAINS_PUBLISHED = false
+const CLI_INSTALL = 'npm install -g @nexoracoding/cli'
 
 export function PlatformsSection({ lang }: { lang: Lang }) {
   const t = DICT[lang] ?? DICT.fr
@@ -152,9 +164,9 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <motion.a
-          href={VSCODE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(VSCODE_PUBLISHED
+            ? { href: VSCODE_URL, target: '_blank', rel: 'noopener noreferrer' }
+            : {})}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
@@ -170,15 +182,21 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed flex-1">{t.vscodeDesc}</p>
           <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
-            {t.vscodeCta}
-            <ArrowRight className="w-4 h-4" />
+            {VSCODE_PUBLISHED ? (
+              <>
+                {t.vscodeCta}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            ) : (
+              <span className="text-muted-foreground">{t.comingSoon}</span>
+            )}
           </div>
         </motion.a>
 
         <motion.a
-          href={JETBRAINS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(JETBRAINS_PUBLISHED
+            ? { href: JETBRAINS_URL, target: '_blank', rel: 'noopener noreferrer' }
+            : {})}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
@@ -204,8 +222,14 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
             ))}
           </div>
           <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
-            {t.jetbrainsCta}
-            <ArrowRight className="w-4 h-4" />
+            {JETBRAINS_PUBLISHED ? (
+              <>
+                {t.jetbrainsCta}
+                <ArrowRight className="w-4 h-4" />
+              </>
+            ) : (
+              <span className="text-muted-foreground">{t.comingSoon}</span>
+            )}
           </div>
         </motion.a>
 

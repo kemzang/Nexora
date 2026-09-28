@@ -133,7 +133,7 @@ export default function DocsIndexPage() {
           title="CLI"
           desc="L'agent Nexora en ligne de commande — pratique pour les scripts, le CI/CD ou un usage headless."
           code={`curl -fsSL https://raw.githubusercontent.com/kemzang-Bryan/Nexora/main/extensions/cli/scripts/install.sh | bash`}
-          codeNote="macOS / Linux — ou npm i -g @nexora/cli (Node.js 20+)"
+          codeNote="macOS / Linux — ou npm i -g @nexoracoding/cli (Node.js 20+)"
         />
       </div>
 

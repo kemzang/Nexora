@@ -19,15 +19,15 @@ const CHANNELS = [
     icon: LifeBuoy,
     title: 'Support technique',
     desc: "Un bug, un souci de connexion, une question sur votre extension ou votre CLI.",
-    action: 'support@nexora.ai',
-    href: 'mailto:support@nexora.ai',
+    action: 'support@nexoracoding.com',
+    href: 'mailto:support@nexoracoding.com',
   },
   {
     icon: Mail,
     title: 'Contact général',
     desc: "Questions générales, facturation, partenariats, ou toute autre demande.",
-    action: 'contact@nexora.ai',
-    href: 'mailto:contact@nexora.ai',
+    action: 'contact@nexoracoding.com',
+    href: 'mailto:contact@nexoracoding.com',
   },
 ]
 

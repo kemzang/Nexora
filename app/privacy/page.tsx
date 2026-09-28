@@ -154,7 +154,7 @@ export default function PrivacyPage() {
                 Quel que soit votre pays de résidence, vous pouvez nous contacter pour demander l'accès,
                 la rectification ou la suppression de vos données personnelles, ou pour obtenir un export de vos
                 données de compte. Pour exercer ces droits, écrivez-nous à{' '}
-                <a href="mailto:contact@nexora.ai" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexora.ai</a>.
+                <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>.
               </p>
             </section>
 
@@ -179,7 +179,7 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-bold mb-3">11. Contact</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Pour toute question relative à cette politique ou à vos données personnelles, contactez-nous à{' '}
-                <a href="mailto:contact@nexora.ai" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexora.ai</a>{' '}
+                <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>{' '}
                 ou consultez notre page <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link>.
               </p>
             </section>

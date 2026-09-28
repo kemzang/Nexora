@@ -92,8 +92,8 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
                 </div>
                 <span className="font-bold text-lg">Nexora</span>
               </div>
-              <p className="text-xs text-muted-foreground">nexora.ai</p>
-              <p className="text-xs text-muted-foreground">contact@nexora.ai</p>
+              <p className="text-xs text-muted-foreground">nexoracoding.com</p>
+              <p className="text-xs text-muted-foreground">contact@nexoracoding.com</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-foreground uppercase tracking-tight">Facture</p>
@@ -150,7 +150,7 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            Merci d'avoir choisi Nexora. Pour toute question : contact@nexora.ai
+            Merci d'avoir choisi Nexora. Pour toute question : contact@nexoracoding.com
           </p>
         </div>
       </motion.div>

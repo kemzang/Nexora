@@ -186,7 +186,7 @@ export default function AideSection() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
-              href="mailto:contact@nexora.ai"
+              href="mailto:contact@nexoracoding.com"
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />

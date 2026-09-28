@@ -64,7 +64,7 @@ export default function ChatQuickStartPage() {
       <h2 className="text-xl font-bold mb-5">Prérequis</h2>
       <ul className="space-y-2 text-sm text-muted-foreground mb-8">
         <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>Extension Nexora installée dans VS Code</li>
-        <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>Compte Nexora créé et vérifié sur <a href="https://nexora.ai" className="text-foreground/70 hover:underline">nexora.ai</a></li>
+        <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>Compte Nexora créé et vérifié sur <a href="https://nexoracoding.com" className="text-foreground/70 hover:underline">nexoracoding.com</a></li>
         <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>Extension connectée à votre compte (token configuré)</li>
       </ul>
 

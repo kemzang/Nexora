@@ -44,8 +44,12 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="border-t border-border mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Identite du vendeur. Un examinateur de prestataire de paiement
+              cherche QUI vend : sans nom ni pays, le dossier tombe en
+              « commercant non identifiable ». */}
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nexora. {t.footer.rights}
+            © {new Date().getFullYear()} Nexora — Bryan Teumena, Cameroun.{" "}
+            {t.footer.rights}
           </p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
             <Shield className="w-3 h-3" />

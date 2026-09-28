@@ -228,6 +228,7 @@ const fr: Translations = {
       { title: 'Légal', links: [
         { label: 'Confidentialité', href: '/privacy' },
         { label: 'CGU', href: '/terms' },
+        { label: 'Remboursement', href: '/refund' },
       ] },
     ],
     rights: 'Tous droits réservés.',
@@ -403,6 +404,7 @@ const en: Translations = {
       { title: 'Legal', links: [
         { label: 'Privacy', href: '/privacy' },
         { label: 'Terms', href: '/terms' },
+        { label: 'Refunds', href: '/refund' },
       ] },
     ],
     rights: 'All rights reserved.',
@@ -578,6 +580,7 @@ const es: Translations = {
       { title: 'Legal', links: [
         { label: 'Privacidad', href: '/privacy' },
         { label: 'Términos', href: '/terms' },
+        { label: 'Reembolsos', href: '/refund' },
       ] },
     ],
     rights: 'Todos los derechos reservados.',
@@ -753,6 +756,7 @@ const pt: Translations = {
       { title: 'Legal', links: [
         { label: 'Privacidade', href: '/privacy' },
         { label: 'Termos', href: '/terms' },
+        { label: 'Reembolsos', href: '/refund' },
       ] },
     ],
     rights: 'Todos os direitos reservados.',

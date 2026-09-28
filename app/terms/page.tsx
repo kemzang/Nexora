@@ -98,8 +98,8 @@ export default function TermsPage() {
                 Une fois votre quota mensuel de crédits atteint, l'accès aux fonctionnalités IA est suspendu
                 jusqu'au renouvellement de votre période ou jusqu'à une mise à niveau vers un plan supérieur,
                 que vous pouvez effectuer à tout moment depuis votre tableau de bord. Pour toute question relative
-                à la facturation, à l'annulation ou à un remboursement, contactez notre support (section 11) :
-                ces situations sont traitées au cas par cas.
+                à la facturation ou à l'annulation, contactez notre support (section 11). Les conditions de
+                remboursement font l'objet d'une page dédiée : <Link href="/refund" className="underline hover:text-foreground">politique de remboursement</Link>.
               </p>
             </section>
 

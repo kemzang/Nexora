@@ -56,7 +56,7 @@ function RegisterForm() {
 
   const getRedirectUrl = (tokenValue: string) => {
     if (!callback) return null
-    const baseUrl = "vscode://Nexora.nexora/auth"
+    const baseUrl = "vscode://nexoracoding.nexora/auth"
     const params = new URLSearchParams()
     params.append('token', tokenValue)
     if (state) params.append('state', state)

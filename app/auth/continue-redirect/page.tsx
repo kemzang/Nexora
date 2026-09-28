@@ -139,7 +139,7 @@ export default function Page() {
           return
         }
 
-        const editorUrl = new URL(`${rawScheme}://Nexora.nexora/auth`)
+        const editorUrl = new URL(`${rawScheme}://nexoracoding.nexora/auth`)
         editorUrl.searchParams.set('code', data.code)
         if (state) editorUrl.searchParams.set('state', state)
 

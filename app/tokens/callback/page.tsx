@@ -140,7 +140,7 @@ function CallbackContent() {
                   <div className="pt-1">
                     <p className="text-xs text-muted-foreground mb-2">Tu utilises VS Code ?</p>
                     <a
-                      href={`vscode://Nexora.nexora/auth?token=${encodeURIComponent(token)}`}
+                      href={`vscode://nexoracoding.nexora/auth?token=${encodeURIComponent(token)}`}
                       className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-white/[0.12] hover:bg-white/[0.06] text-foreground text-sm font-medium transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />

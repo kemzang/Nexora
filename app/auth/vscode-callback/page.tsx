@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/toast'
 const IDE_LABELS: Record<string, { name: string; deepLink?: (token: string) => string }> = {
   vscode: {
     name: 'VS Code',
-    deepLink: (token) => `vscode://Nexora.nexora/auth?token=${encodeURIComponent(token)}`,
+    deepLink: (token) => `vscode://nexoracoding.nexora/auth?token=${encodeURIComponent(token)}`,
   },
   jetbrains: { name: 'votre IDE JetBrains' },
   cli: { name: 'le CLI Nexora' },

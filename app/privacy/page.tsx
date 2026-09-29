@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
-import { LegalDisclaimer } from '@/components/patterns/legal-disclaimer'
 
 export const metadata: Metadata = {
   title: 'Politique de confidentialité — Nexora',
@@ -38,7 +37,7 @@ export default function PrivacyPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="max-w-3xl">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Politique de confidentialité</h1>
-          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 18 août 2026</p>
+          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 28 septembre 2026</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -53,8 +52,6 @@ export default function PrivacyPage() {
           </aside>
 
           <article className="flex-1 min-w-0 max-w-2xl">
-            <LegalDisclaimer />
-
             <p className="text-sm text-muted-foreground leading-relaxed mb-8">
               Cette politique explique quelles données Nexora collecte lorsque vous utilisez notre extension IDE,
               notre CLI, notre site et notre tableau de bord (ensemble, le « Service »), pourquoi nous les

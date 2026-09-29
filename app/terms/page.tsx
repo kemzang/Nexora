@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
-import { LegalDisclaimer } from '@/components/patterns/legal-disclaimer'
 
 export const metadata: Metadata = {
   title: "Conditions d'utilisation — Nexora",
@@ -31,7 +30,7 @@ export default function TermsPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="max-w-3xl">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Conditions d'utilisation</h1>
-          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 18 août 2026</p>
+          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 28 septembre 2026</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -46,8 +45,6 @@ export default function TermsPage() {
           </aside>
 
           <article className="flex-1 min-w-0 max-w-2xl">
-            <LegalDisclaimer />
-
             <p className="text-sm text-muted-foreground leading-relaxed mb-8">
               Les présentes conditions générales d'utilisation (« CGU ») régissent l'accès et l'utilisation du
               service Nexora — l'extension d'intelligence artificielle pour éditeurs de code (VS Code, IDE
@@ -171,8 +168,14 @@ export default function TermsPage() {
             <section id="droit" className="mb-9 scroll-mt-24">
               <h2 className="text-lg font-bold mb-3">10. Droit applicable</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Le droit applicable et la juridiction compétente seront précisés lors de la revue juridique de ce
-                document (voir l'avertissement en haut de page).
+                Les présentes conditions sont régies par le droit camerounais. À défaut de résolution amiable,
+                tout litige relatif à leur formation, leur interprétation ou leur exécution relève de la
+                compétence exclusive des tribunaux de Yaoundé, Cameroun.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+                Si vous contractez en qualité de consommateur et résidez dans un pays dont la loi vous accorde
+                des protections auxquelles il ne peut être dérogé par contrat, ces protections vous restent
+                acquises et la présente clause ne saurait vous en priver.
               </p>
             </section>
 

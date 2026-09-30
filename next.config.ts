@@ -46,6 +46,27 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-store, must-revalidate" },
         ],
       },
+      {
+        // Un lien d'invitation portait son jeton dans l'URL. Il est desormais
+        // efface de la barre d'adresse des le chargement, mais le tout premier
+        // affichage a encore lieu avec : sans cette en-tete, l'adresse complete
+        // partirait dans le `Referer` de toute requete sortante de la page.
+        //
+        // `no-referrer` sur la collaboration, ou transitent des conversations
+        // privees, et `strict-origin-when-cross-origin` partout ailleurs —
+        // l'origine seule suffit aux tiers, jamais le chemin ni la requete.
+        source: "/collab/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
     ];
   },
 };

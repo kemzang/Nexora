@@ -170,7 +170,31 @@ export default function CollabRoomPage() {
   const { roomId } = useParams<{ roomId: string }>()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const inviteToken = searchParams.get('token') ?? ''
+  // Le jeton n'est lu qu'UNE fois, puis efface de l'URL ci-dessous. Le relire
+  // a chaque rendu renverrait une chaine vide apres ce nettoyage.
+  const [inviteToken] = useState(() => searchParams.get('token') ?? '')
+
+  // ── Retire le jeton d'invitation de la barre d'adresse ───────────────────
+  //
+  // Il y figurait en clair. Un secret dans une URL fuit par des chemins qu'on
+  // ne controle pas : historique du navigateur, en-tete Referer vers tout site
+  // ouvert depuis cette page, journaux des serveurs et du CDN traverses — et
+  // la moindre capture d'ecran.
+  //
+  // Le jeton est deja capture dans l'etat ci-dessus, donc l'effacer ici ne
+  // casse rien. Ce qui reste, `/collab/<id>`, n'est qu'un pointeur : lire un
+  // salon exige d'etre authentifie ET d'y etre inscrit, l'identifiant seul
+  // n'ouvre rien.
+  //
+  // `replaceState` plutot que `push` : on ne veut pas laisser dans l'historique
+  // une entree qui contiendrait encore le jeton.
+  useEffect(() => {
+    if (!inviteToken || typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('token')) return
+    url.searchParams.delete('token')
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+  }, [inviteToken])
 
   const { user, token: authToken, loading: authLoading } = useAuth()
 

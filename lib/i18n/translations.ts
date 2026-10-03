@@ -808,4 +808,4 @@ const pt: Translations = {
 }
 
 export const translations: Record<Lang, Translations> = { fr, en, es, pt }
-export const LANGS: Lang[] = ['fr', 'en', 'es', 'pt']
+export const LANGS: Lang[] = ['en', 'fr', 'es', 'pt']

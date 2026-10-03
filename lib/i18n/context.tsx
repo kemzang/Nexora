@@ -10,13 +10,13 @@ type I18nContextType = {
 }
 
 const I18nContext = createContext<I18nContextType>({
-  lang: 'fr',
+  lang: 'en',
   setLang: () => {},
-  t: translations.fr,
+  t: translations.en,
 })
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('fr')
+  const [lang, setLangState] = useState<Lang>('en')
 
   useEffect(() => {
     const saved = localStorage.getItem('nexora_lang') as Lang | null

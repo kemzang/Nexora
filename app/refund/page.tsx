@@ -4,9 +4,8 @@ import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
-  title: 'Politique de remboursement — Nexora',
-  description:
-    "Conditions de remboursement et d'annulation des abonnements Nexora.",
+  title: 'Refund Policy — Nexora',
+  description: 'Refund and cancellation terms for Nexora subscriptions.',
 }
 
 /**
@@ -26,89 +25,85 @@ export default function RefundPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="max-w-3xl">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-            Politique de remboursement
+            Refund Policy
           </h1>
           <p className="text-sm text-muted-foreground mb-8">
-            Dernière mise à jour : 28 septembre 2026
+            Last updated: 3 October 2026
           </p>
         </div>
 
         <article className="max-w-2xl">
           <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-            Nexora est un service par abonnement mensuel. Un palier gratuit
-            permet d&apos;essayer le service sans payer, et les conditions
-            ci-dessous s&apos;appliquent aux abonnements payants.
+            Nexora is a monthly subscription service. A free tier lets you try
+            the service without paying, and the terms below apply to paid
+            subscriptions. Subscriptions are sold by Bryan Teumena, trading as
+            Nexora, a sole trader established in Cameroon.
           </p>
 
           <section className="mb-9">
-            <h2 className="text-lg font-bold mb-3">1. Délai de rétractation</h2>
+            <h2 className="text-lg font-bold mb-3">1. Cooling-off period</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Vous disposez de <strong>14 jours</strong> à compter de votre
-              premier paiement pour demander le remboursement intégral de votre
-              abonnement, sans avoir à vous justifier. Le remboursement est
-              effectué sur le moyen de paiement utilisé lors de l&apos;achat,
-              sous 5 à 10 jours ouvrés selon votre banque.
+              You have <strong>14 days</strong> from your first payment to
+              request a full refund of your subscription, with no need to give a
+              reason. The refund is issued to the payment method used at
+              purchase, within 5 to 10 business days depending on your bank.
             </p>
           </section>
 
           <section className="mb-9">
-            <h2 className="text-lg font-bold mb-3">2. Renouvellements</h2>
+            <h2 className="text-lg font-bold mb-3">2. Renewals</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Passé ce délai, les échéances mensuelles déjà réglées ne sont pas
-              remboursées, le service ayant été rendu sur la période concernée.
-              Vous pouvez annuler à tout moment pour interrompre les
-              renouvellements suivants.
+              After that period, monthly instalments already paid are not
+              refunded, as the service was delivered over the period concerned.
+              You can cancel at any time to stop subsequent renewals.
             </p>
           </section>
 
           <section className="mb-9">
-            <h2 className="text-lg font-bold mb-3">3. Annulation</h2>
+            <h2 className="text-lg font-bold mb-3">3. Cancellation</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              L&apos;annulation s&apos;effectue en un clic depuis votre{' '}
+              Cancellation takes one click from your{' '}
               <Link href="/dashboard" className="underline hover:text-foreground">
-                tableau de bord
+                dashboard
               </Link>
-              , section Abonnement. Aucune démarche par courriel n&apos;est
-              nécessaire. Votre accès reste actif jusqu&apos;à la fin de la
-              période déjà payée, puis bascule automatiquement sur le palier
-              gratuit — votre compte et vos données sont conservés.
+              , in the Subscription section. No email is required. Your access
+              remains active until the end of the period already paid for, then
+              switches automatically to the free tier &mdash; your account and
+              your data are kept.
+            </p>
+          </section>
+
+          <section className="mb-9">
+            <h2 className="text-lg font-bold mb-3">4. Service interruption</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              If the service is unavailable for an extended period through our
+              fault, write to us: we refund the period concerned on a pro-rata
+              basis, even beyond the 14-day window.
             </p>
           </section>
 
           <section className="mb-9">
             <h2 className="text-lg font-bold mb-3">
-              4. Interruption de service
+              5. How to request a refund
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Si le service est indisponible de manière prolongée de notre fait,
-              écrivez-nous : nous remboursons la période concernée au prorata,
-              même au-delà du délai de 14 jours.
-            </p>
-          </section>
-
-          <section className="mb-9">
-            <h2 className="text-lg font-bold mb-3">
-              5. Comment demander un remboursement
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Écrivez à{' '}
+              Write to{' '}
               <a
                 href="mailto:support@nexoracoding.com"
                 className="underline hover:text-foreground"
               >
                 support@nexoracoding.com
               </a>{' '}
-              depuis l&apos;adresse de votre compte, en indiquant la référence
-              de la transaction. Nous répondons sous 24 heures ouvrées et
-              traitons la demande sans discussion si elle entre dans le délai de
-              14 jours.
+              from your account email address, quoting the transaction
+              reference. We reply within 24 business hours and process the
+              request without discussion if it falls within the 14-day window.
             </p>
           </section>
 
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Cette politique complète nos{' '}
+            This policy supplements our{' '}
             <Link href="/terms" className="underline hover:text-foreground">
-              conditions d&apos;utilisation
+              terms of use
             </Link>
             .
           </p>

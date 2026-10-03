@@ -9,7 +9,7 @@ import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
   title: 'Contact — Nexora',
-  description: "Contactez l'équipe Nexora pour une question générale ou un problème technique.",
+  description: 'Contact the Nexora team with a general question or a technical issue.',
 }
 
 const GITHUB_ISSUES_URL = 'https://github.com/kemzang-Bryan/Nexora/issues'
@@ -17,15 +17,15 @@ const GITHUB_ISSUES_URL = 'https://github.com/kemzang-Bryan/Nexora/issues'
 const CHANNELS = [
   {
     icon: LifeBuoy,
-    title: 'Support technique',
-    desc: "Un bug, un souci de connexion, une question sur votre extension ou votre CLI.",
+    title: 'Technical support',
+    desc: 'A bug, a connection problem, a question about your extension or your CLI.',
     action: 'support@nexoracoding.com',
     href: 'mailto:support@nexoracoding.com',
   },
   {
     icon: Mail,
-    title: 'Contact général',
-    desc: "Questions générales, facturation, partenariats, ou toute autre demande.",
+    title: 'General enquiries',
+    desc: 'General questions, billing, partnerships, or any other request.',
     action: 'contact@nexoracoding.com',
     href: 'mailto:contact@nexoracoding.com',
   },
@@ -44,10 +44,10 @@ export default function ContactPage() {
             Contact
           </Badge>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 text-balance">
-            Parlons-en
+            Let's talk
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Écrivez-nous directement — nous répondons sous 24h en semaine.
+            Write to us directly &mdash; we reply within 24 hours on weekdays.
           </p>
         </div>
       </section>
@@ -70,7 +70,7 @@ export default function ContactPage() {
 
         <div className="max-w-2xl mx-auto flex items-center justify-center gap-2 text-xs text-muted-foreground/70 mb-14">
           <Clock className="w-3.5 h-3.5" />
-          Réponse sous 24h, du lundi au vendredi.
+          Reply within 24 hours, Monday to Friday.
         </div>
 
         <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -80,8 +80,8 @@ export default function ContactPage() {
           >
             <BookOpen className="w-4 h-4 text-foreground/70 shrink-0" />
             <div>
-              <p className="text-sm font-medium">Consulter la documentation</p>
-              <p className="text-xs text-muted-foreground">Installation, guides et FAQ produit</p>
+              <p className="text-sm font-medium">Read the documentation</p>
+              <p className="text-xs text-muted-foreground">Installation, guides and product FAQ</p>
             </div>
           </Link>
           <a
@@ -92,15 +92,15 @@ export default function ContactPage() {
           >
             <GitBranch className="w-4 h-4 text-foreground/70 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium flex items-center gap-1.5">Signaler un bug sur GitHub <ExternalLink className="w-3 h-3 opacity-60" /></p>
-              <p className="text-xs text-muted-foreground">Pour les rapports de bugs techniques détaillés</p>
+              <p className="text-sm font-medium flex items-center gap-1.5">Report a bug on GitHub <ExternalLink className="w-3 h-3 opacity-60" /></p>
+              <p className="text-xs text-muted-foreground">For detailed technical bug reports</p>
             </div>
           </a>
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-10">
-          Déjà client Nexora ? Retrouvez aussi l'aide contextuelle depuis votre{' '}
-          <Link href="/dashboard" className="text-foreground/80 hover:text-foreground underline underline-offset-4">tableau de bord</Link>.
+          Already a Nexora customer? You can also find contextual help from your{' '}
+          <Link href="/dashboard" className="text-foreground/80 hover:text-foreground underline underline-offset-4">dashboard</Link>.
         </p>
       </SectionLayout>
 

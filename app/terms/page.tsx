@@ -4,22 +4,23 @@ import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
-  title: "Conditions d'utilisation — Nexora",
-  description: "Conditions générales d'utilisation du service Nexora.",
+  title: 'Terms of Use — Nexora',
+  description: 'Terms and conditions governing the use of the Nexora service.',
 }
 
 const SECTIONS = [
-  { id: 'objet', label: '1. Objet' },
-  { id: 'compte', label: '2. Compte utilisateur' },
-  { id: 'abonnements', label: '3. Abonnements & paiement' },
-  { id: 'usage', label: '4. Usage autorisé' },
-  { id: 'ia', label: '5. Suggestions générées par IA' },
-  { id: 'propriete', label: '6. Propriété intellectuelle' },
-  { id: 'responsabilite', label: '7. Limitation de responsabilité' },
-  { id: 'resiliation', label: '8. Résiliation' },
-  { id: 'modifications', label: '9. Modification des présentes conditions' },
-  { id: 'droit', label: '10. Droit applicable' },
-  { id: 'contact', label: '11. Contact' },
+  { id: 'identity', label: '1. Who we are' },
+  { id: 'purpose', label: '2. Purpose' },
+  { id: 'account', label: '3. User account' },
+  { id: 'subscriptions', label: '4. Subscriptions & payment' },
+  { id: 'use', label: '5. Permitted use' },
+  { id: 'ai', label: '6. AI-generated suggestions' },
+  { id: 'ip', label: '7. Intellectual property' },
+  { id: 'liability', label: '8. Limitation of liability' },
+  { id: 'termination', label: '9. Termination' },
+  { id: 'changes', label: '10. Changes to these terms' },
+  { id: 'law', label: '11. Governing law' },
+  { id: 'contact', label: '12. Contact' },
 ]
 
 export default function TermsPage() {
@@ -29,8 +30,8 @@ export default function TermsPage() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Conditions d'utilisation</h1>
-          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 28 septembre 2026</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Terms of Use</h1>
+          <p className="text-sm text-muted-foreground mb-8">Last updated: 3 October 2026</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -46,145 +47,162 @@ export default function TermsPage() {
 
           <article className="flex-1 min-w-0 max-w-2xl">
             <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-              Les présentes conditions générales d'utilisation (« CGU ») régissent l'accès et l'utilisation du
-              service Nexora — l'extension d'intelligence artificielle pour éditeurs de code (VS Code, IDE
-              JetBrains) et son interface en ligne de commande, ainsi que le site et le tableau de bord associés
-              (ensemble, le « Service »). En créant un compte ou en utilisant le Service, vous acceptez les
-              présentes conditions.
+              These terms of use (the &laquo;&nbsp;Terms&nbsp;&raquo;) govern access to and use of the Nexora
+              service &mdash; the artificial intelligence extension for code editors (VS Code, JetBrains IDEs)
+              and its command-line interface, together with the associated website and dashboard (collectively,
+              the &laquo;&nbsp;Service&nbsp;&raquo;). By creating an account or using the Service, you agree to
+              these Terms.
             </p>
 
-            <section id="objet" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">1. Objet</h2>
+            <section id="identity" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">1. Who we are</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                The Service is operated by <strong className="text-foreground/90">Bryan Teumena</strong>, trading
+                as <strong className="text-foreground/90">Nexora</strong>, a sole trader established in Cameroon.
+                Bryan Teumena is the contracting party under these Terms and the seller of the subscriptions
+                described below.
+              </p>
+              <ul className="text-sm text-muted-foreground leading-relaxed space-y-1.5 list-disc list-inside">
+                <li>Legal name: Bryan Teumena</li>
+                <li>Trading name: Nexora</li>
+                <li>Legal form: sole trader (entreprise individuelle)</li>
+                <li>Country of establishment: Cameroon</li>
+                <li>
+                  Contact:{' '}
+                  <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>
+                </li>
+              </ul>
+            </section>
+
+            <section id="purpose" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">2. Purpose</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Nexora fournit un accès à des modèles d'intelligence artificielle tiers (DeepSeek, Gemini, Claude
-                selon votre plan) au travers d'un chat intégré, d'une autocomplétion de code, d'un mode Agent et
-                d'une édition inline, accessibles depuis une extension IDE ou une interface en ligne de commande.
-                L'accès aux fonctionnalités et aux modèles dépend du plan souscrit — voir la page{' '}
-                <Link href="/pricing" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Tarifs</Link>.
+                Nexora provides access to third-party artificial intelligence models (DeepSeek, Gemini, Claude,
+                depending on your plan) through an integrated chat, code autocomplete, an Agent mode and inline
+                editing, available from an IDE extension or a command-line interface. Access to features and
+                models depends on the plan you subscribe to &mdash; see the{' '}
+                <Link href="/pricing" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Pricing</Link> page.
               </p>
             </section>
 
-            <section id="compte" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">2. Compte utilisateur</h2>
+            <section id="account" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">3. User account</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                L'utilisation du Service nécessite la création d'un compte. Vous êtes responsable de
-                l'exactitude des informations fournies et de la confidentialité de vos identifiants. Toute
-                activité effectuée depuis votre compte est réputée effectuée par vous.
+                Using the Service requires creating an account. You are responsible for the accuracy of the
+                information you provide and for keeping your credentials confidential. Any activity carried out
+                from your account is deemed to have been carried out by you.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Vous devez nous informer sans délai de toute utilisation non autorisée de votre compte, en nous
-                contactant (voir section 11).
+                You must inform us without delay of any unauthorised use of your account by contacting us (see
+                section 12).
               </p>
             </section>
 
-            <section id="abonnements" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">3. Abonnements & paiement</h2>
+            <section id="subscriptions" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">4. Subscriptions &amp; payment</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Nexora propose un plan gratuit ainsi que plusieurs plans payants avec facturation mensuelle,
-                détaillés sur la page <Link href="/pricing" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Tarifs</Link>.
-                Chaque plan donne accès à un quota de crédits mensuel, un nombre de requêtes par jour et un
-                nombre de collaborateurs maximal. Les crédits non consommés ne sont pas reportés d'un mois sur
-                l'autre.
+                Nexora offers a free plan as well as several paid plans billed monthly, detailed on the{' '}
+                <Link href="/pricing" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Pricing</Link> page.
+                Each plan grants a monthly credit allowance, a number of requests per day and a maximum number of
+                collaborators. Unused credits do not carry over from one month to the next.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Les paiements sont traités par notre prestataire tiers Paddle, qui agit en tant que revendeur
-                officiel (Merchant of Record) pour les transactions par carte bancaire. Nexora ne stocke pas vos
-                données de carte bancaire.
+                Payments are processed by our third-party provider Paddle, acting as Merchant of Record for card
+                transactions. Nexora does not store your card details.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Une fois votre quota mensuel de crédits atteint, l'accès aux fonctionnalités IA est suspendu
-                jusqu'au renouvellement de votre période ou jusqu'à une mise à niveau vers un plan supérieur,
-                que vous pouvez effectuer à tout moment depuis votre tableau de bord. Pour toute question relative
-                à la facturation ou à l'annulation, contactez notre support (section 11). Les conditions de
-                remboursement font l'objet d'une page dédiée : <Link href="/refund" className="underline hover:text-foreground">politique de remboursement</Link>.
+                Once your monthly credit allowance is reached, access to AI features is suspended until your
+                billing period renews or until you upgrade to a higher plan, which you can do at any time from
+                your dashboard. For any question about billing or cancellation, contact our support (section 12).
+                Refund conditions are set out on a dedicated page:{' '}
+                <Link href="/refund" className="underline hover:text-foreground">refund policy</Link>.
               </p>
             </section>
 
-            <section id="usage" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">4. Usage autorisé</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">Vous vous engagez à ne pas :</p>
+            <section id="use" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">5. Permitted use</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">You agree not to:</p>
               <ul className="text-sm text-muted-foreground leading-relaxed space-y-1.5 list-disc list-inside mb-3">
-                <li>Revendre, sous-licencier ou redistribuer l'accès au Service sans autorisation ;</li>
-                <li>Contourner ou tenter de contourner les quotas, limites de débit ou mesures de sécurité du Service ;</li>
-                <li>Utiliser le Service à des fins illégales ou pour produire du contenu illicite, malveillant ou nuisible ;</li>
-                <li>Perturber le fonctionnement du Service ou en extraire les données de façon automatisée en dehors de l'usage prévu.</li>
+                <li>Resell, sublicense or redistribute access to the Service without authorisation;</li>
+                <li>Circumvent or attempt to circumvent the quotas, rate limits or security measures of the Service;</li>
+                <li>Use the Service for unlawful purposes or to produce illegal, malicious or harmful content;</li>
+                <li>Disrupt the operation of the Service or extract its data in an automated way outside the intended use.</li>
               </ul>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Le Service inclut des mesures automatiques de détection visant à limiter l'exécution de commandes
-                dangereuses proposées par l'IA (suppression de fichiers, exfiltration de données, etc.). Ces
-                mesures réduisent les risques mais ne les éliminent pas : vous restez responsable de la revue de
-                toute action ou commande avant de l'exécuter.
+                The Service includes automatic detection measures intended to limit the execution of dangerous
+                commands suggested by the AI (file deletion, data exfiltration, and the like). These measures
+                reduce the risk but do not eliminate it: you remain responsible for reviewing any action or
+                command before running it.
               </p>
             </section>
 
-            <section id="ia" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">5. Suggestions générées par IA</h2>
+            <section id="ai" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">6. AI-generated suggestions</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Le code, les explications et les suggestions produits par les modèles d'IA accessibles via
-                Nexora sont fournis à titre indicatif et peuvent contenir des erreurs, des approximations ou du
-                contenu inapproprié. Vous êtes seul responsable de la relecture, du test et de la validation de
-                tout code ou contenu généré avant de l'utiliser, notamment en environnement de production.
+                Code, explanations and suggestions produced by the AI models available through Nexora are
+                provided for guidance only and may contain errors, approximations or inappropriate content. You
+                are solely responsible for reviewing, testing and validating any generated code or content before
+                using it, particularly in a production environment.
               </p>
             </section>
 
-            <section id="propriete" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">6. Propriété intellectuelle</h2>
+            <section id="ip" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">7. Intellectual property</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Vous conservez l'intégralité des droits sur votre code source et vos données. Nexora ne
-                revendique aucun droit de propriété sur le contenu que vous créez ou traitez via le Service. Le
-                Service lui-même (marque, interface, logiciel) reste la propriété de Nexora et de ses concédants.
+                You retain all rights in your source code and your data. Nexora claims no ownership over the
+                content you create or process through the Service. The Service itself (brand, interface,
+                software) remains the property of Nexora and its licensors.
               </p>
             </section>
 
-            <section id="responsabilite" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">7. Limitation de responsabilité</h2>
+            <section id="liability" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">8. Limitation of liability</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Le Service est fourni « en l'état », sans garantie de disponibilité continue, d'exactitude des
-                réponses de l'IA ou d'absence d'erreur, hormis les engagements spécifiques éventuellement
-                convenus contractuellement avec les clients du plan Enterprise. Dans les limites permises par la
-                loi applicable, Nexora ne pourra être tenu responsable des dommages indirects résultant de
-                l'utilisation du Service ou du code généré par l'IA.
+                The Service is provided &laquo;&nbsp;as is&nbsp;&raquo;, without warranty of continuous
+                availability, accuracy of AI responses or freedom from error, save for any specific commitments
+                agreed contractually with Enterprise plan customers. To the extent permitted by applicable law,
+                Nexora shall not be liable for indirect damages arising from use of the Service or of code
+                generated by the AI.
               </p>
             </section>
 
-            <section id="resiliation" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">8. Résiliation</h2>
+            <section id="termination" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">9. Termination</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Vous pouvez cesser d'utiliser le Service et demander la clôture de votre compte à tout moment en
-                nous contactant. Nexora se réserve le droit de suspendre ou de résilier l'accès d'un compte en
-                cas de violation manifeste des présentes conditions.
+                You may stop using the Service and request closure of your account at any time by contacting us.
+                Nexora reserves the right to suspend or terminate access to an account in the event of a manifest
+                breach of these Terms.
               </p>
             </section>
 
-            <section id="modifications" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">9. Modification des présentes conditions</h2>
+            <section id="changes" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">10. Changes to these terms</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Ces conditions peuvent évoluer pour refléter les changements apportés au Service. La date de
-                dernière mise à jour en haut de cette page permet de suivre les révisions. Nous vous invitons à
-                la consulter périodiquement.
+                These Terms may change to reflect changes made to the Service. The last-updated date at the top
+                of this page allows you to track revisions. We encourage you to consult it periodically.
               </p>
             </section>
 
-            <section id="droit" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">10. Droit applicable</h2>
+            <section id="law" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">11. Governing law</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Les présentes conditions sont régies par le droit camerounais. À défaut de résolution amiable,
-                tout litige relatif à leur formation, leur interprétation ou leur exécution relève de la
-                compétence exclusive des tribunaux de Yaoundé, Cameroun.
+                These Terms are governed by the laws of Cameroon. Failing an amicable resolution, any dispute
+                relating to their formation, interpretation or performance falls within the exclusive
+                jurisdiction of the courts of Yaoundé, Cameroon.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                Si vous contractez en qualité de consommateur et résidez dans un pays dont la loi vous accorde
-                des protections auxquelles il ne peut être dérogé par contrat, ces protections vous restent
-                acquises et la présente clause ne saurait vous en priver.
+                If you contract as a consumer and reside in a country whose law grants you protections that
+                cannot be derogated from by contract, those protections remain available to you and this clause
+                shall not deprive you of them.
               </p>
             </section>
 
             <section id="contact" className="mb-2 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">11. Contact</h2>
+              <h2 className="text-lg font-bold mb-3">12. Contact</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Pour toute question relative à ces conditions, contactez-nous à{' '}
+                For any question about these Terms, contact us at{' '}
                 <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>{' '}
-                ou consultez notre page <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link>.
+                or visit our <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link> page.
               </p>
             </section>
           </article>

@@ -4,29 +4,29 @@ import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
-  title: 'Politique de confidentialité — Nexora',
-  description: 'Comment Nexora collecte, utilise et protège vos données personnelles.',
+  title: 'Privacy Policy — Nexora',
+  description: 'How Nexora collects, uses and protects your personal data.',
 }
 
 const SECTIONS = [
-  { id: 'donnees', label: '1. Données collectées' },
-  { id: 'finalites', label: '2. Finalités' },
-  { id: 'paiement', label: '3. Paiement' },
-  { id: 'cookies', label: '4. Cookies & stockage local' },
-  { id: 'tiers', label: '5. Prestataires tiers' },
-  { id: 'conservation', label: '6. Conservation des données' },
-  { id: 'securite', label: '7. Sécurité' },
-  { id: 'droits', label: '8. Vos droits' },
-  { id: 'mineurs', label: '9. Mineurs' },
-  { id: 'modifications', label: '10. Modifications' },
+  { id: 'data', label: '1. Data we collect' },
+  { id: 'purposes', label: '2. Purposes' },
+  { id: 'payment', label: '3. Payment' },
+  { id: 'cookies', label: '4. Cookies & local storage' },
+  { id: 'subprocessors', label: '5. Third-party providers' },
+  { id: 'retention', label: '6. Data retention' },
+  { id: 'security', label: '7. Security' },
+  { id: 'rights', label: '8. Your rights' },
+  { id: 'minors', label: '9. Minors' },
+  { id: 'changes', label: '10. Changes' },
   { id: 'contact', label: '11. Contact' },
 ]
 
 const SUBPROCESSORS = [
-  { name: 'Supabase', role: "Hébergement de la base de données, authentification et stockage du compte utilisateur." },
-  { name: 'Paddle', role: "Revendeur officiel (Merchant of Record) : traite les paiements par carte bancaire, la TVA/taxes internationales et la facturation. Nexora ne stocke pas vos données de carte." },
-  { name: 'Resend', role: "Envoi des emails transactionnels (confirmation de paiement, notifications de compte)." },
-  { name: 'Upstash', role: "Cache technique utilisé pour la limitation de débit (anti-abus) et la cohérence des quotas." },
+  { name: 'Supabase', role: "Database hosting, authentication and storage of the user account." },
+  { name: 'Paddle', role: "Merchant of Record: handles card payments, international VAT/taxes and invoicing. Nexora does not store your card details." },
+  { name: 'Resend', role: "Sending transactional emails (payment confirmation, account notifications)." },
+  { name: 'Upstash', role: "Technical cache used for rate limiting (abuse prevention) and quota consistency." },
 ]
 
 export default function PrivacyPage() {
@@ -36,8 +36,8 @@ export default function PrivacyPage() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Politique de confidentialité</h1>
-          <p className="text-sm text-muted-foreground mb-8">Dernière mise à jour : 28 septembre 2026</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">Privacy Policy</h1>
+          <p className="text-sm text-muted-foreground mb-8">Last updated: 3 October 2026</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
@@ -53,63 +53,60 @@ export default function PrivacyPage() {
 
           <article className="flex-1 min-w-0 max-w-2xl">
             <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-              Cette politique explique quelles données Nexora collecte lorsque vous utilisez notre extension IDE,
-              notre CLI, notre site et notre tableau de bord (ensemble, le « Service »), pourquoi nous les
-              collectons, et les choix dont vous disposez.
+              This policy explains what data Nexora collects when you use our IDE extension, our CLI, our website and
+              our dashboard (together, the &laquo;&nbsp;Service&nbsp;&raquo;), why we collect it, and the choices
+              available to you. The Service is operated by Bryan Teumena, trading as Nexora, a sole trader
+              established in Cameroon.
             </p>
 
-            <section id="donnees" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">1. Données collectées</h2>
+            <section id="data" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">1. Data we collect</h2>
               <ul className="text-sm text-muted-foreground leading-relaxed space-y-1.5 list-disc list-inside">
-                <li><strong className="text-foreground/80 font-medium">Compte</strong> : adresse email, nom affiché, langue préférée.</li>
-                <li><strong className="text-foreground/80 font-medium">Abonnement & facturation</strong> : plan souscrit, historique de paiement (traité par Paddle, voir section 5).</li>
-                <li><strong className="text-foreground/80 font-medium">Utilisation du Service</strong> : volume de tokens consommés par requête, modèle IA utilisé et horodatage — nécessaires au calcul de votre quota et à la facturation. Le contenu de vos conversations et de votre code est transmis aux modèles IA pour générer une réponse, mais n'est pas conservé par Nexora au-delà de ce qui est nécessaire au fonctionnement du Service.</li>
-                <li><strong className="text-foreground/80 font-medium">Préférences d'extension</strong> : réglages enregistrés dans l'extension IDE (modèle préféré, etc.).</li>
-                <li><strong className="text-foreground/80 font-medium">Clés API</strong> : si vous générez des clés API depuis le tableau de bord pour authentifier l'extension ou la CLI.</li>
+                <li><strong className="text-foreground/80 font-medium">Account</strong>: email address, display name, preferred language.</li>
+                <li><strong className="text-foreground/80 font-medium">Subscription &amp; billing</strong>: plan subscribed to, payment history (handled by Paddle, see section 5).</li>
+                <li><strong className="text-foreground/80 font-medium">Use of the Service</strong>: volume of tokens consumed per request, AI model used and timestamp &mdash; needed to compute your quota and to bill you. The content of your conversations and your code is transmitted to the AI models to generate a response, but is not retained by Nexora beyond what is necessary to operate the Service.</li>
+                <li><strong className="text-foreground/80 font-medium">Extension preferences</strong>: settings saved in the IDE extension (preferred model, and the like).</li>
+                <li><strong className="text-foreground/80 font-medium">API keys</strong>: if you generate API keys from the dashboard to authenticate the extension or the CLI.</li>
               </ul>
             </section>
 
-            <section id="finalites" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">2. Finalités</h2>
+            <section id="purposes" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">2. Purposes</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Nous utilisons ces données pour : fournir et maintenir le Service, authentifier votre compte,
-                calculer votre consommation de crédits et appliquer les limites de votre plan, traiter les
-                paiements, assurer la sécurité du Service (limitation de débit, détection d'abus), et répondre à
-                vos demandes de support.
+                We use this data to: provide and maintain the Service, authenticate your account, compute your credit
+                consumption and enforce your plan limits, process payments, keep the Service secure (rate
+                limiting, abuse detection), and respond to your support requests.
               </p>
             </section>
 
-            <section id="paiement" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">3. Paiement</h2>
+            <section id="payment" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">3. Payment</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Les paiements sont traités par notre prestataire Paddle, qui agit en tant que revendeur officiel
-                (Merchant of Record) et gère directement vos informations de carte bancaire ainsi que la TVA/taxes
-                applicables. Nexora n'a pas accès à votre numéro de carte complet et ne le stocke pas sur ses
-                serveurs.
+                Payments are processed by our provider Paddle, acting as Merchant of Record, which handles your card
+                details directly along with applicable VAT and taxes. Nexora has no access to your full card
+                number and does not store it on its servers.
               </p>
             </section>
 
             <section id="cookies" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">4. Cookies & stockage local</h2>
+              <h2 className="text-lg font-bold mb-3">4. Cookies &amp; local storage</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Le site utilise le stockage local de votre navigateur (localStorage) à des fins strictement
-                fonctionnelles :
+                The website uses your browser&apos;s local storage (localStorage) for strictly functional purposes:
               </p>
               <ul className="text-sm text-muted-foreground leading-relaxed space-y-1.5 list-disc list-inside mb-3">
-                <li>Maintenir votre session connectée ;</li>
-                <li>Mémoriser votre langue d'affichage préférée ;</li>
-                <li>Mémoriser votre préférence d'affichage clair / sombre.</li>
+                <li>Keeping you signed in;</li>
+                <li>Remembering your preferred display language;</li>
+                <li>Remembering your light / dark display preference.</li>
               </ul>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Nous n'utilisons pas de cookies publicitaires ni de traceurs tiers à des fins commerciales ou de
-                profilage.
+                We do not use advertising cookies or third-party trackers for commercial or profiling purposes.
               </p>
             </section>
 
-            <section id="tiers" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">5. Prestataires tiers</h2>
+            <section id="subprocessors" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">5. Third-party providers</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Nous faisons appel aux prestataires techniques suivants pour faire fonctionner le Service :
+                We rely on the following technical providers to operate the Service:
               </p>
               <div className="space-y-2.5">
                 {SUBPROCESSORS.map(p => (
@@ -120,64 +117,62 @@ export default function PrivacyPage() {
                 ))}
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                Selon le ou les modèles IA sollicités par votre requête (DeepSeek, Gemini ou Claude), le contenu
-                nécessaire à la génération de la réponse est transmis au fournisseur du modèle correspondant.
+                Depending on the AI model or models your request calls on (DeepSeek, Gemini or Claude), the content
+                needed to generate the response is transmitted to the corresponding model provider.
               </p>
             </section>
 
-            <section id="conservation" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">6. Conservation des données</h2>
+            <section id="retention" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">6. Data retention</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Vos données de compte et d'utilisation sont conservées aussi longtemps que votre compte est
-                actif. Si vous demandez la suppression de votre compte, nous supprimons ou anonymisons vos
-                données personnelles dans un délai raisonnable, sous réserve des obligations légales de
-                conservation (notamment comptables) qui pourraient s'appliquer à certaines données de
-                facturation.
+                Your account and usage data are kept for as long as your account is active. If you request deletion of
+                your account, we delete or anonymise your personal data within a reasonable period, subject to
+                any legal retention obligations (notably accounting ones) that may apply to certain billing
+                records.
               </p>
             </section>
 
-            <section id="securite" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">7. Sécurité</h2>
+            <section id="security" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">7. Security</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Les échanges avec le Service sont chiffrés en transit (TLS). L'accès à votre compte est protégé
-                par les mécanismes d'authentification de Supabase, et l'accès à vos données par nos équipes est
-                limité à ce qui est nécessaire pour exploiter et sécuriser le Service.
+                Exchanges with the Service are encrypted in transit (TLS). Access to your account is protected by
+                Supabase&apos;s authentication mechanisms, and access to your data by our team is limited to what
+                is necessary to operate and secure the Service.
               </p>
             </section>
 
-            <section id="droits" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">8. Vos droits</h2>
+            <section id="rights" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">8. Your rights</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Quel que soit votre pays de résidence, vous pouvez nous contacter pour demander l'accès,
-                la rectification ou la suppression de vos données personnelles, ou pour obtenir un export de vos
-                données de compte. Pour exercer ces droits, écrivez-nous à{' '}
+                Whatever your country of residence, you can contact us to request access to, correction of or deletion
+                of your personal data, or to obtain an export of your account data. To exercise these rights,
+                write to us at{' '}
                 <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>.
               </p>
             </section>
 
-            <section id="mineurs" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">9. Mineurs</h2>
+            <section id="minors" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">9. Minors</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Le Service ne s'adresse pas aux personnes de moins de 16 ans. Nous ne collectons pas
-                sciemment de données concernant des mineurs de moins de 16 ans.
+                The Service is not directed at people under 16. We do not knowingly collect data concerning minors
+                under 16.
               </p>
             </section>
 
-            <section id="modifications" className="mb-9 scroll-mt-24">
-              <h2 className="text-lg font-bold mb-3">10. Modifications</h2>
+            <section id="changes" className="mb-9 scroll-mt-24">
+              <h2 className="text-lg font-bold mb-3">10. Changes</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Cette politique peut être mise à jour pour refléter l'évolution du Service ou de la
-                réglementation applicable. La date de dernière mise à jour en haut de cette page reflète la
-                version en vigueur.
+                This policy may be updated to reflect changes in the Service or in applicable regulation. The
+                last-updated date at the top of this page reflects the version in force.
               </p>
             </section>
 
             <section id="contact" className="mb-2 scroll-mt-24">
               <h2 className="text-lg font-bold mb-3">11. Contact</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Pour toute question relative à cette politique ou à vos données personnelles, contactez-nous à{' '}
+                For any question about this policy or your personal data, contact us at{' '}
                 <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>{' '}
-                ou consultez notre page <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link>.
+                or visit our <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link>.
               </p>
             </section>
           </article>

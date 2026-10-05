@@ -14,6 +14,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { PLANS, type PlanId } from '@/lib/models'
 import { PADDLE_PRICE_IDS, isPaddleSandbox } from '@/lib/paddle'
+import { APP_URL } from '@/lib/appUrl'
 
 declare global {
   interface Window {
@@ -153,7 +154,7 @@ function CheckoutForm() {
 
     setLoading(true)
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const appUrl = APP_URL || window.location.origin
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
         customer: { email: user.email },

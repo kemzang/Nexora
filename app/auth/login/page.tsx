@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, Zap, Code, ArrowRight, Brain } from 'lucide-react'
+import { Loader2, Code, ArrowRight } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
 const loginSchema = z.object({
@@ -174,18 +175,7 @@ function LoginForm() {
               transition={{ delay: 0.15, type: "spring" }}
               className="flex justify-center"
             >
-              <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
-                  <Sparkles className="w-7 h-7 text-primary-foreground" />
-                </div>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute -top-1 -right-1"
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                </motion.div>
-              </div>
+              <BrandLogo size={56} />
             </motion.div>
             <div className="space-y-1.5">
               <CardTitle className="text-2xl font-bold tracking-tight">Nexora</CardTitle>

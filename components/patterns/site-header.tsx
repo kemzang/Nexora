@@ -8,7 +8,8 @@ import { LanguageSwitcher } from '@/components/language-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { useTranslation } from '@/lib/i18n/context'
 import { useAuth } from '@/hooks/use-auth'
-import { Sparkles, Menu, X, LayoutDashboard } from 'lucide-react'
+import { Menu, X, LayoutDashboard } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 
 /**
  * Barre de navigation globale du site marketing (accueil, tarifs, docs,
@@ -35,9 +36,7 @@ export function SiteHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <BrandLogo size={36} className="rounded-xl shadow-none" />
             <span className="text-lg font-bold tracking-tight gradient-text-strong">Nexora</span>
           </Link>
 

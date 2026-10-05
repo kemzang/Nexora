@@ -36,7 +36,7 @@ export default function RefundPage() {
           <p className="text-sm text-muted-foreground leading-relaxed mb-8">
             Nexora is a monthly subscription service. A free tier lets you try
             the service without paying, and the terms below apply to paid
-            subscriptions. Subscriptions are sold by Bryan Teumena, trading as
+            subscriptions. Subscriptions are sold by Kemzang Teumena Stephane Bryan, trading as
             Nexora, a sole trader established in Cameroon.
           </p>
 

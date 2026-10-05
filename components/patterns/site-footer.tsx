@@ -48,7 +48,7 @@ export function SiteFooter() {
               cherche QUI vend : sans nom ni pays, le dossier tombe en
               « commercant non identifiable ». */}
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nexora — Bryan Teumena, Cameroun.{" "}
+            © {new Date().getFullYear()} Nexora — Kemzang Teumena Stephane Bryan, Cameroon.{" "}
             {t.footer.rights}
           </p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">

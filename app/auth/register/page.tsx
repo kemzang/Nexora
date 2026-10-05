@@ -173,7 +173,7 @@ function RegisterForm() {
               </motion.div>
               <div className="space-y-1.5">
                 <CardTitle className="text-2xl font-bold tracking-tight">
-                  Rejoindre <span className="gradient-text">Nexora</span>
+                  Join <span className="gradient-text">Nexora</span>
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
                   Create your account and transform the way you build
@@ -199,7 +199,7 @@ function RegisterForm() {
                     {errors.firstName && <p className="text-red-400 text-xs ml-1">{errors.firstName.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-sm ml-0.5">Nom</Label>
+                    <Label htmlFor="lastName" className="text-sm ml-0.5">Last name</Label>
                     <Input id="lastName" placeholder="Dupont" {...register('lastName')}
                       className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                     {errors.lastName && <p className="text-red-400 text-xs ml-1">{errors.lastName.message}</p>}

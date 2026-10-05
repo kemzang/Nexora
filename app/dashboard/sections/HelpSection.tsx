@@ -147,7 +147,7 @@ export default function HelpSection() {
               color: 'text-foreground/70',
               bg: 'bg-muted',
               hover: 'hover:border-border hover:bg-muted',
-              action: 'Rejoindre →',
+              action: 'Join →',
             },
           ].map(item => (
             <Card key={item.title} className={`glass border-border/50 ${item.hover} transition-all cursor-pointer group hover:-translate-y-0.5`}>

@@ -272,7 +272,7 @@ export default function InvoicesSection() {
                 <span>Facture</span>
                 <span>Montant</span>
                 <span>Period</span>
-                <span>Statut</span>
+                <span>Status</span>
                 <span />
               </div>
 

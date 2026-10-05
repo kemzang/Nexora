@@ -127,7 +127,7 @@ function VSCodeCallbackInner() {
                 </p>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => window.close()} className="flex-1">
-                    Fermer
+                    Close
                   </Button>
                   <Button variant="outline" onClick={() => window.open('/dashboard', '_blank')} className="border-border/50 text-muted-foreground hover:text-foreground">
                     <ExternalLink className="w-4 h-4 mr-1" />

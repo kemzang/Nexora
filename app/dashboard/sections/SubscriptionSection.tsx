@@ -264,17 +264,17 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
                   <Zap className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">Plan actuel</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-1">Current plan</p>
                   <p className="text-2xl font-bold text-foreground">{sub.planName}</p>
                   {sub.planSlug === 'free' ? (
-                    <span className="badge-neutral mt-1">Gratuit</span>
+                    <span className="badge-neutral mt-1">Free</span>
                   ) : (
-                    <span className="badge-primary mt-1">Actif</span>
+                    <span className="badge-primary mt-1">Active</span>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">{sub.price === 0 ? 'Gratuit' : `$${sub.price}`}</p>
+                <p className="text-2xl font-bold">{sub.price === 0 ? 'Free' : `$${sub.price}`}</p>
                 {sub.price > 0 && <p className="text-xs text-muted-foreground">/month</p>}
               </div>
             </div>

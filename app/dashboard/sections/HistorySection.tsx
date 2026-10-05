@@ -88,7 +88,7 @@ export default function HistorySection() {
               disabled={query.trim().length < 2 || loading}
               className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Rechercher'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
             </button>
           </div>
           {error && <p className="text-red-400 text-xs mt-2">{error}</p>}

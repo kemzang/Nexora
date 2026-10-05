@@ -133,7 +133,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       ring: 'ring-emerald-500/20',
     },
     {
-      label: 'Plan actuel',
+      label: 'Current plan',
       value: stats.planName,
       sub: stats.renewalDate
         ? `Renews on ${new Date(stats.renewalDate).toLocaleDateString('en-US')}`

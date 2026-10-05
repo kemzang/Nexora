@@ -115,7 +115,7 @@ export default function DashboardPage() {
               Sign out
             </Button>
             <Button variant="ghost" onClick={() => setIsSignOutModalOpen(false)} className="flex-1 text-muted-foreground hover:text-foreground hover:bg-accent">
-              Annuler
+              Cancel
             </Button>
           </div>
         </div>

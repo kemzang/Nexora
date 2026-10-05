@@ -110,7 +110,7 @@ export default function ResetPasswordPage() {
                 {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirmer</Label>
+                <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirm</Label>
                 <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                 {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}

@@ -192,7 +192,7 @@ export default function ApiKeysSection() {
                     {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating…</> : 'Create the key'}
                   </Button>
                   <Button variant="ghost" onClick={() => setShowCreate(false)} className="text-muted-foreground">
-                    Annuler
+                    Cancel
                   </Button>
                 </div>
               </CardContent>
@@ -306,7 +306,7 @@ export default function ApiKeysSection() {
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {deleteConfirm === key.id ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-red-400">Confirmer ?</span>
+                        <span className="text-xs text-red-400">Confirm?</span>
                         <button
                           onClick={() => handleDelete(key.id)}
                           disabled={deleting}
@@ -318,7 +318,7 @@ export default function ApiKeysSection() {
                           onClick={() => setDeleteConfirm(null)}
                           className="px-2 py-1 rounded-lg bg-white/[0.05] text-muted-foreground hover:text-foreground text-xs transition-colors"
                         >
-                          Annuler
+                          Cancel
                         </button>
                       </div>
                     ) : (

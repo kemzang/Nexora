@@ -99,7 +99,7 @@ export default function ParametresSection() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-sm">Nom</Label>
+              <Label htmlFor="lastName" className="text-sm">Last name</Label>
               <Input
                 id="lastName"
                 value={lastName}
@@ -120,7 +120,7 @@ export default function ParametresSection() {
             size="sm"
             className="bg-primary text-primary-foreground"
           >
-            {savingProfile ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enregistrement...</> : <><CheckCircle2 className="w-4 h-4 mr-2" />Enregistrer</>}
+            {savingProfile ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enregistrement...</> : <><CheckCircle2 className="w-4 h-4 mr-2" />Save</>}
           </Button>
         </CardContent>
       </Card>
@@ -164,7 +164,7 @@ export default function ParametresSection() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm">Confirmer</Label>
+              <Label htmlFor="confirmPassword" className="text-sm">Confirm</Label>
               <Input
                 id="confirmPassword"
                 type="password"

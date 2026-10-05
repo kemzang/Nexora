@@ -225,7 +225,7 @@ function CheckoutForm() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold">{currentPlan.price}</p>
-                    <p className="text-xs text-muted-foreground">/mois</p>
+                    <p className="text-xs text-muted-foreground">/month</p>
                   </div>
                 </div>
               </CardContent>
@@ -293,17 +293,17 @@ function CheckoutForm() {
                     <Lock className="w-4 h-4 text-foreground/70" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">Paiement par carte sécurisé</p>
+                    <p className="text-sm font-medium text-foreground">Secure card payment</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Au clic, le formulaire de paiement s'affiche directement sur cette page — tu ne la quittes jamais.
-                      Tes informations bancaires ne transitent jamais par Nexora.
+                      When you click, the payment form opens directly on this page &mdash; you never leave it.
+                        Your card details never pass through Nexora.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-0.5">
                   <p className="text-xs text-muted-foreground">{ch.accepted}</p>
-                  {(['VISA', 'Mastercard', 'Prépayée'] as const).map(c => (
+                  {(['VISA', 'Mastercard', 'Prepaid'] as const).map(c => (
                     <span key={c} className="px-2 py-0.5 rounded-md bg-white/[0.05] border border-border/40 text-xs text-muted-foreground font-mono">
                       {c}
                     </span>

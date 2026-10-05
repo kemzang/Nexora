@@ -144,7 +144,7 @@ export default function PricingPageClient() {
                 <PricingCard
                   name={plan.name}
                   price={plan.priceLabel}
-                  period={plan.price > 0 ? '/mois' : undefined}
+                  period={plan.price > 0 ? '/month' : undefined}
                   features={plan.features}
                   href={`/checkout?plan=${key}`}
                   popular={plan.popular}
@@ -179,7 +179,7 @@ export default function PricingPageClient() {
             </thead>
             <tbody>
               {[
-                { label: 'Prix', render: (k: PlanId) => PLANS[k].price > 0 ? `${PLANS[k].priceLabel}/mois` : 'Gratuit' },
+                { label: 'Price', render: (k: PlanId) => PLANS[k].price > 0 ? `${PLANS[k].priceLabel}/month` : 'Free' },
                 { label: 'Credits / month', render: (k: PlanId) => formatCredits(PLANS[k].tokensPerMonth) },
                 { label: 'Requests / day', render: (k: PlanId) => formatRequests(PLANS[k].maxRequestsPerDay) },
                 { label: 'Collaborateurs max', render: (k: PlanId) => formatCollaborators(PLANS[k].maxCollaborators) },

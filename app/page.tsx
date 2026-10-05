@@ -27,7 +27,7 @@ const plans = [
   { key: 'starter',    name: PLANS.starter.name,    price: PLANS.starter.priceLabel,    href: '/checkout?plan=starter',    popular: false },
   { key: 'pro',        name: PLANS.pro.name,        price: PLANS.pro.priceLabel,        href: '/checkout?plan=pro',        popular: true  },
   { key: 'business',   name: PLANS.business.name,   price: PLANS.business.priceLabel,   href: '/checkout?plan=business',   popular: false },
-  { key: 'enterprise', name: PLANS.enterprise.name, price: PLANS.enterprise.priceLabel, href: '/checkout?plan=enterprise', popular: false },
+  { key: 'enterprise', name: PLANS.enterprise.name, price: PLANS.enterprise.priceLabel, href: '/contact', popular: false },
 ]
 
 function TerminalMockup() {

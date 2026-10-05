@@ -17,11 +17,11 @@ import { PLANS, MODELS, type PlanId } from '@/lib/models'
 const PLAN_ORDER: PlanId[] = ['free', 'starter', 'pro', 'business', 'enterprise']
 
 const CTA_TEXT: Record<PlanId, string> = {
-  free: 'Commencer gratuitement',
-  starter: 'Choisir Starter',
-  pro: 'Choisir Pro',
-  business: 'Choisir Business',
-  enterprise: 'Contacter l\'équipe',
+  free: 'Get started free',
+  starter: 'Choose Starter',
+  pro: 'Choose Pro',
+  business: 'Choose Business',
+  enterprise: 'Contact the team',
 }
 
 function formatCredits(n: number): string {
@@ -31,11 +31,11 @@ function formatCredits(n: number): string {
 }
 
 function formatRequests(n: number): string {
-  return n >= 99_999 ? 'Illimitées' : n.toLocaleString('fr-FR')
+  return n >= 99_999 ? 'Unlimited' : n.toLocaleString('en-US')
 }
 
 function formatCollaborators(n: number): string {
-  return n >= 99_999 ? 'Illimité' : String(n)
+  return n >= 99_999 ? 'Unlimited' : String(n)
 }
 
 function modelsForPlan(id: PlanId): string {
@@ -44,36 +44,36 @@ function modelsForPlan(id: PlanId): string {
 
 const FAQ: { q: string; a: string }[] = [
   {
-    q: 'Que se passe-t-il si je dépasse mon quota de crédits ?',
-    a: "Les requêtes IA sont temporairement bloquées jusqu'au renouvellement mensuel de votre période. Vous pouvez passer à un plan supérieur à tout moment depuis votre tableau de bord pour continuer immédiatement, sans attendre le renouvellement.",
+    q: 'What happens if I exceed my credit allowance?',
+    a: "AI requests are temporarily blocked until your billing period renews. You can upgrade at any time from your dashboard to carry on straight away, without waiting for the renewal.",
   },
   {
-    q: 'Puis-je changer de plan à tout moment ?',
-    a: "Oui. Rendez-vous dans la section Abonnement de votre tableau de bord pour passer à un plan supérieur quand vous le souhaitez. Pour résilier, contactez notre support par email — voir la page Contact.",
+    q: 'Can I change plan at any time?',
+    a: "Yes. Go to the Subscription section of your dashboard to upgrade whenever you like. To cancel, email our support — see the Contact page.",
   },
   {
-    q: 'Les crédits non utilisés sont-ils reportés au mois suivant ?',
-    a: "Non, les crédits se réinitialisent à chaque renouvellement mensuel et ne sont pas cumulables d'un mois à l'autre.",
+    q: 'Do unused credits roll over to the next month?',
+    a: "No. Credits reset at each monthly renewal and do not accumulate from one month to the next.",
   },
   {
-    q: "Qu'est-ce qu'un crédit, exactement ?",
-    a: "Un crédit correspond à un token consommé, pondéré par le coût relatif du modèle utilisé : un modèle plus puissant (comme Claude Opus) consomme plus de crédits par token qu'un modèle plus léger (comme DeepSeek V3). Votre consommation détaillée est visible dans votre tableau de bord.",
+    q: "What exactly is a credit?",
+    a: "A credit corresponds to one token consumed, weighted by the relative cost of the model used: a more powerful model (such as Claude Opus) consumes more credits per token than a lighter one (such as DeepSeek V3). Your detailed consumption is visible in your dashboard.",
   },
   {
-    q: 'Quels moyens de paiement acceptez-vous ?',
-    a: "La carte bancaire (Visa, Mastercard) via notre partenaire de paiement Paddle, disponible dans le monde entier.",
+    q: 'Which payment methods do you accept?',
+    a: "Card payments (Visa, Mastercard) through our payment partner Paddle, available worldwide.",
   },
   {
-    q: 'Le plan Free expire-t-il ?',
-    a: "Non — le plan Free reste disponible aussi longtemps que vous le souhaitez, avec 100 000 crédits chaque mois.",
+    q: 'Does the Free plan expire?',
+    a: "No — the Free plan stays available for as long as you want, with 100,000 credits every month.",
   },
   {
-    q: 'Puis-je collaborer avec mon équipe ?',
-    a: "Oui, à partir du plan Starter (2 personnes dans une session). Les plans supérieurs permettent davantage de collaborateurs : 5 sur Pro, 20 sur Business, et un nombre illimité sur Enterprise.",
+    q: 'Can I collaborate with my team?',
+    a: "Yes, from the Starter plan onwards (2 people in a session). Higher plans allow more collaborators: 5 on Pro, 20 on Business, and an unlimited number on Enterprise.",
   },
   {
-    q: 'Le plan Enterprise inclut-il un SLA ?',
-    a: "Le plan Enterprise inclut le support 24/7, l'authentification SSO et un SLA contractuel — contactez notre équipe pour les modalités précises.",
+    q: 'Does the Enterprise plan include an SLA?',
+    a: "The Enterprise plan includes 24/7 support, SSO authentication and a contractual SLA — contact our team for the exact terms.",
   },
 ]
 
@@ -116,13 +116,13 @@ export default function PricingPageClient() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Badge variant="primary" className="mb-5">
               <Sparkles className="w-3 h-3" />
-              Tarifs
+              Pricing
             </Badge>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-4 text-balance">
-              Des tarifs simples, sans surprise
+              Simple pricing, no surprises
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Commencez gratuitement, sans carte bancaire. Passez à un plan supérieur quand vous en avez besoin — changez ou annulez à tout moment.
+              Start free, no card required. Upgrade when you need to — change or cancel at any time.
             </p>
           </motion.div>
         </div>
@@ -161,9 +161,9 @@ export default function PricingPageClient() {
       {/* Comparison table */}
       <SectionLayout background="muted">
         <PageHeader
-          badge="Comparatif"
-          title="Comparaison rapide"
-          subtitle="Les chiffres clés de chaque plan, en un coup d'œil."
+          badge="Comparison"
+          title="At a glance"
+          subtitle="The key figures for each plan, side by side."
         />
         <div className="max-w-5xl mx-auto overflow-x-auto">
           <table className="w-full text-sm border-separate border-spacing-0">
@@ -180,10 +180,10 @@ export default function PricingPageClient() {
             <tbody>
               {[
                 { label: 'Prix', render: (k: PlanId) => PLANS[k].price > 0 ? `${PLANS[k].priceLabel}/mois` : 'Gratuit' },
-                { label: 'Crédits / mois', render: (k: PlanId) => formatCredits(PLANS[k].tokensPerMonth) },
-                { label: 'Requêtes / jour', render: (k: PlanId) => formatRequests(PLANS[k].maxRequestsPerDay) },
+                { label: 'Credits / month', render: (k: PlanId) => formatCredits(PLANS[k].tokensPerMonth) },
+                { label: 'Requests / day', render: (k: PlanId) => formatRequests(PLANS[k].maxRequestsPerDay) },
                 { label: 'Collaborateurs max', render: (k: PlanId) => formatCollaborators(PLANS[k].maxCollaborators) },
-                { label: 'Modèles inclus', render: (k: PlanId) => modelsForPlan(k) },
+                { label: 'Models included', render: (k: PlanId) => modelsForPlan(k) },
               ].map((row, ri) => (
                 <tr key={row.label} className={ri % 2 === 0 ? 'bg-white/[0.02]' : ''}>
                   <td className="px-4 py-3 text-muted-foreground border-t border-border/50">{row.label}</td>
@@ -196,13 +196,13 @@ export default function PricingPageClient() {
           </table>
         </div>
         <p className="text-center text-xs text-muted-foreground/70 mt-6 max-w-2xl mx-auto">
-          L'autocomplétion nécessite le plan Starter ou supérieur. Le plan Free inclut 100 000 crédits chaque mois.
+          Autocomplete requires the Starter plan or above. The Free plan includes 100,000 credits every month.
         </p>
       </SectionLayout>
 
       {/* FAQ */}
       <SectionLayout background="default">
-        <PageHeader badge="FAQ" title="Questions fréquentes" subtitle="Ce que nos utilisateurs nous demandent le plus souvent." />
+        <PageHeader badge="FAQ" title="Frequently asked questions" subtitle="What our users ask us most often." />
         <div className="max-w-2xl mx-auto space-y-2.5">
           {FAQ.map((item, i) => (
             <motion.div key={item.q} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
@@ -226,8 +226,8 @@ export default function PricingPageClient() {
                   <Rocket className="w-7 h-7 text-primary-foreground relative z-10" />
                 </div>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-balance">Prêt à essayer Nexora ?</h2>
-              <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">Créez un compte gratuit en quelques secondes, aucune carte bancaire requise.</p>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-balance">Ready to try Nexora?</h2>
+              <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">Create a free account in seconds, no card required.</p>
               <Link href="/auth/register">
                 <Button size="lg" variant="outline" className="px-10 h-12 text-base group">
                   Commencer gratuitement

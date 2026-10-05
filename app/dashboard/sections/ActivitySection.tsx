@@ -16,7 +16,7 @@ const FEED_LIMIT = 25
 function timeAgo(dateStr: string): string {
   const diffMs = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diffMs / 60_000)
-  if (mins < 1) return "à l'instant"
+  if (mins < 1) return "just now"
   if (mins < 60) return `il y a ${mins} min`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `il y a ${hours} h`
@@ -104,9 +104,9 @@ export default function ActiviteSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Activité</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Ce qui se passe en ce moment dans vos sessions de collaboration
+          What is happening right now in your collaboration sessions
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function ActiviteSection() {
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Radio className="w-4 h-4 text-foreground/70" />
-            Fil d'activité
+            Activity feed
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -124,7 +124,7 @@ export default function ActiviteSection() {
             </div>
           ) : events.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-10">
-              Aucune activité pour l'instant — rejoignez ou créez une session de collaboration
+              No activity yet — join or create a collaboration session
             </p>
           ) : (
             <div className="space-y-1">

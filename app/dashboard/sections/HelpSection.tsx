@@ -10,24 +10,24 @@ import {
 
 const FAQ = [
   {
-    q: 'Comment installer l\'extension Nexora dans VS Code ?',
-    a: 'Ouvrez VS Code, allez dans l\'onglet Extensions (Ctrl+Shift+X), recherchez "Nexora AI" et cliquez sur Installer. Relancez VS Code si demandé.',
+    q: 'How do I install the Nexora extension in VS Code?',
+    a: 'Open VS Code, go to the Extensions tab (Ctrl+Shift+X), search for "Nexora AI" and click Install. Restart VS Code if prompted.',
   },
   {
-    q: 'Comment connecter mon compte à l\'extension ?',
-    a: 'Dans VS Code, ouvrez la palette de commandes (Ctrl+Shift+P), tapez "Nexora: Login" et suivez les instructions. Vous serez redirigé vers votre navigateur pour vous authentifier.',
+    q: 'How do I connect my account to the extension?',
+    a: 'In VS Code, open the command palette (Ctrl+Shift+P), type "Nexora: Login" and follow the instructions. You will be redirected to your browser to authenticate.',
   },
   {
-    q: 'Qu\'est-ce qu\'un crédit et comment est-il compté ?',
-    a: 'Un crédit correspond à un token (environ 4 caractères de texte), pondéré selon le modèle utilisé — les modèles plus puissants (Claude Opus, Sonnet...) consomment plus de crédits par token que les modèles économiques (DeepSeek, Gemini Flash). Chaque requête IA consomme des crédits en entrée (votre message + contexte) et en sortie (la réponse générée). Le décompte est visible dans votre tableau de bord.',
+    q: 'What is a credit and how is it counted?',
+    a: 'A credit corresponds to one token (about 4 characters of text), weighted by the model used — more powerful models (Claude Opus, Sonnet…) consume more credits per token than economical ones (DeepSeek, Gemini Flash). Each AI request consumes credits on input (your message plus context) and on output (the generated response). The count is visible in your dashboard.',
   },
   {
-    q: 'Mes crédits non utilisés sont-ils reportés au mois suivant ?',
-    a: 'Non, les crédits se réinitialisent à chaque renouvellement mensuel. Ils ne sont pas cumulables d\'un mois à l\'autre.',
+    q: 'Do my unused credits carry over to the next month?',
+    a: 'No. Credits reset at each monthly renewal and do not carry over from one month to the next.',
   },
   {
-    q: 'Comment changer de plan ou annuler mon abonnement ?',
-    a: 'Rendez-vous dans la section Abonnement de votre tableau de bord. Vous pouvez upgrader votre plan à tout moment. Pour annuler, contactez notre support par email.',
+    q: 'How do I change plan or cancel my subscription?',
+    a: 'Go to the Subscription section of your dashboard. You can upgrade your plan at any time. To cancel, email our support.',
   },
 ]
 
@@ -59,13 +59,13 @@ function FaqItem({ item }: { item: typeof FAQ[0] }) {
   )
 }
 
-export default function AideSection() {
+export default function HelpSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Aide & Support</h1>
-        <p className="text-muted-foreground text-sm mt-1">Documentation, guides et ressources pour démarrer</p>
+        <h1 className="text-2xl font-bold tracking-tight">Help & Support</h1>
+        <p className="text-muted-foreground text-sm mt-1">Documentation, guides and resources to get started</p>
       </div>
 
       {/* Quick start */}
@@ -73,7 +73,7 @@ export default function AideSection() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-5">
             <Terminal className="w-4 h-4 text-foreground/70" />
-            <h2 className="font-semibold">Guide de démarrage rapide</h2>
+            <h2 className="font-semibold">Quick-start guide</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -88,16 +88,16 @@ export default function AideSection() {
               {
                 step: '02',
                 icon: Key,
-                title: 'Créer une clé API',
-                desc: 'Générez votre clé dans l\'onglet "Clés API" du dashboard',
+                title: 'Create an API key',
+                desc: 'Generate your key in the "API keys" tab of the dashboard',
                 color: 'text-foreground/70',
                 bg: 'bg-muted',
               },
               {
                 step: '03',
                 icon: Zap,
-                title: 'Commencer à coder',
-                desc: 'Utilisez Ctrl+Shift+P → Nexora dans VS Code',
+                title: 'Start coding',
+                desc: 'Use Ctrl+Shift+P → Nexora in VS Code',
                 color: 'text-emerald-400',
                 bg: 'bg-emerald-500/10',
               },
@@ -125,7 +125,7 @@ export default function AideSection() {
             {
               icon: Book,
               title: 'Documentation',
-              desc: 'Guides complets, référence API et tutoriels',
+              desc: 'Full guides, API reference and tutorials',
               color: 'text-foreground/70',
               bg: 'bg-muted',
               hover: 'hover:border-border hover:bg-muted',
@@ -134,16 +134,16 @@ export default function AideSection() {
             {
               icon: GitBranch,
               title: 'GitHub',
-              desc: 'Code source de l\'extension et issues',
+              desc: 'Extension source code and issues',
               color: 'text-foreground',
               bg: 'bg-white/[0.06]',
               hover: 'hover:border-white/[0.12] hover:bg-white/[0.04]',
-              action: 'Voir le repo →',
+              action: 'View the repo →',
             },
             {
               icon: MessagesSquare,
-              title: 'Communauté',
-              desc: 'Discord et forum avec la communauté Nexora',
+              title: 'Community',
+              desc: 'Discord and forum with the Nexora community',
               color: 'text-foreground/70',
               bg: 'bg-muted',
               hover: 'hover:border-border hover:bg-muted',
@@ -166,7 +166,7 @@ export default function AideSection() {
 
       {/* FAQ */}
       <div>
-        <h2 className="text-base font-semibold mb-4">Questions fréquentes</h2>
+        <h2 className="text-base font-semibold mb-4">Frequently asked questions</h2>
         <div className="space-y-2">
           {FAQ.map((item, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -180,9 +180,9 @@ export default function AideSection() {
       <Card className="glass bg-gradient-to-br from-muted to-muted/50 border-border">
         <CardContent className="p-6 text-center">
           <Sparkles className="w-9 h-9 mx-auto mb-3 text-foreground/70" />
-          <h2 className="text-lg font-bold mb-1">Vous avez d'autres questions ?</h2>
+          <h2 className="text-lg font-bold mb-1">Any other questions?</h2>
           <p className="text-muted-foreground text-sm mb-5 max-w-sm mx-auto">
-            Notre équipe est disponible pour vous aider. Réponse sous 24h en semaine.
+            Our team is here to help. We reply within 24 hours on weekdays.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
@@ -190,7 +190,7 @@ export default function AideSection() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium transition-colors"
             >
               <Mail className="w-3.5 h-3.5" />
-              Envoyer un email
+              Send an email
             </a>
             <a
               href="#"

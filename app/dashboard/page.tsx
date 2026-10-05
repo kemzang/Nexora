@@ -14,38 +14,38 @@ import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
 import OverviewSection from '@/app/dashboard/sections/OverviewSection'
 import ApiKeysSection from '@/app/dashboard/sections/ApiKeysSection'
-import UtilisationSection from '@/app/dashboard/sections/UtilisationSection'
-import AbonnementSection from '@/app/dashboard/sections/AbonnementSection'
-import FacturesSection from '@/app/dashboard/sections/FacturesSection'
-import AideSection from '@/app/dashboard/sections/AideSection'
+import UsageSection from '@/app/dashboard/sections/UsageSection'
+import SubscriptionSection from '@/app/dashboard/sections/SubscriptionSection'
+import InvoicesSection from '@/app/dashboard/sections/InvoicesSection'
+import HelpSection from '@/app/dashboard/sections/HelpSection'
 import CollaborationsSection from '@/app/dashboard/sections/CollaborationsSection'
-import HistoriqueSection from '@/app/dashboard/sections/HistoriqueSection'
-import ActiviteSection from '@/app/dashboard/sections/ActiviteSection'
-import ParametresSection from '@/app/dashboard/sections/ParametresSection'
+import HistorySection from '@/app/dashboard/sections/HistorySection'
+import ActivitySection from '@/app/dashboard/sections/ActivitySection'
+import SettingsSection from '@/app/dashboard/sections/SettingsSection'
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Vue d\'ensemble', section: 'dashboard' },
-  { icon: Key, label: 'Clés API', section: 'api-keys' },
+  { icon: Key, label: 'API keys', section: 'api-keys' },
   { icon: Users, label: 'Collaborations', section: 'collaborations' },
-  { icon: Radio, label: 'Activité', section: 'activite' },
-  { icon: History, label: 'Historique', section: 'historique' },
-  { icon: Activity, label: 'Utilisation', section: 'utilisation' },
-  { icon: Wallet, label: 'Abonnement', section: 'abonnement' },
-  { icon: FileText, label: 'Factures', section: 'factures' },
-  { icon: HelpCircle, label: 'Aide', section: 'aide' },
+  { icon: Radio, label: 'Activity', section: 'activite' },
+  { icon: History, label: 'History', section: 'historique' },
+  { icon: Activity, label: 'Usage', section: 'utilisation' },
+  { icon: Wallet, label: 'Subscription', section: 'abonnement' },
+  { icon: FileText, label: 'Invoices', section: 'factures' },
+  { icon: HelpCircle, label: 'Help', section: 'aide' },
 ]
 
 const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => void }>> = {
   dashboard: ({ user, onNavigate }) => <OverviewSection user={user} onNavigate={onNavigate} />,
   'api-keys': ({ user }) => <ApiKeysSection />,
   collaborations: () => <CollaborationsSection />,
-  activite: () => <ActiviteSection />,
-  historique: () => <HistoriqueSection />,
-  utilisation: () => <UtilisationSection />,
-  abonnement: ({ onNavigate }) => <AbonnementSection onNavigate={onNavigate} />,
-  factures: () => <FacturesSection />,
-  aide: () => <AideSection />,
-  parametres: () => <ParametresSection />,
+  activite: () => <ActivitySection />,
+  historique: () => <HistorySection />,
+  utilisation: () => <UsageSection />,
+  abonnement: ({ onNavigate }) => <SubscriptionSection onNavigate={onNavigate} />,
+  factures: () => <InvoicesSection />,
+  aide: () => <HelpSection />,
+  parametres: () => <SettingsSection />,
 }
 
 function NexoraLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }
 
   const sectionTitle = sidebarLinks.find(l => l.section === activeSection)?.label
-    || (activeSection === 'parametres' ? 'Paramètres' : 'Vue d\'ensemble')
+    || (activeSection === 'parametres' ? 'Settings' : 'Vue d\'ensemble')
   const ActiveComponent = sections[activeSection] || sections.dashboard
 
   if (loading || !user) {
@@ -101,18 +101,18 @@ export default function DashboardPage() {
       <Modal
         isOpen={isSignOutModalOpen}
         onClose={() => setIsSignOutModalOpen(false)}
-        title="Confirmer la déconnexion"
+        title="Confirm sign-out"
       >
         <div className="text-center">
           <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <LogOut className="w-7 h-7 text-red-400" />
           </div>
           <p className="text-muted-foreground mb-8 text-sm">
-            Êtes-vous sûr de vouloir vous déconnecter de votre compte Nexora ?
+            Are you sure you want to sign out of your Nexora account?
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button onClick={handleSignOut} className="flex-1 bg-red-600 hover:bg-red-500 text-white border-none">
-              Se déconnecter
+              Sign out
             </Button>
             <Button variant="ghost" onClick={() => setIsSignOutModalOpen(false)} className="flex-1 text-muted-foreground hover:text-foreground hover:bg-accent">
               Annuler
@@ -193,14 +193,14 @@ export default function DashboardPage() {
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.05] transition-colors border border-transparent hover:border-border/40"
             >
               <Settings className="w-3.5 h-3.5" />
-              Paramètres
+              Settings
             </button>
             <button
               onClick={() => setIsSignOutModalOpen(true)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Déconnexion
+              Signing out
             </button>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
             aucun <div> n'est jamais créé pour lui et la section ne s'affiche
             jamais, quel que soit activeSection. */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-          {[...sidebarLinks, { icon: Settings, label: 'Paramètres', section: 'parametres' }].map(link => {
+          {[...sidebarLinks, { icon: Settings, label: 'Settings', section: 'parametres' }].map(link => {
             const Section = sections[link.section]
             return (
               <div

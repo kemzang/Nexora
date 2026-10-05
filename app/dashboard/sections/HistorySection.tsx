@@ -18,7 +18,7 @@ interface SearchResult {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -32,7 +32,7 @@ function highlightSnippet(content: string, query: string): string {
   return (start > 0 ? '…' : '') + content.slice(start, end) + (end < content.length ? '…' : '')
 }
 
-export default function HistoriqueSection() {
+export default function HistorySection() {
   const { token } = useAuth()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -50,7 +50,7 @@ export default function HistoriqueSection() {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Erreur de recherche')
+      if (!res.ok) throw new Error(data.error ?? 'Search failed')
       setResults(data.results ?? [])
       setSearched(true)
     } catch (e: unknown) {
@@ -63,9 +63,9 @@ export default function HistoriqueSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Historique</h1>
+        <h1 className="text-2xl font-bold tracking-tight">History</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Recherchez dans tous vos échanges de collaboration passés, actifs ou fermés
+          Search across all your collaboration exchanges, past, active or closed
         </p>
       </div>
 
@@ -79,7 +79,7 @@ export default function HistoriqueSection() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && void handleSearch()}
-                placeholder="Rechercher un message, un sujet, un mot-clé…"
+                placeholder="Search a message, a topic, a keyword…"
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-foreground/20"
               />
             </div>
@@ -99,7 +99,7 @@ export default function HistoriqueSection() {
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-foreground/70" />
-            Résultats
+            Results
             {searched && (
               <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 text-xs font-medium">
                 {results.length}
@@ -110,11 +110,11 @@ export default function HistoriqueSection() {
         <CardContent>
           {!searched ? (
             <p className="text-sm text-muted-foreground text-center py-10">
-              Lancez une recherche pour retrouver un ancien échange
+              Run a search to find an earlier exchange
             </p>
           ) : results.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-10">
-              Aucun résultat pour « {query} »
+              No result for “ {query} »
             </p>
           ) : (
             <div className="space-y-2">

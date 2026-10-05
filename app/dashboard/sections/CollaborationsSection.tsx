@@ -25,7 +25,7 @@ const SITE_URL =
   APP_URL
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -102,7 +102,7 @@ export default function CollaborationsSection() {
   const handleCopy = async (room: Room) => {
     await navigator.clipboard.writeText(webLink(room))
     setCopiedId(room.id)
-    showToast('Lien d\'invitation copié', 'success')
+    showToast('Invite link copied', 'success')
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -112,9 +112,9 @@ export default function CollaborationsSection() {
       .update({ is_active: false })
       .eq('id', room.id)
     if (error) {
-      showToast('Erreur lors de la fermeture', 'error')
+      showToast('Failed to close', 'error')
     } else {
-      showToast('Session fermée', 'success')
+      showToast('Session closed', 'success')
       setRooms((prev) => prev.filter((r) => r.id !== room.id))
     }
     setDeleting(null)
@@ -126,7 +126,7 @@ export default function CollaborationsSection() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Collaborations</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Vos sessions de collaboration en temps réel partagées depuis VS Code
+          Your real-time collaboration sessions shared from VS Code
         </p>
       </div>
 
@@ -135,8 +135,8 @@ export default function CollaborationsSection() {
         <CardContent className="p-4 flex gap-3">
           <Link2 className="w-4 h-4 text-foreground/70 shrink-0 mt-0.5" />
           <p className="text-xs text-foreground/70 leading-relaxed">
-            Les sessions se créent depuis l'extension VS Code (bouton « Collab »).
-            Elles apparaissent ici — partagez le lien web pour qu'un collègue rejoigne
+            Sessions are created from the VS Code extension (the “Collab” button).
+            They appear here — share the web link so a colleague can join
             depuis son navigateur, sans VS Code.
           </p>
         </CardContent>
@@ -165,9 +165,9 @@ export default function CollaborationsSection() {
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <Users className="w-7 h-7 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">Aucune session active</p>
+              <p className="font-medium text-foreground mb-1">No active session</p>
               <p className="text-sm text-muted-foreground">
-                Créez une session depuis l'extension VS Code pour la voir ici
+                Create a session from the VS Code extension to see it here
               </p>
             </div>
           ) : (
@@ -194,7 +194,7 @@ export default function CollaborationsSection() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground/60 mt-0.5">
-                      Créée le {formatDate(room.created_at)}
+                      Created on {formatDate(room.created_at)}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -213,7 +213,7 @@ export default function CollaborationsSection() {
                       href={webLink(room)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title="Ouvrir la session web"
+                      title="Open the web session"
                       className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -221,7 +221,7 @@ export default function CollaborationsSection() {
                     <button
                       onClick={() => handleStop(room)}
                       disabled={deleting === room.id}
-                      title="Fermer la session"
+                      title="Close the session"
                       className="p-2 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                       {deleting === room.id

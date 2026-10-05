@@ -14,8 +14,8 @@ const IDE_LABELS: Record<string, { name: string; deepLink?: (token: string) => s
     name: 'VS Code',
     deepLink: (token) => `vscode://nexoracoding.nexora/auth?token=${encodeURIComponent(token)}`,
   },
-  jetbrains: { name: 'votre IDE JetBrains' },
-  cli: { name: 'le CLI Nexora' },
+  jetbrains: { name: 'your JetBrains IDE' },
+  cli: { name: 'the Nexora CLI' },
 }
 
 function VSCodeCallbackInner() {
@@ -47,7 +47,7 @@ function VSCodeCallbackInner() {
           }
         }
       } catch (err) {
-        console.error('Erreur génération token:', err)
+        console.error('Token generation failed:', err)
       } finally {
         setLoading(false)
       }
@@ -59,14 +59,14 @@ function VSCodeCallbackInner() {
   const copyToClipboard = () => {
     if (apiKey) {
       navigator.clipboard.writeText(apiKey)
-      showToast('Token copié !', 'success')
+      showToast('Token copied', 'success')
     }
   }
 
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <p className="text-muted-foreground">Redirection vers la connexion...</p>
+        <p className="text-muted-foreground">Redirecting to sign-in…</p>
       </div>
     )
   }
@@ -93,10 +93,10 @@ function VSCodeCallbackInner() {
             </div>
             <div>
               <CardTitle className="text-xl font-bold tracking-tight">
-                {loading ? 'Connexion en cours...' : 'Connexion réussie !'}
+                {loading ? 'Signing in…' : 'Signed in'}
               </CardTitle>
               <CardDescription className="text-muted-foreground text-sm mt-1">
-                {loading ? 'Génération de votre token...' : `${ideInfo.name} est connecté`}
+                {loading ? 'Generating your token…' : `${ideInfo.name} is connected`}
               </CardDescription>
             </div>
           </CardHeader>
@@ -108,7 +108,7 @@ function VSCodeCallbackInner() {
               </p>
               <div className="bg-card border border-border/50 rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-2">
-                  Votre clé Nexora <span className="font-mono text-foreground/70">nxr_</span> :
+                  Your Nexora key <span className="font-mono text-foreground/70">nxr_</span> :
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-xs text-foreground/70 bg-background px-2.5 py-1.5 rounded-lg font-mono break-all">
@@ -122,8 +122,8 @@ function VSCodeCallbackInner() {
               <div className="text-center space-y-3">
                 <p className="text-xs text-muted-foreground">
                   {ide === 'vscode'
-                    ? "Si l'extension ne s'est pas connectée automatiquement, copiez la clé et collez-la dans VS Code."
-                    : `Copiez cette clé et collez-la dans ${ideInfo.name} pour vous connecter.`}
+                    ? "If the extension did not connect automatically, copy the key and paste it into VS Code."
+                    : `Copy this key and paste it into ${ideInfo.name} to sign in.`}
                 </p>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => window.close()} className="flex-1">

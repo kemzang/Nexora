@@ -18,10 +18,10 @@ import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
 const schema = z.object({
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
 }).refine(d => d.password === d.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
+  message: 'Passwords do not match',
   path: ['confirmPassword'],
 })
 
@@ -49,9 +49,9 @@ export default function ResetPasswordPage() {
     setLoading(true); setError(null)
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password: data.password })
-      if (updateError) { setError(updateError.message); showToast('Erreur lors de la réinitialisation.', 'error') }
-      else { setSuccess(true); showToast('Mot de passe mis à jour !', 'success'); setTimeout(() => router.push('/auth/login'), 3000) }
-    } catch { setError('Une erreur est survenue.') }
+      if (updateError) { setError(updateError.message); showToast('Reset failed.', 'error') }
+      else { setSuccess(true); showToast('Password updated', 'success'); setTimeout(() => router.push('/auth/login'), 3000) }
+    } catch { setError('Something went wrong.') }
     finally { setLoading(false) }
   }
 
@@ -62,8 +62,8 @@ export default function ResetPasswordPage() {
           <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-400" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-3">Mot de passe mis à jour !</h1>
-          <p className="text-muted-foreground mb-8">Redirection vers la connexion...</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-3">Password updated</h1>
+          <p className="text-muted-foreground mb-8">Redirecting to sign-in…</p>
           <div className="flex justify-center">
             <div className="w-6 h-6 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
           </div>
@@ -85,14 +85,14 @@ export default function ResetPasswordPage() {
               <BrandLogo size={56} />
             </motion.div>
             <div className="space-y-1.5">
-              <CardTitle className="text-2xl font-bold tracking-tight">Nouveau mot de passe</CardTitle>
-              <CardDescription className="text-muted-foreground">Choisissez un mot de passe sécurisé</CardDescription>
+              <CardTitle className="text-2xl font-bold tracking-tight">New password</CardTitle>
+              <CardDescription className="text-muted-foreground">Choose a secure password</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-5 p-8 pt-4">
             {!sessionReady && (
               <Alert className="bg-amber-500/10 border-amber-500/20 text-amber-300 rounded-xl">
-                <AlertDescription>Vérification du lien... Si rien ne se produit, le lien a peut-être expiré.</AlertDescription>
+                <AlertDescription>Checking the link… If nothing happens, it may have expired.</AlertDescription>
               </Alert>
             )}
             {error && (
@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm ml-0.5">Nouveau mot de passe</Label>
+                <Label htmlFor="password" className="text-sm ml-0.5">New password</Label>
                 <Input id="password" type="password" placeholder="••••••••" {...register('password')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                 {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
@@ -118,12 +118,12 @@ export default function ResetPasswordPage() {
               <Button type="submit" disabled={loading || !sessionReady}
                 variant="outline"
                 className="w-full font-semibold h-11 rounded-xl">
-                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Mise à jour...</> : <><Lock className="mr-2 h-4 w-4" />Mettre à jour</>}
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating…</> : <><Lock className="mr-2 h-4 w-4" />Update</>}
               </Button>
             </form>
             <div className="text-center pt-1">
               <Link href="/auth/login" className="text-sm text-foreground/70 hover:text-foreground transition-colors font-medium">
-                Retour à la connexion
+                Back to sign-in
               </Link>
             </div>
           </CardContent>

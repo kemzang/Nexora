@@ -31,23 +31,23 @@ interface UserInfo {
 function formatCurrency(amount: number, currency: string) {
   // `invoices.amount` est stocké en unité pleine (ex. 5.00 = $5), pas en
   // centimes — voir webhooks/paddle: totalCents / 100 au moment de l'insert.
-  if (currency === 'XAF') return `${amount.toLocaleString('fr-FR')} FCFA`
+  if (currency === 'XAF') return `${amount.toLocaleString('en-US')} FCFA`
   if (currency === 'EUR') return `${amount.toFixed(2)} €`
   return `$${amount.toFixed(2)}`
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'paid') return <span className="badge-success"><CheckCircle2 className="w-3 h-3" />Payée</span>
+  if (status === 'paid') return <span className="badge-success"><CheckCircle2 className="w-3 h-3" />Paid</span>
   if (status === 'pending') return <span className="badge-warning"><Clock className="w-3 h-3" />En attente</span>
-  if (status === 'failed') return <span className="badge-error"><XCircle className="w-3 h-3" />Échouée</span>
+  if (status === 'failed') return <span className="badge-error"><XCircle className="w-3 h-3" />Failed</span>
   return <span className="badge-neutral">{status}</span>
 }
 
 function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: UserInfo; onClose: () => void }) {
   const subtotal = invoice.amount - invoice.tax_amount
-  const issueDate = new Date(invoice.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-  const periodStart = new Date(invoice.billing_period_start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-  const periodEnd = new Date(invoice.billing_period_end).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const issueDate = new Date(invoice.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+  const periodStart = new Date(invoice.billing_period_start).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+  const periodEnd = new Date(invoice.billing_period_end).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <motion.div
@@ -112,10 +112,10 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">De</p>
               <p className="text-sm font-semibold">Nexora SAS</p>
-              <p className="text-xs text-muted-foreground">Plateforme IA pour développeurs</p>
+              <p className="text-xs text-muted-foreground">AI platform for developers</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">Facturé à</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-2">Billed to</p>
               <p className="text-sm font-semibold">{user.firstName} {user.lastName}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
@@ -129,8 +129,8 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
             </div>
             <div className="px-4 py-3.5 grid grid-cols-3 border-t border-border/40">
               <div className="col-span-2">
-                <p className="text-sm font-medium">Abonnement Nexora</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Période : {periodStart} – {periodEnd}</p>
+                <p className="text-sm font-medium">Subscription Nexora</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Period : {periodStart} – {periodEnd}</p>
               </div>
               <p className="text-sm font-medium text-right">{formatCurrency(subtotal, invoice.currency)}</p>
             </div>
@@ -149,7 +149,7 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            Merci d'avoir choisi Nexora. Pour toute question : contact@nexoracoding.com
+            Thank you for choosing Nexora. Any questions: contact@nexoracoding.com
           </p>
         </div>
       </motion.div>
@@ -157,7 +157,7 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
   )
 }
 
-export default function FacturesSection() {
+export default function InvoicesSection() {
   const { user, token } = useAuth()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -222,8 +222,8 @@ export default function FacturesSection() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Factures</h1>
-        <p className="text-muted-foreground text-sm mt-1">Historique de facturation et téléchargement</p>
+        <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
+        <p className="text-muted-foreground text-sm mt-1">Billing history and downloads</p>
       </div>
 
       {downloadError && (
@@ -236,7 +236,7 @@ export default function FacturesSection() {
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <FileText className="w-4 h-4 text-foreground/70" />
-            Historique des factures
+            History des factures
             {!loading && invoices.length > 0 && (
               <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 text-xs font-medium">{invoices.length}</span>
             )}
@@ -262,8 +262,8 @@ export default function FacturesSection() {
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-7 h-7 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">Aucune facture</p>
-              <p className="text-sm text-muted-foreground">Vos factures apparaîtront ici après votre premier paiement</p>
+              <p className="font-medium text-foreground mb-1">No invoices</p>
+              <p className="text-sm text-muted-foreground">Your invoices will appear here after your first payment</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -271,7 +271,7 @@ export default function FacturesSection() {
               <div className="hidden sm:grid grid-cols-[1fr_120px_140px_100px_auto] gap-4 px-4 py-2 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                 <span>Facture</span>
                 <span>Montant</span>
-                <span>Période</span>
+                <span>Period</span>
                 <span>Statut</span>
                 <span />
               </div>
@@ -292,7 +292,7 @@ export default function FacturesSection() {
                     <div>
                       <p className="text-sm font-semibold text-foreground">{inv.invoice_number}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(inv.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(inv.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                   </div>
@@ -302,9 +302,9 @@ export default function FacturesSection() {
 
                   {/* Period */}
                   <p className="text-xs text-muted-foreground">
-                    {new Date(inv.billing_period_start).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                    {new Date(inv.billing_period_start).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                     {' – '}
-                    {new Date(inv.billing_period_end).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                    {new Date(inv.billing_period_end).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </p>
 
                   {/* Status */}

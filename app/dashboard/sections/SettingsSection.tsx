@@ -38,9 +38,9 @@ export default function ParametresSection() {
       })
       if (error) throw error
       await refreshUser()
-      showToast('Profil mis à jour', 'success')
+      showToast('Profile updated', 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Erreur lors de la mise à jour', 'error')
+      showToast(err instanceof Error ? err.message : 'Update failed', 'error')
     } finally {
       setSavingProfile(false)
     }
@@ -49,11 +49,11 @@ export default function ParametresSection() {
   async function handleChangePassword() {
     setPasswordError(null)
     if (newPassword.length < 8) {
-      setPasswordError('Le mot de passe doit contenir au moins 8 caractères')
+      setPasswordError('Password must be at least 8 characters')
       return
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('Les mots de passe ne correspondent pas')
+      setPasswordError('Passwords do not match')
       return
     }
     setSavingPassword(true)
@@ -62,9 +62,9 @@ export default function ParametresSection() {
       if (error) throw error
       setNewPassword('')
       setConfirmPassword('')
-      showToast('Mot de passe mis à jour', 'success')
+      showToast('Password updated', 'success')
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour')
+      setPasswordError(err instanceof Error ? err.message : 'Update failed')
     } finally {
       setSavingPassword(false)
     }
@@ -73,8 +73,8 @@ export default function ParametresSection() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Paramètres</h1>
-        <p className="text-muted-foreground text-sm mt-1">Gérez votre profil et vos préférences</p>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your profile and preferences</p>
       </div>
 
       {/* Profil */}
@@ -84,12 +84,12 @@ export default function ParametresSection() {
             <User className="w-4 h-4 text-foreground/70" />
             Profil
           </CardTitle>
-          <CardDescription className="text-sm">Ces informations apparaissent sur vos factures et votre compte.</CardDescription>
+          <CardDescription className="text-sm">This information appears on your invoices and your account.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-sm">Prénom</Label>
+              <Label htmlFor="firstName" className="text-sm">First name</Label>
               <Input
                 id="firstName"
                 value={firstName}
@@ -112,7 +112,7 @@ export default function ParametresSection() {
           <div className="space-y-2">
             <Label className="text-sm">Email</Label>
             <Input value={user?.email || ''} disabled className="bg-muted/50 border-border/50 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">L'email de connexion ne peut pas être modifié ici.</p>
+            <p className="text-xs text-muted-foreground">The sign-in email cannot be changed here.</p>
           </div>
           <Button
             onClick={handleSaveProfile}
@@ -132,21 +132,21 @@ export default function ParametresSection() {
             <Globe className="w-4 h-4 text-foreground/70" />
             Langue
           </CardTitle>
-          <CardDescription className="text-sm">Langue d'affichage du site et du dashboard.</CardDescription>
+          <CardDescription className="text-sm">Display language for the site and the dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
           <LanguageSwitcher />
         </CardContent>
       </Card>
 
-      {/* Mot de passe */}
+      {/* Password */}
       <Card className="glass">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Lock className="w-4 h-4 text-foreground/70" />
-            Mot de passe
+            Password
           </CardTitle>
-          <CardDescription className="text-sm">Choisissez un nouveau mot de passe (8 caractères minimum).</CardDescription>
+          <CardDescription className="text-sm">Choose a new password (8 characters minimum).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {passwordError && (
@@ -154,7 +154,7 @@ export default function ParametresSection() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-sm">Nouveau mot de passe</Label>
+              <Label htmlFor="newPassword" className="text-sm">New password</Label>
               <Input
                 id="newPassword"
                 type="password"
@@ -180,7 +180,7 @@ export default function ParametresSection() {
             size="sm"
             className="bg-primary text-primary-foreground"
           >
-            {savingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Mise à jour...</> : 'Changer le mot de passe'}
+            {savingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating…</> : 'Change password'}
           </Button>
         </CardContent>
       </Card>

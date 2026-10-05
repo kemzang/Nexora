@@ -27,11 +27,11 @@ interface ApiKeyRow {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function timeAgo(dateStr: string | null) {
-  if (!dateStr) return 'Jamais utilisée'
+  if (!dateStr) return 'Never used'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 60) return `il y a ${mins} min`
@@ -87,7 +87,7 @@ export default function ApiKeysSection() {
       const { data: { session } } = await supabase.auth.getSession()
       const accessToken = session?.access_token
       if (!accessToken) {
-        showToast('Session expirée — reconnecte-toi puis réessaie', 'error')
+        showToast('Session expired — sign in again and retry', 'error')
         return
       }
 
@@ -102,7 +102,7 @@ export default function ApiKeysSection() {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok || !data?.success || !data?.token) {
-        showToast(data?.error || 'Erreur lors de la création de la clé', 'error')
+        showToast(data?.error || 'Failed to create the key', 'error')
         return
       }
 
@@ -120,15 +120,15 @@ export default function ApiKeysSection() {
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text)
     setKeyCopied(true)
-    showToast('Clé copiée dans le presse-papiers', 'success')
+    showToast('Key copied to clipboard', 'success')
     setTimeout(() => setKeyCopied(false), 2000)
   }
 
   const handleDelete = async (id: string) => {
     setDeleting(true)
     const { error } = await (supabase.from('api_keys') as any).update({ is_active: false }).eq('id', id)
-    if (error) { showToast('Erreur lors de la suppression', 'error') } else {
-      showToast('Clé révoquée avec succès', 'success')
+    if (error) { showToast('Deletion failed', 'error') } else {
+      showToast('Key revoked', 'success')
       setKeys(prev => prev.filter(k => k.id !== id))
     }
     setDeleteConfirm(null)
@@ -140,14 +140,14 @@ export default function ApiKeysSection() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Clés API</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gérez vos clés d'accès pour l'extension VS Code</p>
+          <h1 className="text-2xl font-bold tracking-tight">API keys</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage your access keys for the VS Code extension</p>
         </div>
         <Button
           onClick={() => { setShowCreate(true); setNewKeyName('') }}
           variant="outline"
         >
-          <Plus className="w-4 h-4 mr-2" /> Nouvelle clé
+          <Plus className="w-4 h-4 mr-2" /> New key
         </Button>
       </div>
 
@@ -156,7 +156,7 @@ export default function ApiKeysSection() {
         <CardContent className="p-4 flex gap-3">
           <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <p className="text-xs text-amber-300/90 leading-relaxed">
-            Vos clés API donnent un accès complet à vos crédits Nexora. Ne les partagez jamais et révoquez immédiatement toute clé compromise.
+            Your API keys give full access to your Nexora credits. Never share them, and revoke any compromised key immediately.
           </p>
         </CardContent>
       </Card>
@@ -167,12 +167,12 @@ export default function ApiKeysSection() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <Card className="glass border-border">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Créer une nouvelle clé</CardTitle>
-                <CardDescription className="text-sm">Donnez un nom descriptif à votre clé pour l'identifier facilement.</CardDescription>
+                <CardTitle className="text-base">Create a new key</CardTitle>
+                <CardDescription className="text-sm">Give your key a descriptive name so you can identify it easily.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="keyName" className="text-sm">Nom de la clé</Label>
+                  <Label htmlFor="keyName" className="text-sm">Key name</Label>
                   <Input
                     id="keyName"
                     placeholder="ex: VS Code - MacBook Pro"
@@ -189,7 +189,7 @@ export default function ApiKeysSection() {
                     disabled={creating || !newKeyName.trim()}
                     className="bg-primary text-primary-foreground"
                   >
-                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Création...</> : 'Créer la clé'}
+                    {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating…</> : 'Create the key'}
                   </Button>
                   <Button variant="ghost" onClick={() => setShowCreate(false)} className="text-muted-foreground">
                     Annuler
@@ -209,11 +209,11 @@ export default function ApiKeysSection() {
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400 font-semibold text-sm">Clé créée avec succès</span>
+                  <span className="text-emerald-400 font-semibold text-sm">Key created</span>
                 </div>
                 <p className="text-xs text-amber-300 mb-3 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  Copiez cette clé maintenant — elle ne sera plus visible après.
+                  Copy this key now — it will not be shown again.
                 </p>
                 <div className="flex gap-2 items-center">
                   <code className="flex-1 font-mono text-xs bg-card border border-border/50 rounded-lg px-3 py-2.5 text-foreground truncate">
@@ -231,7 +231,7 @@ export default function ApiKeysSection() {
                   onClick={() => setCreatedKey(null)}
                   className="mt-3 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
                 >
-                  J'ai bien copié ma clé, fermer
+                  I have copied my key, close
                 </button>
               </CardContent>
             </Card>
@@ -244,7 +244,7 @@ export default function ApiKeysSection() {
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Key className="w-4 h-4 text-foreground/70" />
-            Clés actives
+            Active keys
             {!loading && <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 text-xs font-medium">{keys.length}</span>}
           </CardTitle>
         </CardHeader>
@@ -266,14 +266,14 @@ export default function ApiKeysSection() {
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <Key className="w-7 h-7 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">Aucune clé API</p>
-              <p className="text-sm text-muted-foreground mb-5">Créez votre première clé pour utiliser Nexora dans VS Code</p>
+              <p className="font-medium text-foreground mb-1">No API keys</p>
+              <p className="text-sm text-muted-foreground mb-5">Create your first key to use Nexora in VS Code</p>
               <Button
                 onClick={() => setShowCreate(true)}
                 className="bg-primary text-primary-foreground"
                 size="sm"
               >
-                <Plus className="w-4 h-4 mr-2" />Créer une clé
+                <Plus className="w-4 h-4 mr-2" />Create a key
               </Button>
             </div>
           ) : (
@@ -301,7 +301,7 @@ export default function ApiKeysSection() {
                         <Clock className="w-3 h-3" />{timeAgo(key.last_used_at)}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">Créée le {formatDate(key.created_at)}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">Created on {formatDate(key.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {deleteConfirm === key.id ? (
@@ -312,7 +312,7 @@ export default function ApiKeysSection() {
                           disabled={deleting}
                           className="px-2 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 text-xs font-medium transition-colors"
                         >
-                          {deleting ? 'Révocation...' : 'Oui, révoquer'}
+                          {deleting ? 'Revoking…' : 'Yes, revoke'}
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(null)}
@@ -325,7 +325,7 @@ export default function ApiKeysSection() {
                       <button
                         onClick={() => setDeleteConfirm(key.id)}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        title="Révoquer la clé"
+                        title="Revoke the key"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

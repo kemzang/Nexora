@@ -36,7 +36,7 @@ const UPGRADE_PLANS = [
     border: 'hover:border-sky-500/40',
     activeBorder: 'border-sky-500/40',
     badgeColor: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
-    features: ['4M crédits/mois', '500 requêtes/jour', 'DeepSeek, Gemini Flash', 'Gemini 2.5 Pro', 'Autocomplétion illimitée'],
+    features: ['4M credits/month', '500 requests/day', 'DeepSeek, Gemini Flash', 'Gemini 2.5 Pro', 'Unlimited autocomplete'],
   },
   {
     slug: 'pro',
@@ -49,7 +49,7 @@ const UPGRADE_PLANS = [
     activeBorder: 'border-amber-500/40',
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     popular: true,
-    features: ['15M crédits/mois', '2 000 requêtes/jour', '+ Claude Haiku & Sonnet 4.6', 'Mode Agent IA', 'Support prioritaire'],
+    features: ['15M credits/month', '2,000 requests/day', '+ Claude Haiku & Sonnet 4.6', 'Mode Agent IA', 'Support prioritaire'],
   },
   {
     slug: 'business',
@@ -61,7 +61,7 @@ const UPGRADE_PLANS = [
     border: 'hover:border-emerald-500/40',
     activeBorder: 'border-emerald-500/40',
     badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-    features: ['40M crédits/mois', '5 000 requêtes/jour', '+ Claude Opus 4.7', 'Accès API direct', 'Support dédié'],
+    features: ['40M credits/month', '5,000 requests/day', '+ Claude Opus 4.7', 'Direct API access', 'Dedicated support'],
   },
   {
     slug: 'enterprise',
@@ -73,13 +73,13 @@ const UPGRADE_PLANS = [
     border: 'hover:border-border',
     activeBorder: 'border-border',
     badgeColor: 'bg-muted text-foreground/70 border-border',
-    features: ['100M crédits/mois', 'Requêtes illimitées', 'Tous les modèles', 'Support 24/7 + SSO + SLA'],
+    features: ['100M credits/month', 'Unlimited requests', 'All models', 'Support 24/7 + SSO + SLA'],
   },
 ]
 
 const PLAN_ORDER = ['free', 'starter', 'pro', 'business', 'enterprise']
 
-export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: string) => void }) {
+export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: string) => void }) {
   const { user, token } = useAuth()
   const [sub, setSub] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -237,8 +237,8 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Abonnement</h1>
-        <p className="text-muted-foreground text-sm mt-1">Gérez votre plan et découvrez les offres disponibles</p>
+        <h1 className="text-2xl font-bold tracking-tight">Subscription</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your plan and explore the available offers</p>
       </div>
 
       {/* Current plan card */}
@@ -275,16 +275,16 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold">{sub.price === 0 ? 'Gratuit' : `$${sub.price}`}</p>
-                {sub.price > 0 && <p className="text-xs text-muted-foreground">/mois</p>}
+                {sub.price > 0 && <p className="text-xs text-muted-foreground">/month</p>}
               </div>
             </div>
 
             {/* Token usage bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Crédits utilisés ce mois</span>
+                <span className="text-muted-foreground">Credits used this month</span>
                 <span className="text-foreground font-medium">
-                  {(sub.tokensPerMonth - sub.tokensRemaining).toLocaleString('fr-FR')} / {sub.tokensPerMonth.toLocaleString('fr-FR')}
+                  {(sub.tokensPerMonth - sub.tokensRemaining).toLocaleString('en-US')} / {sub.tokensPerMonth.toLocaleString('en-US')}
                 </span>
               </div>
               <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
@@ -296,11 +296,11 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
                 />
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{sub.tokensRemaining.toLocaleString('fr-FR')} crédits restants</span>
+                <span>{sub.tokensRemaining.toLocaleString('en-US')} credits remaining</span>
                 {sub.renewalDate && (
                   <span className="flex items-center gap-1">
                     <RefreshCw className="w-3 h-3" />
-                    {sub.cancelAtPeriodEnd ? 'Accès jusqu\'au' : 'Renouvellement le'} {new Date(sub.renewalDate).toLocaleDateString('fr-FR')}
+                    {sub.cancelAtPeriodEnd ? 'Access until' : 'Renews on'} {new Date(sub.renewalDate).toLocaleDateString('en-US')}
                   </span>
                 )}
               </div>
@@ -309,7 +309,7 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
             {usagePercent > 80 && (
               <div className="mt-4 flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                Vous approchez de votre limite mensuelle. Pensez à upgrader.
+                You are approaching your monthly limit. Consider upgrading.
               </div>
             )}
 
@@ -321,26 +321,26 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
                 {sub.cancelAtPeriodEnd ? (
                   <div className="flex items-center justify-between gap-3 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
                     <span className="text-amber-300/90">
-                      Le renouvellement automatique est désactivé — votre accès {sub.planName} s'arrête le{' '}
-                      {new Date(sub.renewalDate).toLocaleDateString('fr-FR')}.
+                      Automatic renewal is off — your {sub.planName} access ends on{' '}
+                      {new Date(sub.renewalDate).toLocaleDateString('en-US')}.
                     </span>
                     <button
                       onClick={handleResumeRenewal}
                       disabled={cancelling}
                       className="shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.06] text-foreground hover:bg-white/[0.1] font-medium transition-colors disabled:opacity-50"
                     >
-                      {cancelling ? 'Réactivation...' : 'Réactiver'}
+                      {cancelling ? 'Reactivating…' : 'Reactivate'}
                     </button>
                   </div>
                 ) : cancelConfirm ? (
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">Arrêter le renouvellement automatique ? Vous garderez l'accès jusqu'au {new Date(sub.renewalDate).toLocaleDateString('fr-FR')}.</span>
+                    <span className="text-muted-foreground">Stop automatic renewal? You will keep access until {new Date(sub.renewalDate).toLocaleDateString('en-US')}.</span>
                     <button
                       onClick={handleCancelRenewal}
                       disabled={cancelling}
                       className="shrink-0 px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 font-medium transition-colors disabled:opacity-50"
                     >
-                      {cancelling ? 'Confirmation...' : 'Oui, arrêter'}
+                      {cancelling ? 'Confirmation...' : 'Yes, stop it'}
                     </button>
                     <button
                       onClick={() => setCancelConfirm(false)}
@@ -355,7 +355,7 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors"
                   >
                     <XCircle className="w-3.5 h-3.5" />
-                    Annuler le renouvellement automatique
+                    Cancel automatic renewal
                   </button>
                 )}
               </div>
@@ -368,8 +368,8 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
       {!loading && plansToShow.length > 0 && (
         <div>
           <div className="mb-5">
-            <h2 className="text-lg font-semibold">Passer à la vitesse supérieure</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Choisissez le plan qui correspond à vos besoins</p>
+            <h2 className="text-lg font-semibold">Step up a gear</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Choose the plan that fits your needs</p>
           </div>
 
           <div className={`grid grid-cols-1 gap-4 ${plansToShow.length >= 3 ? 'sm:grid-cols-2 lg:grid-cols-4' : plansToShow.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1 max-w-xs'}`}>
@@ -394,7 +394,7 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
                     <h3 className="text-base font-bold">{plan.name}</h3>
                     <div className="flex items-baseline gap-0.5 mt-1 mb-4">
                       <span className="text-2xl font-bold">{plan.price}</span>
-                      <span className="text-sm text-muted-foreground">/mois</span>
+                      <span className="text-sm text-muted-foreground">/month</span>
                     </div>
                     <ul className="space-y-2 mb-5">
                       {plan.features.map(f => (
@@ -427,8 +427,8 @@ export default function AbonnementSection({ onNavigate }: { onNavigate?: (s: str
         <Card className="glass border-border bg-muted/50">
           <CardContent className="p-6 text-center">
             <Crown className="w-10 h-10 text-foreground/70 mx-auto mb-3" />
-            <h3 className="font-bold text-lg mb-1">Vous êtes sur le plan Enterprise</h3>
-            <p className="text-muted-foreground text-sm">Vous bénéficiez de toutes les fonctionnalités Nexora.</p>
+            <h3 className="font-bold text-lg mb-1">You are on the Enterprise plan</h3>
+            <p className="text-muted-foreground text-sm">You have access to every Nexora feature.</p>
           </CardContent>
         </Card>
       )}

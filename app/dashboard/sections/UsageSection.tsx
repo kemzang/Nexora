@@ -36,10 +36,10 @@ function generateDateRange(days: number): string[] {
 
 function formatDateLabel(dateStr: string, period: Period): string {
   const d = new Date(dateStr)
-  if (period === '7d') return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })
-  if (period === '30d') return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  if (period === '3m') return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  return d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+  if (period === '7d') return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })
+  if (period === '30d') return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+  if (period === '3m') return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
 }
 
 function numberShort(n: number): string {
@@ -179,16 +179,16 @@ function AreaChart({ data, period }: AreaChartProps) {
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <p className="text-xs text-muted-foreground mb-0.5">{new Date(hovered.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-          <p className="font-bold text-sm text-foreground">{hovered.tokens.toLocaleString('fr-FR')} crédits</p>
-          <p className="text-xs text-muted-foreground">{hovered.requests} requête{hovered.requests > 1 ? 's' : ''}</p>
+          <p className="text-xs text-muted-foreground mb-0.5">{new Date(hovered.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p className="font-bold text-sm text-foreground">{hovered.tokens.toLocaleString('en-US')} credits</p>
+          <p className="text-xs text-muted-foreground">{hovered.requests} request{hovered.requests > 1 ? 's' : ''}</p>
         </div>
       )}
     </div>
   )
 }
 
-export default function UtilisationSection() {
+export default function UsageSection() {
   const { user } = useAuth()
   const [period, setPeriod] = useState<Period>('30d')
   const [data, setData] = useState<DayData[]>([])
@@ -251,8 +251,8 @@ export default function UtilisationSection() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Utilisation</h1>
-          <p className="text-muted-foreground text-sm mt-1">Consommation globale de crédits sur la période</p>
+          <h1 className="text-2xl font-bold tracking-tight">Usage</h1>
+          <p className="text-muted-foreground text-sm mt-1">Overall credit consumption over the period</p>
         </div>
         {/* Period filter */}
         <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-border/50">
@@ -276,21 +276,21 @@ export default function UtilisationSection() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: 'Crédits consommés',
-            value: loading ? '—' : totalTokens.toLocaleString('fr-FR'),
+            label: 'Credits used',
+            value: loading ? '—' : totalTokens.toLocaleString('en-US'),
             icon: Zap,
             color: 'text-foreground/70',
             bg: 'from-muted to-muted/50',
           },
           {
-            label: 'Requêtes totales',
-            value: loading ? '—' : totalRequests.toLocaleString('fr-FR'),
+            label: 'Total requests',
+            value: loading ? '—' : totalRequests.toLocaleString('en-US'),
             icon: Activity,
             color: 'text-foreground/70',
             bg: 'from-muted to-muted/50',
           },
           {
-            label: 'Moyenne / jour',
+            label: 'Average / day',
             value: loading ? '—' : numberShort(avgPerDay),
             icon: Calendar,
             color: 'text-sky-400',
@@ -326,7 +326,7 @@ export default function UtilisationSection() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-foreground/70" />
-              Consommation de crédits
+              Credit consumption
               {!loading && hasData && trend !== 0 && (
                 <span className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-md ${
                   trend > 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
@@ -347,8 +347,8 @@ export default function UtilisationSection() {
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                 <BarChart3 className="w-7 h-7 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">Aucune donnée pour cette période</p>
-              <p className="text-sm text-muted-foreground">Commencez à utiliser Nexora dans VS Code pour voir vos statistiques</p>
+              <p className="font-medium text-foreground mb-1">No data for this period</p>
+              <p className="text-sm text-muted-foreground">Start using Nexora in VS Code to see your statistics</p>
             </div>
           ) : (
             <AreaChart data={data} period={period} />
@@ -364,11 +364,11 @@ export default function UtilisationSection() {
               <TrendingUp className="w-4 h-4 text-foreground/70" />
             </div>
             <div>
-              <p className="text-sm font-medium">Pic de consommation</p>
+              <p className="text-sm font-medium">Peak usage</p>
               <p className="text-xs text-muted-foreground">
-                {new Date(peakDay.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} ·{' '}
-                <span className="text-foreground/70 font-medium">{peakDay.tokens.toLocaleString('fr-FR')} crédits</span> ·{' '}
-                {peakDay.requests} requête{peakDay.requests > 1 ? 's' : ''}
+                {new Date(peakDay.date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })} ·{' '}
+                <span className="text-foreground/70 font-medium">{peakDay.tokens.toLocaleString('en-US')} credits</span> ·{' '}
+                {peakDay.requests} request{peakDay.requests > 1 ? 's' : ''}
               </p>
             </div>
           </CardContent>

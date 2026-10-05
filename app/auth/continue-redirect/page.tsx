@@ -85,7 +85,7 @@ export default function Page() {
 
         if (!response.ok || !data.success) {
           setStatus('error')
-          setMessage(data.error || 'Erreur lors de la génération du code')
+          setMessage(data.error || 'Failed to generate the code')
           return
         }
 
@@ -112,14 +112,14 @@ export default function Page() {
 
           if (!loopback) {
             setStatus('error')
-            setMessage("Adresse de redirection refusée : seule la boucle locale est autorisée.")
+            setMessage("Redirect address refused: only the local loopback is allowed.")
             return
           }
 
           loopback.searchParams.set('code', data.code)
           if (state) loopback.searchParams.set('state', state)
           setStatus('success')
-          setMessage('Authentification réussie ! Tu peux revenir à ton terminal.')
+          setMessage('Signed in. You can return to your terminal.')
           window.location.href = loopback.toString()
           return
         }
@@ -144,7 +144,7 @@ export default function Page() {
         if (state) editorUrl.searchParams.set('state', state)
 
         setStatus('success')
-        setMessage('Authentification réussie ! Redirection vers ton éditeur…')
+        setMessage('Signed in. Redirecting to your editor…')
 
         // Le lien vscode:// passe la main a l'editeur mais laisse l'onglet
         // ouvert sur cette page, qui n'a plus rien a montrer. On enchaine sur
@@ -181,7 +181,7 @@ export default function Page() {
 
       <div className="glass rounded-2xl p-8 max-w-md w-full text-center relative z-10">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Authentification de ton éditeur</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Authenticating your editor</h1>
           <div className="w-16 h-1 bg-primary mx-auto rounded-full" />
         </div>
 
@@ -204,8 +204,8 @@ export default function Page() {
             </div>
             <p className="text-emerald-400 font-medium">{message}</p>
             <p className="text-muted-foreground text-sm">
-              Si ton éditeur ne s'ouvre pas, tu peux fermer cette fenêtre.
-              Sinon, tu vas être redirigé vers ton tableau de bord.
+              If your editor does not open, you can close this window.
+              Otherwise you will be redirected to your dashboard.
             </p>
           </div>
         )}
@@ -219,13 +219,13 @@ export default function Page() {
             </div>
             <p className="text-red-400 font-medium">{message}</p>
             <Button variant="outline" onClick={() => window.location.reload()}>
-              Réessayer
+              Try again
             </Button>
           </div>
         )}
 
         <div className="mt-8 pt-6 border-t border-border/50">
-          <p className="text-muted-foreground text-sm">Nexora — Extension éditeur</p>
+          <p className="text-muted-foreground text-sm">Nexora — Editor extension</p>
         </div>
       </div>
     </div>

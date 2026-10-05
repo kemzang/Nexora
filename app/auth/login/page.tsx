@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/toast'
 
 const loginSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères')
+  password: z.string().min(6, 'Password must be at least 6 characters')
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -77,7 +77,7 @@ function LoginForm() {
         setError(result.error)
         setLoading(false)
       } else {
-        showToast('Connexion réussie !', 'success')
+        showToast('Signed in', 'success')
         if (callback) {
           if (result.token) {
             setRedirectToken(result.token)
@@ -92,7 +92,7 @@ function LoginForm() {
         }
       }
     } catch {
-      setError('Une erreur inattendue est survenue')
+      setError('An unexpected error occurred')
       setLoading(false)
     }
   }
@@ -118,10 +118,10 @@ function LoginForm() {
               <Code className="w-10 h-10 text-primary-foreground" />
             </motion.div>
             <h1 className="text-2xl font-bold tracking-tight mb-3">
-              Connexion réussie !
+              Signed in
             </h1>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              Votre compte est prêt. Cliquez ci-dessous pour retourner dans VS Code.
+              Your account is ready. Click below to return to VS Code.
             </p>
             <div className="space-y-3">
               {redirectUrl ? (
@@ -144,12 +144,12 @@ function LoginForm() {
                 onClick={() => router.push('/dashboard')}
                 className="w-full text-muted-foreground hover:text-foreground"
               >
-                Aller au Dashboard web
+                Go to the web dashboard
               </Button>
             </div>
           </Card>
           <p className="mt-6 text-xs text-muted-foreground">
-            Si rien ne se passe, vérifiez que VS Code est bien installé.
+            If nothing happens, check that VS Code is installed.
           </p>
         </motion.div>
       </div>
@@ -179,7 +179,7 @@ function LoginForm() {
             </motion.div>
             <div className="space-y-1.5">
               <CardTitle className="text-2xl font-bold tracking-tight">Nexora</CardTitle>
-              <CardDescription className="text-muted-foreground">Connectez-vous pour continuer</CardDescription>
+              <CardDescription className="text-muted-foreground">Sign in to continue</CardDescription>
             </div>
           </CardHeader>
 
@@ -207,9 +207,9 @@ function LoginForm() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-0.5">
-                  <Label htmlFor="password" className="text-sm">Mot de passe</Label>
+                  <Label htmlFor="password" className="text-sm">Password</Label>
                   <Link href="/auth/forgot-password" className="text-xs text-foreground/70 hover:text-foreground transition-colors">
-                    Oublié ?
+                    Forgot?
                   </Link>
                 </div>
                 <Input
@@ -229,9 +229,9 @@ function LoginForm() {
                 className="w-full font-semibold h-11 rounded-xl transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
                 {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Connexion...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in…</>
                 ) : (
-                  <>Se connecter <ArrowRight className="ml-2 h-4 w-4" /></>
+                  <>Sign in <ArrowRight className="ml-2 h-4 w-4" /></>
                 )}
               </Button>
             </form>
@@ -254,19 +254,19 @@ function LoginForm() {
                   <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 1.9 14.7 1 12 1 6.5 1 2 5.5 2 11s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-1.7H12z"/>
                   </svg>
-                  Continuer avec Google
+                  Continue with Google
                 </button>
               </>
             )}
 
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">
-                Pas encore de compte ?{' '}
+                No account yet?{' '}
                 <Link
                   href={`/auth/register${callback ? `?callback=${encodeURIComponent(callback)}` : ''}`}
                   className="text-foreground/70 hover:text-foreground transition-colors font-medium"
                 >
-                  Créer un compte
+                  Create an account
                 </Link>
               </p>
             </div>

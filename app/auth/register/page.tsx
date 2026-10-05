@@ -19,12 +19,12 @@ import { useToast } from '@/components/ui/toast'
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
-  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères')
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters')
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas",
+  message: "Passwords do not match",
   path: ["confirmPassword"]
 })
 
@@ -77,7 +77,7 @@ function RegisterForm() {
       if (result.error) {
         setError(result.error); setLoading(false)
       } else {
-        showToast('Inscription réussie !', 'success')
+        showToast('Account created', 'success')
         if (callback && result.token) {
           setRedirectToken(result.token)
           const redirectUrl = getRedirectUrl(result.token)
@@ -89,7 +89,7 @@ function RegisterForm() {
         }
       }
     } catch {
-      setError('Une erreur inattendue est survenue'); setLoading(false)
+      setError('An unexpected error occurred'); setLoading(false)
     }
   }
 
@@ -115,12 +115,12 @@ function RegisterForm() {
               <Code className="w-10 h-10 text-primary-foreground" />
             </motion.div>
             <h1 className="text-2xl font-bold tracking-tight mb-3">
-              Inscription réussie !
+              Account created
             </h1>
             {callback && redirectUrl ? (
               <>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
-                  Votre compte a été créé. Cliquez ci-dessous pour ouvrir VS Code.
+                  Your account has been created. Click below to open VS Code.
                 </p>
                 <div className="space-y-3">
                   <a
@@ -133,14 +133,14 @@ function RegisterForm() {
                     </Button>
                   </a>
                   <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full text-muted-foreground hover:text-foreground">
-                    Aller au Dashboard web
+                    Go to the web dashboard
                   </Button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
-                  Vérifiez votre email pour activer votre compte. Redirection vers la connexion...
+                  Check your email to activate your account. Redirecting to sign-in…
                 </p>
                 <div className="flex justify-center">
                   <div className="w-6 h-6 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
@@ -176,7 +176,7 @@ function RegisterForm() {
                   Rejoindre <span className="gradient-text">Nexora</span>
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Créez votre compte et transformez votre développement
+                  Create your account and transform the way you build
                 </CardDescription>
               </div>
             </CardHeader>
@@ -193,7 +193,7 @@ function RegisterForm() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-sm ml-0.5">Prénom</Label>
+                    <Label htmlFor="firstName" className="text-sm ml-0.5">First name</Label>
                     <Input id="firstName" placeholder="Jean" {...register('firstName')}
                       className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                     {errors.firstName && <p className="text-red-400 text-xs ml-1">{errors.firstName.message}</p>}
@@ -214,14 +214,14 @@ function RegisterForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm ml-0.5">Mot de passe</Label>
+                  <Label htmlFor="password" className="text-sm ml-0.5">Password</Label>
                   <Input id="password" type="password" placeholder="••••••••" {...register('password')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirmer le mot de passe</Label>
+                  <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirm password</Label>
                   <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}
@@ -233,17 +233,17 @@ function RegisterForm() {
                   {loading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Inscription...</>
                   ) : (
-                    <><Rocket className="mr-2 h-4 w-4" />Créer mon compte</>
+                    <><Rocket className="mr-2 h-4 w-4" />Create my account</>
                   )}
                 </Button>
               </form>
 
               <div className="text-center pt-1">
                 <p className="text-sm text-muted-foreground">
-                  Déjà un compte ?{' '}
+                  Already have an account?{' '}
                   <Link href={`/auth/login${callback ? `?callback=${encodeURIComponent(callback)}` : ''}`}
                     className="text-foreground/70 hover:text-foreground transition-colors font-medium">
-                    Se connecter
+                    Sign in
                   </Link>
                 </p>
               </div>

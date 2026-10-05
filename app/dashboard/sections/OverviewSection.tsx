@@ -106,27 +106,27 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       // trop-beau-pour-être-vrai — le pourcentage restant est ce qui compte
       // pour décider, le détail brut passe en sous-texte (même logique que
       // le badge de l'extension : plan + % d'abord, chiffres au clic).
-      label: 'Crédits restants',
+      label: 'Credits remaining',
       value: `${Math.max(0, 100 - usagePercent)}%`,
-      sub: `${stats.tokensRemaining.toLocaleString('fr-FR')} sur ${stats.tokensTotal.toLocaleString('fr-FR')} ce mois`,
+      sub: `${stats.tokensRemaining.toLocaleString('en-US')} sur ${stats.tokensTotal.toLocaleString('en-US')} ce mois`,
       icon: Zap,
       color: 'text-amber-400',
       bg: 'from-amber-500/20 to-amber-500/5',
       ring: 'ring-amber-500/20',
     },
     {
-      label: 'Clés API actives',
+      label: 'Active API keys',
       value: stats.apiKeysCount.toString(),
-      sub: stats.apiKeysCount === 0 ? 'Aucune clé créée' : `${stats.apiKeysCount} clé${stats.apiKeysCount > 1 ? 's' : ''} active${stats.apiKeysCount > 1 ? 's' : ''}`,
+      sub: stats.apiKeysCount === 0 ? 'No key created' : `${stats.apiKeysCount} active key${stats.apiKeysCount > 1 ? 's' : ''}`,
       icon: Key,
       color: 'text-sky-400',
       bg: 'from-sky-500/20 to-sky-500/5',
       ring: 'ring-sky-500/20',
     },
     {
-      label: 'Utilisation du mois',
+      label: 'Usage this month',
       value: `${usagePercent}%`,
-      sub: `${stats.monthlyRequests} requête${stats.monthlyRequests > 1 ? 's' : ''} · ${stats.monthlyTokens.toLocaleString('fr-FR')} tokens`,
+      sub: `${stats.monthlyRequests} request${stats.monthlyRequests > 1 ? 's' : ''} · ${stats.monthlyTokens.toLocaleString('en-US')} tokens`,
       icon: BarChart3,
       color: 'text-emerald-400',
       bg: 'from-emerald-500/20 to-emerald-500/5',
@@ -136,7 +136,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       label: 'Plan actuel',
       value: stats.planName,
       sub: stats.renewalDate
-        ? `Renouvellement le ${new Date(stats.renewalDate).toLocaleDateString('fr-FR')}`
+        ? `Renews on ${new Date(stats.renewalDate).toLocaleDateString('en-US')}`
         : 'Plan gratuit',
       icon: Star,
       color: 'text-foreground/70',
@@ -151,14 +151,14 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
           <Clock className="w-3 h-3" />
-          <span>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1.5">
           Bonjour,{' '}
           <span className="gradient-text-strong">{user.firstName || 'Utilisateur'}</span> 👋
         </h1>
         <p className="text-muted-foreground text-sm">
-          Voici un résumé de votre activité sur Nexora.
+          Here is a summary of your activity on Nexora.
         </p>
       </motion.div>
 
@@ -195,7 +195,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                   <span className="text-sm font-medium">Quota mensuel</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{stats.monthlyTokens.toLocaleString('fr-FR')} / {stats.tokensTotal.toLocaleString('fr-FR')} tokens</span>
+                <span className="text-xs text-muted-foreground">{stats.monthlyTokens.toLocaleString('en-US')} / {stats.tokensTotal.toLocaleString('en-US')} tokens</span>
               </div>
               <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div
@@ -205,7 +205,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   className={`h-full rounded-full ${usagePercent > 80 ? 'bg-gradient-to-r from-amber-500 to-red-500' : 'bg-primary'}`}
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{usagePercent}% utilisé ce mois</p>
+              <p className="text-xs text-muted-foreground mt-2">{usagePercent}% used this month</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -223,7 +223,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                 {[
                   {
                     icon: Key,
-                    label: 'Créer une clé API',
+                    label: 'Create an API key',
                     desc: 'Connecter VS Code',
                     color: 'text-foreground/70',
                     bg: 'bg-muted',
@@ -232,8 +232,8 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   },
                   {
                     icon: CreditCard,
-                    label: stats.planSlug === 'free' ? 'Passer au Pro' : 'Gérer l\'abonnement',
-                    desc: stats.planSlug === 'free' ? 'Débloquer plus de crédits' : 'Voir votre plan',
+                    label: stats.planSlug === 'free' ? 'Passer au Pro' : 'Manage subscription',
+                    desc: stats.planSlug === 'free' ? 'Unlock more credits' : 'See your plan',
                     color: 'text-amber-400',
                     bg: 'bg-amber-500/10',
                     hover: 'hover:bg-amber-500/15 hover:border-amber-500/30',
@@ -271,13 +271,13 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
           <Card className="glass h-full">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold">Démarrage rapide</CardTitle>
+              <CardTitle className="text-base font-semibold">Quick start</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { step: 1, title: 'Installer l\'extension', desc: 'Ajoutez Nexora dans VS Code', done: false },
-                { step: 2, title: 'Créer une clé API', desc: 'Générez votre clé d\'accès', done: stats.apiKeysCount > 0 },
-                { step: 3, title: 'Commencer à coder', desc: 'Utilisez l\'IA dans votre éditeur', done: stats.monthlyRequests > 0 },
+                { step: 1, title: 'Installer l\'extension', desc: 'Add Nexora to VS Code', done: false },
+                { step: 2, title: 'Create an API key', desc: 'Generate your access key', done: stats.apiKeysCount > 0 },
+                { step: 3, title: 'Start coding', desc: 'Use AI in your editor', done: stats.monthlyRequests > 0 },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-3 group">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
@@ -298,7 +298,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
               ))}
               <button onClick={() => onNavigate('aide')} className="w-full mt-2">
                 <div className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-border/50 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-all text-sm group">
-                  Voir le guide complet
+                  See the full guide
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </button>

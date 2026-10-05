@@ -34,8 +34,8 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email: data.email }),
       })
       if (!res.ok) throw new Error()
-      setSent(true); showToast('Email de réinitialisation envoyé !', 'success')
-    } catch { setError('Une erreur est survenue. Réessayez.'); showToast('Erreur lors de l\'envoi.', 'error') }
+      setSent(true); showToast('Reset email sent', 'success')
+    } catch { setError('Something went wrong. Please try again.'); showToast('Sending failed.', 'error') }
     finally { setLoading(false) }
   }
 
@@ -46,12 +46,12 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-400" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-3">Email envoyé !</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-3">Email sent</h1>
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            Si un compte existe avec cette adresse, vous recevrez un lien de réinitialisation dans quelques instants.
+            If an account exists for this address, you will receive a reset link shortly.
           </p>
           <Link href="/auth/login">
-            <Button><ArrowLeft className="mr-2 h-4 w-4" />Retour à la connexion</Button>
+            <Button><ArrowLeft className="mr-2 h-4 w-4" />Back to sign-in</Button>
           </Link>
         </motion.div>
       </div>
@@ -71,8 +71,8 @@ export default function ForgotPasswordPage() {
               <BrandLogo size={56} />
             </motion.div>
             <div className="space-y-1.5">
-              <CardTitle className="text-2xl font-bold tracking-tight">Mot de passe oublié</CardTitle>
-              <CardDescription className="text-muted-foreground">Entrez votre email pour recevoir un lien de réinitialisation</CardDescription>
+              <CardTitle className="text-2xl font-bold tracking-tight">Forgotten password</CardTitle>
+              <CardDescription className="text-muted-foreground">Enter your email to receive a reset link</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="space-y-5 p-8 pt-4">
@@ -93,12 +93,12 @@ export default function ForgotPasswordPage() {
               <Button type="submit" disabled={loading}
                 variant="outline"
                 className="w-full font-semibold h-11 rounded-xl">
-                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Envoi...</> : <><Mail className="mr-2 h-4 w-4" />Envoyer le lien</>}
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Envoi...</> : <><Mail className="mr-2 h-4 w-4" />Send the link</>}
               </Button>
             </form>
             <div className="text-center pt-1">
               <Link href="/auth/login" className="inline-flex items-center text-sm text-foreground/70 hover:text-foreground transition-colors font-medium">
-                <ArrowLeft className="w-3 h-3 mr-1" />Retour à la connexion
+                <ArrowLeft className="w-3 h-3 mr-1" />Back to sign-in
               </Link>
             </div>
           </CardContent>

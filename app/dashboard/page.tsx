@@ -9,6 +9,7 @@ import {
   Settings, LogOut, LayoutDashboard, Key, FileText, HelpCircle, ChevronRight,
   Bell, Menu, X, Activity, Wallet, Users, History, Radio
 } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
 import OverviewSection from '@/app/dashboard/sections/OverviewSection'
@@ -50,9 +51,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
 function NexoraLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const s = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8'
   return (
-    <div className={`${s} rounded-xl bg-primary flex items-center justify-center flex-shrink-0`}>
-      <span className="text-white font-bold text-sm tracking-tight select-none">N</span>
-    </div>
+    <BrandLogo size={32} className="rounded-xl flex-shrink-0 shadow-none" />
   )
 }
 

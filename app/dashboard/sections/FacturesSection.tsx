@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Download, X, Printer, CheckCircle2, Clock, XCircle, Eye } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -87,9 +88,7 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">N</span>
-                </div>
+                <BrandLogo size={36} className="rounded-xl shadow-none" />
                 <span className="font-bold text-lg">Nexora</span>
               </div>
               <p className="text-xs text-muted-foreground">nexoracoding.com</p>

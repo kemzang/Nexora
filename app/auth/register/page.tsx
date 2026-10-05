@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, CheckCircle, Code, Rocket, ArrowRight, Brain } from 'lucide-react'
+import { Loader2, Code, Rocket, ArrowRight } from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
@@ -249,33 +249,6 @@ function RegisterForm() {
               </div>
             </CardContent>
           </Card>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-6"
-          >
-            <Card className="glass">
-              <CardContent className="p-5">
-                <h3 className="text-sm font-semibold text-center mb-4">Ce que vous obtenez avec Nexora :</h3>
-                <div className="space-y-3">
-                  {[
-                    { icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10', text: '50 tokens gratuits avec le plan Free' },
-                    { icon: Code, color: 'text-foreground/70', bg: 'bg-muted', text: 'Chat IA intégré dans VS Code' },
-                    { icon: Brain, color: 'text-foreground/70', bg: 'bg-muted', text: 'IA puissante multi-modèles' },
-                  ].map(item => (
-                    <div key={item.text} className="flex items-center gap-3">
-                      <div className={`w-7 h-7 ${item.bg} rounded-lg flex items-center justify-center`}>
-                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-                      </div>
-                      <span className="text-sm text-muted-foreground">{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </motion.div>
       </div>
     </div>

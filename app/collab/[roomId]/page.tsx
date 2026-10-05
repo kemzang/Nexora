@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Send, Users, Wifi, WifiOff, ExternalLink, Copy, Check, LogIn, MessageCircle } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 
 const PRESENCE_TIMEOUT_MS = 30_000
 const HEARTBEAT_INTERVAL_MS = 10_000
@@ -40,9 +41,7 @@ interface Annotation {
 
 function NexoraLogo() {
   return (
-    <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-      <span className="text-white font-bold text-sm tracking-tight select-none">N</span>
-    </div>
+    <BrandLogo size={32} className="rounded-xl flex-shrink-0 shadow-none" />
   )
 }
 
@@ -577,9 +576,7 @@ export default function CollabRoomPage() {
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-3 opacity-30">
-                    <span className="text-white font-bold text-lg">N</span>
-                  </div>
+                  <BrandLogo size={48} className="rounded-2xl mx-auto mb-3 opacity-30 shadow-none" />
                   <p className="text-slate-400 text-sm">Aucun message pour l'instant.</p>
                   <p className="text-slate-300 text-xs mt-1">Les messages de la session VS Code apparaîtront ici.</p>
                 </div>

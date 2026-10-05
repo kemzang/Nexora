@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CreditCard, Lock, ArrowLeft, Loader2, Shield, Wifi } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useAuth } from '@/hooks/use-auth'
 import { useTranslation } from '@/lib/i18n/context'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -66,9 +67,7 @@ function VirtualCard({ holder, exp }: { holder: string; exp: string }) {
       <div className="absolute inset-0 p-5 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-neutral-700 to-neutral-900 dark:from-neutral-300 dark:to-neutral-500 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xs">N</span>
-            </div>
+            <BrandLogo size={28} className="rounded-lg shadow-lg" />
             <span className="text-white/70 text-xs font-semibold tracking-[0.2em]">NEXORA</span>
           </div>
           <Wifi className="w-5 h-5 text-white/30 rotate-90" />

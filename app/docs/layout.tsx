@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { BrandLogo } from '@/components/patterns/brand-logo'
 
 export const metadata: Metadata = {
   title: 'Documentation — Nexora',
@@ -47,9 +48,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <span className="text-border/60">|</span>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <span className="text-white font-bold text-xs">N</span>
-              </div>
+              <BrandLogo size={24} className="rounded-md shadow-none" />
               <span className="font-semibold text-sm">Nexora Docs</span>
             </div>
           </div>

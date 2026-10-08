@@ -27,6 +27,7 @@ const SUBPROCESSORS = [
   { name: 'Paddle', role: "Merchant of Record: handles card payments, international VAT/taxes and invoicing. Nexora does not store your card details." },
   { name: 'Resend', role: "Sending transactional emails (payment confirmation, account notifications)." },
   { name: 'Upstash', role: "Technical cache used for rate limiting (abuse prevention) and quota consistency." },
+  { name: 'PostHog', role: "Anonymous product analytics from the IDE extension, sent only if you enable telemetry. Identified by an editor-generated machine identifier, never by your name or email. Session recording and automatic capture are disabled." },
 ]
 
 export default function PrivacyPage() {

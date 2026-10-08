@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     })
 
     const baseUrl = appUrlFromRequest(req)
-    const inviteLink = `vscode://nexora/collab?room=${room.id}&token=${inviteToken}`
+    const inviteLink = `vscode://nexoracoding.nexora-ai/collab?room=${room.id}&token=${inviteToken}`
     const webLink = `${baseUrl}/collab/${room.id}?token=${inviteToken}`
 
     return NextResponse.json({ room, inviteLink, webLink }, { status: 201 })

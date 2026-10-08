@@ -491,7 +491,7 @@ export default function CollabRoomPage() {
               <div className="mt-6 pt-5 border-t border-slate-100 text-center">
                 <p className="text-xs text-slate-400 mb-2">Tu préfères utiliser VS Code ?</p>
                 <a
-                  href={`vscode://nexora/collab?room=${roomId}&token=${inviteToken}`}
+                  href={`vscode://nexoracoding.nexora-ai/collab?room=${roomId}&token=${inviteToken}`}
                   className="inline-flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground font-medium"
                 >
                   <ExternalLink className="w-3 h-3" />
@@ -508,7 +508,7 @@ export default function CollabRoomPage() {
   }
 
   // ── Session screen ──
-  const vscodeLink = `vscode://nexora/collab?room=${roomId}&token=${inviteToken}`
+  const vscodeLink = `vscode://nexoracoding.nexora-ai/collab?room=${roomId}&token=${inviteToken}`
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">

@@ -59,7 +59,7 @@ function LoginForm() {
 
   const getRedirectUrl = (tokenValue: string) => {
     if (!callback) return null
-    const baseUrl = "vscode://nexoracoding.nexora"
+    const baseUrl = "vscode://nexoracoding.nexora-ai"
     const params = new URLSearchParams()
     params.append('token', tokenValue)
     if (state) params.append('state', state)

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { VSCODE_EXTENSION_ID } from '@/lib/editorDeepLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -139,7 +140,7 @@ export default function Page() {
           return
         }
 
-        const editorUrl = new URL(`${rawScheme}://nexoracoding.nexora/auth`)
+        const editorUrl = new URL(`${rawScheme}://${VSCODE_EXTENSION_ID}/auth`)
         editorUrl.searchParams.set('code', data.code)
         if (state) editorUrl.searchParams.set('state', state)
 

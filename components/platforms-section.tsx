@@ -124,14 +124,14 @@ const JETBRAINS_IDES = [
   'GoLand', 'Rider', 'CLion', 'RubyMine', 'DataGrip', 'Android Studio',
 ]
 
-const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=nexoracoding.nexora'
-const JETBRAINS_URL = 'https://plugins.jetbrains.com/plugin/nexora'
+const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=nexoracoding.nexora-ai'
+const JETBRAINS_URL = 'https://plugins.jetbrains.com/plugin/34609-nexora'
 
 // Ces deux places de marche ne servent pas encore l'extension : les liens
 // renvoyaient un 404 a quiconque cliquait « Installer sur VS Code ». Promettre
 // trois installations dont deux mènent a une page d'erreur est pire que d'en
 // annoncer une seule. Passer a `true` le jour de la publication.
-const VSCODE_PUBLISHED = false
+const VSCODE_PUBLISHED = true
 const JETBRAINS_PUBLISHED = false
 const CLI_INSTALL = 'npm install -g @nexoracoding/cli'
 

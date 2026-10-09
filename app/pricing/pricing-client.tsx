@@ -146,9 +146,9 @@ export default function PricingPageClient() {
                   price={plan.priceLabel}
                   period={plan.price > 0 ? '/month' : undefined}
                   features={plan.features}
-                  href={`/checkout?plan=${key}`}
+                  href={key === 'enterprise' ? '/contact' : `/checkout?plan=${key}`}
                   popular={plan.popular}
-                  popularLabel="Populaire"
+                  popularLabel="Popular"
                   models={modelsForPlan(key)}
                   ctaText={CTA_TEXT[key]}
                 />

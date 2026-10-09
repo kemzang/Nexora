@@ -31,7 +31,19 @@ export function PricingCard({
   className,
 }: PricingCardProps) {
   return (
-    <GlassCard
+    // Le badge est pose sur ce conteneur, pas dans la carte : GlassCard porte
+    // overflow-hidden pour que son fond respecte les coins arrondis, ce qui
+    // rognait le badge debordant vers le haut — il etait coupe en deux.
+    <div className="relative h-full">
+      {popular && popularLabel && (
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
+          <span className="relative inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-3.5 py-1 rounded-full shadow-lg whitespace-nowrap">
+            <Star className="w-2.5 h-2.5" />
+            {popularLabel}
+          </span>
+        </div>
+      )}
+      <GlassCard
       variant="hover"
       className={cn(
         "h-full relative flex flex-col",
@@ -39,14 +51,6 @@ export function PricingCard({
         className
       )}
     >
-      {popular && popularLabel && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-          <span className="relative inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-3.5 py-1 rounded-full shadow-lg">
-            <Star className="w-2.5 h-2.5" />
-            {popularLabel}
-          </span>
-        </div>
-      )}
       <div className={cn("text-center", popular ? "pt-8" : "pt-5", "px-6")}>
         <h3 className="text-foreground text-base font-bold">{name}</h3>
         <div className="mt-3">
@@ -81,5 +85,6 @@ export function PricingCard({
         </Link>
       </div>
     </GlassCard>
+    </div>
   )
 }

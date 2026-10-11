@@ -4,7 +4,7 @@ import {
   checkStartupEligibility, STARTUP_PROGRAM,
   FUNDING_STAGES, PROOF_TYPES,
 } from '@/lib/leads'
-import { adminClient, clientIp, rateLimited, bad } from '../route-helpers'
+import { adminClient, clientIp, tooManyAttempts, tooManySubmissions, recordSubmission, bad } from '../route-helpers'
 import { notifyStartupApplication } from '@/lib/leadEmails'
 
 export const runtime = 'nodejs'
@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     if (body.website_url) return NextResponse.json({ success: true })
 
-    if (await rateLimited(`lead:startup:${clientIp(req)}`, 3, 3600)) {
+    const rlKey = `lead:startup:${clientIp(req)}`
+    if (await tooManyAttempts(rlKey) || await tooManySubmissions(rlKey)) {
       return bad('Too many requests. Please try again later.', 429)
     }
 
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
       domainMatches: emailMatchesSite(row.work_email, row.company_website),
     }).catch((e) => console.error('[startup application] notification failed', e))
 
+    await recordSubmission(rlKey)
     return NextResponse.json({ success: true, autoEligible: eligibility.eligible })
   } catch (err) {
     console.error('[startup application] unexpected', err)

@@ -20,15 +20,30 @@ export function clientIp(req: NextRequest): string {
 }
 
 /**
- * Limite grossière par IP. Un formulaire public sans frein se fait inonder
- * dès qu'un robot le découvre — et chaque soumission déclenche un e-mail.
+ * Limite par IP, en deux temps.
+ *
+ * Une limite unique qui compte toutes les requetes punit la faute de frappe
+ * autant que le robot : trois courriels mal saisis et le visiteur est bloque
+ * une heure. On separe donc les deux. `tooManyAttempts` tolere largement les
+ * essais — ils ne coutent qu'une validation — tandis que `recordSubmission`
+ * plafonne ce qui a reellement un cout : une ligne en base et un e-mail.
  */
-export async function rateLimited(key: string, max: number, windowSeconds: number) {
+export async function tooManyAttempts(key: string, max = 20, windowSeconds = 3600) {
   if (!isDistributedCacheConfigured) return false
-  const hits = (await cacheGet<number>(key)) ?? 0
-  if (hits >= max) return true
-  await cacheSet(key, hits + 1, windowSeconds)
-  return false
+  const hits = (await cacheGet<number>(`${key}:try`) ?? 0) + 1
+  await cacheSet(`${key}:try`, hits, windowSeconds)
+  return hits > max
+}
+
+export async function tooManySubmissions(key: string, max = 3, windowSeconds = 3600) {
+  if (!isDistributedCacheConfigured) return false
+  return ((await cacheGet<number>(`${key}:ok`)) ?? 0) >= max
+}
+
+export async function recordSubmission(key: string, windowSeconds = 3600) {
+  if (!isDistributedCacheConfigured) return
+  const n = (await cacheGet<number>(`${key}:ok`)) ?? 0
+  await cacheSet(`${key}:ok`, n + 1, windowSeconds)
 }
 
 export const bad = (message: string, status = 400) =>

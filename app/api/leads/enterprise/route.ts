@@ -3,7 +3,7 @@ import {
   checkWorkEmail, emailMatchesSite, siteDomain,
   COMPANY_SIZES, TIMELINES, REQUIREMENTS, IDES,
 } from '@/lib/leads'
-import { adminClient, clientIp, rateLimited, bad } from '../route-helpers'
+import { adminClient, clientIp, tooManyAttempts, tooManySubmissions, recordSubmission, bad } from '../route-helpers'
 import { notifyEnterpriseLead } from '@/lib/leadEmails'
 
 export const runtime = 'nodejs'
@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
     // Champ piège : invisible à l'écran, rempli uniquement par un robot.
     if (body.website_url) return NextResponse.json({ success: true })
 
-    if (await rateLimited(`lead:ent:${clientIp(req)}`, 3, 3600)) {
+    const rlKey = `lead:ent:${clientIp(req)}`
+    if (await tooManyAttempts(rlKey) || await tooManySubmissions(rlKey)) {
       return bad('Too many requests. Please try again later.', 429)
     }
 
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
       domainMatches: emailMatchesSite(row.work_email, row.company_website),
     }).catch((e) => console.error('[enterprise lead] notification failed', e))
 
+    await recordSubmission(rlKey)
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('[enterprise lead] unexpected', err)

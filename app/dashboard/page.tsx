@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import {
   Settings, LogOut, LayoutDashboard, Key, FileText, HelpCircle, ChevronRight,
   Bell, Menu, X, Activity, Wallet, Users, History, Radio
-} from 'lucide-react'
+, Inbox} from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
@@ -22,9 +22,10 @@ import CollaborationsSection from '@/app/dashboard/sections/CollaborationsSectio
 import HistorySection from '@/app/dashboard/sections/HistorySection'
 import ActivitySection from '@/app/dashboard/sections/ActivitySection'
 import SettingsSection from '@/app/dashboard/sections/SettingsSection'
+import LeadsSection from '@/app/dashboard/sections/LeadsSection'
 
 const sidebarLinks = [
-  { icon: LayoutDashboard, label: 'Vue d\'ensemble', section: 'dashboard' },
+  { icon: LayoutDashboard, label: 'Overview', section: 'dashboard' },
   { icon: Key, label: 'API keys', section: 'api-keys' },
   { icon: Users, label: 'Collaborations', section: 'collaborations' },
   { icon: Radio, label: 'Activity', section: 'activite' },
@@ -33,6 +34,9 @@ const sidebarLinks = [
   { icon: Wallet, label: 'Subscription', section: 'abonnement' },
   { icon: FileText, label: 'Invoices', section: 'factures' },
   { icon: HelpCircle, label: 'Help', section: 'aide' },
+  // Reserve : l'API /api/admin/leads refuse tout appelant absent d'ADMIN_EMAILS,
+  // et la section affiche alors un message. C'est le serveur qui garde, pas le menu.
+  { icon: Inbox, label: 'Leads', section: 'leads' },
 ]
 
 const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => void }>> = {
@@ -45,6 +49,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   abonnement: ({ onNavigate }) => <SubscriptionSection onNavigate={onNavigate} />,
   factures: () => <InvoicesSection />,
   aide: () => <HelpSection />,
+  leads: () => <LeadsSection />,
   parametres: () => <SettingsSection />,
 }
 

@@ -222,6 +222,8 @@ const fr: Translations = {
         { label: 'Changelog', href: '/changelog' },
       ] },
       { title: 'Entreprise', links: [
+        { label: 'Entreprises', href: '/enterprise' },
+        { label: 'Start-up', href: '/startups' },
         { label: 'À propos', href: '/about' },
         { label: 'Contact', href: '/contact' },
       ] },
@@ -398,6 +400,8 @@ const en: Translations = {
         { label: 'Changelog', href: '/changelog' },
       ] },
       { title: 'Company', links: [
+        { label: 'Enterprise', href: '/enterprise' },
+        { label: 'Startups', href: '/startups' },
         { label: 'About', href: '/about' },
         { label: 'Contact', href: '/contact' },
       ] },
@@ -574,6 +578,8 @@ const es: Translations = {
         { label: 'Changelog', href: '/changelog' },
       ] },
       { title: 'Empresa', links: [
+        { label: 'Empresas', href: '/enterprise' },
+        { label: 'Startups', href: '/startups' },
         { label: 'Acerca de', href: '/about' },
         { label: 'Contacto', href: '/contact' },
       ] },
@@ -750,6 +756,8 @@ const pt: Translations = {
         { label: 'Changelog', href: '/changelog' },
       ] },
       { title: 'Empresa', links: [
+        { label: 'Empresas', href: '/enterprise' },
+        { label: 'Startups', href: '/startups' },
         { label: 'Sobre', href: '/about' },
         { label: 'Contato', href: '/contact' },
       ] },

@@ -66,7 +66,13 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 3,
     sortOrder: 1,
     supportsVision: false,
-    creditMultiplier: 1,
+    // 1.25 et non 1 : a multiplicateur 1, un credit DeepSeek coute son prix
+    // brut, sans marge. C'est le modele par defaut, donc le plus consomme, et
+    // le seul sur lequel un quota epuise pouvait passer sous le cout — jusqu'a
+    // -4$ sur un plan Business dont le client genere beaucoup de code. Les
+    // modeles Claude, eux, sont facturees ~5x leur cout relatif et n'ont jamais
+    // pose ce probleme. 1.25 couvre le pire cas calcule (1.18) avec une marge.
+    creditMultiplier: 1.25,
   },
   'gemini-flash': {
     id: 'gemini-flash',

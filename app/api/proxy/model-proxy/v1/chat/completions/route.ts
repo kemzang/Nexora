@@ -5,6 +5,7 @@ import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTok
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
+import { windowStartIso, secondsUntilReset } from '@/lib/billingWindow'
 
 export const runtime = 'nodejs'
 
@@ -317,8 +318,7 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
   }
 
   const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const usage = await sumMonthlyUsage(userId, startOfMonth)
+  const usage = await sumMonthlyUsage(userId, windowStartIso(createdAt, now))
   usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
   void cacheSet(`usage:${userId}`, usage, 60)
   return usage >= planLimit ? planLimit.toString() : null
@@ -687,7 +687,7 @@ export async function POST(req: NextRequest) {
     const limitReached = await checkMonthlyLimit(userId, userPlan)
     if (limitReached) {
       const now = new Date()
-      const retryAfter = Math.ceil((new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() - now.getTime()) / 1000)
+      const retryAfter = secondsUntilReset(await getUserCreatedAt(userId), now)
       return NextResponse.json(
         { error: `Monthly token limit reached (${limitReached}). Upgrade your plan to continue.`, code: 'MONTHLY_LIMIT_REACHED', plan: userPlan, limit: Number(limitReached), retry_after: retryAfter },
         { status: 429, headers: { 'Retry-After': String(retryAfter) } }

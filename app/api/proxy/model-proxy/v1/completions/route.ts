@@ -3,6 +3,7 @@ import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { getEffectiveTokenLimit, type PlanId } from '@/lib/models'
 import type { FimModelId } from '@/lib/modelRouter'
+import { windowStartIso, secondsUntilReset } from '@/lib/billingWindow'
 
 export const runtime = 'nodejs'
 
@@ -70,7 +71,7 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
   if (cached && cached.expiresAt > Date.now()) {
     return cached.total >= planLimit ? planLimit.toString() : null
   }
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const startOfMonth = windowStartIso(createdAt)
   const { data } = await supabase
     .from('usage_sessions')
     .select('tokens_input, tokens_total')
@@ -132,8 +133,7 @@ export async function POST(req: NextRequest) {
     if (!autocompleteIsFree) {
       const limitReached = await checkMonthlyLimit(userId, userPlan)
       if (limitReached) {
-        const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
-        const retryAfter = Math.ceil((endOfMonth.getTime() - Date.now()) / 1000)
+        const retryAfter = secondsUntilReset(await getUserCreatedAt(userId))
         return NextResponse.json(
           { error: `Monthly token limit reached (${limitReached}). Upgrade your plan.`, code: 'MONTHLY_LIMIT_REACHED', plan: userPlan, retry_after: retryAfter },
           { status: 429, headers: { 'Retry-After': String(retryAfter) } }

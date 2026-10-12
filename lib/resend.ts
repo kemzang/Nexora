@@ -3,8 +3,16 @@ import { APP_URL } from '@/lib/appUrl'
 
 export const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Utilise onboarding@resend.dev tant que tu n'as pas de domaine vérifié
-const FROM_EMAIL = 'Nexora <onboarding@resend.dev>'
+/**
+ * Adresse d'expedition.
+ *
+ * nexoracoding.com est verifie chez Resend (DKIM, SPF et retour de plainte
+ * poses sur le sous-domaine `send`). Avant cela tout partait de
+ * onboarding@resend.dev, le domaine de test partage : un client qui demandait
+ * la reinitialisation de son mot de passe recevait un message d'un domaine
+ * inconnu, promis aux indesirables.
+ */
+export const FROM_EMAIL = 'Nexora <noreply@nexoracoding.com>'
 
 export async function sendPaymentConfirmation({
   to,

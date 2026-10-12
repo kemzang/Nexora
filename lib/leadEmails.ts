@@ -1,7 +1,6 @@
-import { resend } from '@/lib/resend'
+import { resend, FROM_EMAIL } from '@/lib/resend'
 import { STARTUP_PROGRAM, type StartupEligibility } from '@/lib/leads'
 
-const FROM = 'Nexora <onboarding@resend.dev>'
 /** Boite ou arrivent les demandes commerciales. */
 const SALES_INBOX = process.env.SALES_INBOX_EMAIL || 'contact@nexoracoding.com'
 
@@ -53,7 +52,7 @@ export async function notifyEnterpriseLead(lead: {
     ].join(''),
   )
   return resend.emails.send({
-    from: FROM,
+    from: FROM_EMAIL,
     to: SALES_INBOX,
     replyTo: lead.work_email,
     subject: `Enterprise enquiry — ${lead.company_name}`,
@@ -101,7 +100,7 @@ export async function notifyStartupApplication(app: {
     ].join(''),
   )
   return resend.emails.send({
-    from: FROM,
+    from: FROM_EMAIL,
     to: SALES_INBOX,
     replyTo: app.work_email,
     subject: `Startup application — ${app.company_name}`,

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, type AIModel, type ModelId, type PlanId } from '@/lib/models'
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
+import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 
 export const runtime = 'nodejs'
 
@@ -290,7 +291,18 @@ async function sumMonthlyUsage(userId: string, since: string): Promise<number> {
 
 async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string | null> {
   const createdAt = await getUserCreatedAt(userId)
-  const planLimit = getEffectiveTokenLimit(plan, createdAt)
+  let planLimit = getEffectiveTokenLimit(plan, createdAt)
+
+  // Le palier gratuit ne vaut que pour les deux premiers comptes d'une meme
+  // machine. Au-dela, l'acces au produit reste ouvert mais sans credits
+  // offerts : c'est la seule reponse a l'ouverture en serie de comptes
+  // jetables, qui consomme de vrais appels d'API a nos frais. Les plans
+  // payants ne sont jamais concernes.
+  if (plan === 'free' && (await isFreeQuotaBlocked(supabase, userId))) {
+    planLimit = 0
+    return '0'
+  }
+
   if (planLimit <= 0) return null
 
   const cached = usageCache.get(userId)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { generateApiKey, apiKeyExpiresAt } from '@/lib/api-keys'
+import { linkAccountToMachine } from '@/lib/machineAccounts'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +18,7 @@ async function sha256(text: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, state } = await req.json()
+    const { code, state, machineId } = await req.json()
     
     if (!code) {
       return NextResponse.json({ error: 'Code requis' }, { status: 400 })
@@ -41,6 +42,16 @@ export async function POST(req: NextRequest) {
 
     // Désactiver le code (usage unique)
     await supabase.from('api_keys').update({ is_active: false }).eq('key_hash', codeHash)
+
+    // Lie le compte a la machine qui l'active. Au-dela de deux comptes par
+    // machine, les suivants perdent le quota gratuit — sans quoi il suffisait
+    // d'une adresse jetable de plus pour relancer 100 000 credits a nos frais.
+    // Un echec ici ne doit jamais empecher la connexion.
+    try {
+      await linkAccountToMachine(authCodeData.user_id, machineId)
+    } catch (e) {
+      console.error('[exchange-code] machine link failed', e)
+    }
 
     // Générer le token d'accès (CSPRNG, 160 bits d'entropie réelle)
     const accessToken = generateApiKey()

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
@@ -34,10 +35,18 @@ const sidebarLinks = [
   { icon: Wallet, label: 'Subscription', section: 'abonnement' },
   { icon: FileText, label: 'Invoices', section: 'factures' },
   { icon: HelpCircle, label: 'Help', section: 'aide' },
-  // Reserve : l'API /api/admin/leads refuse tout appelant absent d'ADMIN_EMAILS,
-  // et la section affiche alors un message. C'est le serveur qui garde, pas le menu.
-  { icon: Inbox, label: 'Leads', section: 'leads' },
 ]
+
+/**
+ * Entree reservee aux administrateurs.
+ *
+ * Elle n'est ajoutee qu'apres confirmation du serveur : un utilisateur
+ * ordinaire ne voit pas d'onglet qui lui repondrait « restricted ». Ce masquage
+ * est du confort, pas une protection — /api/admin/leads refuse de toute facon
+ * tout appelant absent d'ADMIN_EMAILS, et c'est cette verification-la qui garde
+ * les donnees.
+ */
+const adminLink = { icon: Inbox, label: 'Leads', section: 'leads' }
 
 const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => void }>> = {
   dashboard: ({ user, onNavigate }) => <OverviewSection user={user} onNavigate={onNavigate} />,
@@ -66,6 +75,27 @@ export default function DashboardPage() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      try {
+        const res = await fetch('/api/admin/me', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        const { admin } = await res.json()
+        if (!cancelled) setIsAdmin(Boolean(admin))
+      } catch {
+        /* en cas d'echec on reste sur false : l'onglet ne s'affiche pas */
+      }
+    })()
+    return () => { cancelled = true }
+  }, [user])
+
+  const links = isAdmin ? [...sidebarLinks, adminLink] : sidebarLinks
 
   useEffect(() => {
     if (!loading && !user) {
@@ -152,7 +182,7 @@ export default function DashboardPage() {
           <p className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-[0.12em] px-3 mb-2">
             Navigation
           </p>
-          {sidebarLinks.map(link => {
+          {links.map(link => {
             const isActive = activeSection === link.section
             return (
               <button
@@ -244,7 +274,7 @@ export default function DashboardPage() {
             aucun <div> n'est jamais créé pour lui et la section ne s'affiche
             jamais, quel que soit activeSection. */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-          {[...sidebarLinks, { icon: Settings, label: 'Settings', section: 'parametres' }].map(link => {
+          {[...links, { icon: Settings, label: 'Settings', section: 'parametres' }].map(link => {
             const Section = sections[link.section]
             return (
               <div

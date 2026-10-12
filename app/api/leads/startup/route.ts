@@ -79,12 +79,18 @@ export async function POST(req: NextRequest) {
       return bad('Could not record your application. Please try again.', 500)
     }
 
-    void notifyStartupApplication({
-      ...row,
-      id: data.id,
-      eligibility,
-      domainMatches: emailMatchesSite(row.work_email, row.company_website),
-    }).catch((e) => console.error('[startup application] notification failed', e))
+    // Attendu et non lance en arriere-plan : voir la note de la route
+    // Enterprise — un `void promise` ne survit pas a la fin de la reponse.
+    try {
+      await notifyStartupApplication({
+        ...row,
+        id: data.id,
+        eligibility,
+        domainMatches: emailMatchesSite(row.work_email, row.company_website),
+      })
+    } catch (e) {
+      console.error('[startup application] notification failed', e)
+    }
 
     await recordSubmission(rlKey)
     return NextResponse.json({ success: true, autoEligible: eligibility.eligible })

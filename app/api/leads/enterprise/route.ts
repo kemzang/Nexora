@@ -65,13 +65,20 @@ export async function POST(req: NextRequest) {
       return bad('Could not record your request. Please try again.', 500)
     }
 
-    // L'e-mail ne doit jamais faire echouer l'enregistrement : la demande est
-    // deja en base, et c'est elle qui compte.
-    void notifyEnterpriseLead({
-      ...row,
-      id: data.id,
-      domainMatches: emailMatchesSite(row.work_email, row.company_website),
-    }).catch((e) => console.error('[enterprise lead] notification failed', e))
+    // L'envoi est attendu, pas lance en arriere-plan : sur Vercel la fonction
+    // est gelee des que la reponse part, et un `void promise` n'a jamais le
+    // temps de s'executer — les notifications ne partaient pas du tout. Le
+    // try/catch garde le comportement voulu : un echec d'e-mail ne doit pas
+    // faire echouer la demande, qui est deja enregistree.
+    try {
+      await notifyEnterpriseLead({
+        ...row,
+        id: data.id,
+        domainMatches: emailMatchesSite(row.work_email, row.company_website),
+      })
+    } catch (e) {
+      console.error('[enterprise lead] notification failed', e)
+    }
 
     await recordSubmission(rlKey)
     return NextResponse.json({ success: true })

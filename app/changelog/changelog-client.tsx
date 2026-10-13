@@ -88,7 +88,7 @@ export default function ChangelogPageClient() {
               Une idée, un bug à signaler ?{' '}
               <Link href="/contact" className="inline-flex items-center gap-1 text-foreground/80 hover:text-foreground underline underline-offset-4">
                 <Mail className="w-3.5 h-3.5" />
-                Contactez-nous
+                Contact us
               </Link>
             </p>
           </div>

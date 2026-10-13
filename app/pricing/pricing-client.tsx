@@ -182,7 +182,7 @@ export default function PricingPageClient() {
                 { label: 'Price', render: (k: PlanId) => PLANS[k].price > 0 ? `${PLANS[k].priceLabel}/month` : 'Free' },
                 { label: 'Credits / month', render: (k: PlanId) => formatCredits(PLANS[k].tokensPerMonth) },
                 { label: 'Requests / day', render: (k: PlanId) => formatRequests(PLANS[k].maxRequestsPerDay) },
-                { label: 'Collaborateurs max', render: (k: PlanId) => formatCollaborators(PLANS[k].maxCollaborators) },
+                { label: 'Max collaborators', render: (k: PlanId) => formatCollaborators(PLANS[k].maxCollaborators) },
                 { label: 'Models included', render: (k: PlanId) => modelsForPlan(k) },
               ].map((row, ri) => (
                 <tr key={row.label} className={ri % 2 === 0 ? 'bg-white/[0.02]' : ''}>
@@ -211,7 +211,7 @@ export default function PricingPageClient() {
           ))}
         </div>
         <p className="text-center text-sm text-muted-foreground mt-8">
-          D'autres questions ? <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contactez-nous</Link> ou consultez la <Link href="/docs" className="text-foreground/80 hover:text-foreground underline underline-offset-4">documentation</Link>.
+          Any other questions? <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact us</Link> or browse the <Link href="/docs" className="text-foreground/80 hover:text-foreground underline underline-offset-4">documentation</Link>.
         </p>
       </SectionLayout>
 
@@ -230,7 +230,7 @@ export default function PricingPageClient() {
               <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">Create a free account in seconds, no card required.</p>
               <Link href="/auth/register">
                 <Button size="lg" variant="outline" className="px-10 h-12 text-base group">
-                  Commencer gratuitement
+                  Get started free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>

@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Documentation projet — Guide | Nexora Docs',
-  description: 'Apprenez à configurer la conscience documentaire de Nexora pour obtenir des suggestions adaptées à votre codebase',
+  title: 'Project documentation — Guide | Nexora Docs',
+  description: 'Set up Nexora documentation awareness to get suggestions that fit your codebase',
 }
 
 function CodeBlock({ code, lang = 'json' }: { code: string; lang?: string }) {
@@ -45,31 +45,31 @@ export default function CodebaseDocumentationAwarenessPage() {
         <span>/</span>
         <span>Guides</span>
         <span>/</span>
-        <span className="text-foreground">Documentation du projet</span>
+        <span className="text-foreground">Project documentation</span>
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight mb-3">Guide : Documentation du projet</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-3">Guide: Project documentation</h1>
       <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-        Nexora peut exploiter la documentation de votre projet — README, commentaires, fichiers de configuration — pour fournir des suggestions contextuellement cohérentes avec votre architecture et vos conventions.
+        Nexora can draw on your project documentation — README, comments, configuration files — to give suggestions that match your architecture and your conventions.
       </p>
 
       <Callout type="info">
-        Cette fonctionnalité est disponible sur tous les plans. Plus votre documentation est structurée, plus les suggestions seront précises.
+        This works on every plan. The better structured your documentation, the sharper the suggestions.
       </Callout>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Comment Nexora analyse votre projet</h2>
+      <h2 className="text-xl font-bold mb-4">How Nexora reads your project</h2>
       <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-        À l'ouverture d'un workspace, Nexora indexe les fichiers de documentation détectés automatiquement. Cet index est transmis comme contexte système aux modèles IA, ce qui leur permet de comprendre votre projet avant même que vous posiez une question.
+        When a workspace opens, Nexora indexes the documentation files it detects. That index is passed to the models as system context, so they understand your project before you even ask a question.
       </p>
 
       <div className="space-y-3 mb-8">
         {[
-          { icon: '📄', title: 'README.md', desc: 'Description du projet, instructions d\'installation, architecture générale.' },
-          { icon: '⚙️', title: 'Fichiers de config', desc: 'package.json, tsconfig.json, pyproject.toml — pour comprendre les dépendances et les conventions.' },
-          { icon: '💬', title: 'Commentaires JSDoc / docstrings', desc: 'Nexora lit les annotations de types et descriptions de fonctions pour enrichir le contexte.' },
-          { icon: '📁', title: 'AGENTS.md / CLAUDE.md', desc: 'Si présents, ces fichiers sont prioritaires et guidé l\'IA sur vos instructions spécifiques.' },
+          { icon: '📄', title: 'README.md', desc: 'Project description, install instructions, overall architecture.' },
+          { icon: '⚙️', title: 'Config files', desc: 'package.json, tsconfig.json, pyproject.toml — to understand your dependencies and conventions.' },
+          { icon: '💬', title: 'JSDoc comments / docstrings', desc: 'Nexora reads type annotations and function descriptions to enrich the context.' },
+          { icon: '📁', title: 'AGENTS.md / CLAUDE.md', desc: 'When present, these files take priority and steer the AI with your own instructions.' },
         ].map(item => (
           <div key={item.title} className="flex gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50">
             <span className="text-lg shrink-0">{item.icon}</span>
@@ -83,10 +83,10 @@ export default function CodebaseDocumentationAwarenessPage() {
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Configurer la documentation dans VS Code</h2>
+      <h2 className="text-xl font-bold mb-4">Configuring documentation in VS Code</h2>
 
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Vous pouvez spécifier quels fichiers Nexora doit analyser via les paramètres de l'extension :
+        You can choose which files Nexora reads from the extension settings:
       </p>
 
       <CodeBlock lang="json" code={`{
@@ -101,24 +101,24 @@ export default function CodebaseDocumentationAwarenessPage() {
 }`} />
 
       <Callout type="tip">
-        Gardez <code className="font-mono text-xs">maxFileSize</code> sous 50 000 caractères par fichier. Les fichiers plus volumineux sont tronqués automatiquement, ce qui peut exclure des informations importantes.
+        Keep <code className="font-mono text-xs">maxFileSize</code> under 50,000 characters per file. Larger files are truncated automatically, which can cut out important information.
       </Callout>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Structure de projet recommandée</h2>
+      <h2 className="text-xl font-bold mb-4">Recommended project structure</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Pour maximiser la pertinence des suggestions, adoptez cette structure documentaire :
+        To get the most relevant suggestions, lay your documentation out like this:
       </p>
 
       <FileTree items={[
-        'mon-projet/',
-        '├── README.md              ← Vue d\'ensemble, stack, démarrage rapide',
-        '├── ARCHITECTURE.md        ← Décisions d\'architecture, patterns utilisés',
+        'my-project/',
+        '├── README.md              ← Overview, stack, quick start',
+        '├── ARCHITECTURE.md        ← Architecture decisions, patterns in use',
         '├── docs/',
-        '│   ├── conventions.md     ← Conventions de nommage, style de code',
-        '│   ├── api-reference.md   ← Endpoints, types de données',
-        '│   └── glossaire.md       ← Termes métier spécifiques',
+        '│   ├── conventions.md     ← Naming conventions, code style',
+        '│   ├── api-reference.md   ← Endpoints, data types',
+        '│   └── glossary.md        ← Domain-specific terms',
         '├── src/',
         '│   └── ...',
         '└── package.json',
@@ -126,16 +126,16 @@ export default function CodebaseDocumentationAwarenessPage() {
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Utiliser @doc dans le Chat</h2>
+      <h2 className="text-xl font-bold mb-4">Using @doc in the chat</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Dans le panneau Chat, vous pouvez référencer explicitement un fichier de documentation pour l'inclure dans votre question :
+        In the chat panel you can reference a documentation file explicitly to pull it into your question:
       </p>
 
       <div className="space-y-3 mb-6">
         {[
-          { cmd: '@doc README.md', desc: 'Inclut votre README comme contexte de la question' },
-          { cmd: '@doc ARCHITECTURE.md', desc: 'Inclut votre fichier d\'architecture' },
-          { cmd: '@doc docs/conventions.md', desc: 'Inclut un fichier de documentation personnalisé' },
+          { cmd: '@doc README.md', desc: 'Adds your README as context for the question' },
+          { cmd: '@doc ARCHITECTURE.md', desc: 'Adds your architecture file' },
+          { cmd: '@doc docs/conventions.md', desc: 'Adds a documentation file of your own' },
         ].map(item => (
           <div key={item.cmd} className="flex items-start gap-3 text-sm">
             <code className="px-2 py-0.5 bg-white/[0.06] rounded text-xs font-mono text-foreground/70 shrink-0 mt-0.5">{item.cmd}</code>
@@ -145,34 +145,34 @@ export default function CodebaseDocumentationAwarenessPage() {
       </div>
 
       <Callout type="tip">
-        Combinez <code className="font-mono text-xs">@doc</code> et <code className="font-mono text-xs">@file</code> pour des questions très ciblées : <em>"@doc conventions.md @file src/utils/parser.ts — est-ce que ce fichier respecte nos conventions ?"</em>
+        Combine <code className="font-mono text-xs">@doc</code> and <code className="font-mono text-xs">@file</code> for very targeted questions: <em>&ldquo;@doc conventions.md @file src/utils/parser.ts — does this file follow our conventions?&rdquo;</em>
       </Callout>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Exemple concret</h2>
+      <h2 className="text-xl font-bold mb-4">A concrete example</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Avec un README contenant votre stack et vos conventions, Nexora adapte ses suggestions :
+        With a README that states your stack and conventions, Nexora adapts its suggestions:
       </p>
 
       <div className="grid gap-4 mb-6">
         <div className="p-4 rounded-xl bg-white/[0.03] border border-border/50">
-          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Sans documentation projet</p>
-          <p className="text-xs text-foreground/70 italic">"Génère une fonction pour parser un CSV"</p>
-          <p className="text-xs text-muted-foreground mt-2">→ Suggestion générique en JavaScript natif</p>
+          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Without project documentation</p>
+          <p className="text-xs text-foreground/70 italic">&ldquo;Write a function to parse a CSV&rdquo;</p>
+          <p className="text-xs text-muted-foreground mt-2">→ A generic suggestion in plain JavaScript</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/25">
-          <p className="text-xs text-emerald-400 mb-2 uppercase tracking-wider font-semibold">Avec README indexé (stack : TypeScript + zod)</p>
-          <p className="text-xs text-foreground/70 italic">"Génère une fonction pour parser un CSV"</p>
-          <p className="text-xs text-muted-foreground mt-2">→ Suggestion TypeScript avec validation zod, types stricts, gestion d'erreur cohérente avec votre codebase</p>
+          <p className="text-xs text-emerald-400 mb-2 uppercase tracking-wider font-semibold">With the README indexed (stack: TypeScript + zod)</p>
+          <p className="text-xs text-foreground/70 italic">&ldquo;Write a function to parse a CSV&rdquo;</p>
+          <p className="text-xs text-muted-foreground mt-2">→ A TypeScript suggestion with zod validation, strict types and error handling consistent with your codebase</p>
         </div>
       </div>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-4">Fichier .nexoraignore</h2>
+      <h2 className="text-xl font-bold mb-4">The .nexoraignore file</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Pour exclure des fichiers de l'indexation (secrets, fichiers volumineux, dossiers générés) :
+        To keep files out of the index (secrets, large files, generated folders):
       </p>
 
       <CodeBlock lang="text" code={`# .nexoraignore
@@ -181,20 +181,20 @@ dist/
 .env*
 *.min.js
 coverage/
-docs/internal/    # Documentation interne confidentielle`} />
+docs/internal/    # Confidential internal documentation`} />
 
       <Callout type="warning">
-        Nexora ne lit jamais les fichiers <code className="font-mono text-xs">.env</code> et <code className="font-mono text-xs">.env.*</code> par défaut, même sans <code className="font-mono text-xs">.nexoraignore</code>.
+        Nexora never reads <code className="font-mono text-xs">.env</code> or <code className="font-mono text-xs">.env.*</code> files by default, even without a <code className="font-mono text-xs">.nexoraignore</code>.
       </Callout>
 
       <div className="h-px bg-border/50 my-8" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/autocomplete/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
-          ← Auto-complétion
+          ← Autocomplete
         </Link>
         <Link href="/docs" className="text-foreground/70 hover:text-foreground transition-colors">
-          Accueil Docs →
+          Docs home →
         </Link>
       </div>
     </article>

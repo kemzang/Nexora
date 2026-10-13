@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Sparkles, MessageSquare, ShieldCheck, LayoutPanelLeft, Mail } from 'lucide-react'
+import { Sparkles, MessageSquare, ShieldCheck, LayoutPanelLeft, Mail, Cpu } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
 import { SectionLayout } from '@/components/patterns/section-layout'
@@ -11,19 +11,24 @@ import { SiteFooter } from '@/components/patterns/site-footer'
 
 const CURRENT_ENTRIES = [
   {
+    icon: Cpu,
+    title: 'Claude 5.5 across every plan',
+    desc: 'Claude Haiku, Sonnet and Opus move to their 5.5 generation, with a 1M-token context window. Haiku 5.5 is now the cheapest model in the catalogue, so it joins the Free plan and becomes the default — your credits last about four times longer than before.',
+  },
+  {
     icon: LayoutPanelLeft,
-    title: 'Nouvelles pages sur le site',
-    desc: "Ajout des pages Tarifs, Documentation, Changelog, À propos, Contact et des pages légales (CGU, confidentialité), pour une meilleure visibilité sur l'offre et le fonctionnement du produit.",
+    title: 'New pages on the site',
+    desc: 'Added Pricing, Documentation, Changelog, About and Contact pages, plus the legal pages (terms, privacy), so the offer and how the product works are easier to find.',
   },
   {
     icon: MessageSquare,
-    title: "Améliorations du chat et de l'interface",
-    desc: "Ajustements continus de l'expérience de chat et de l'ergonomie générale du site et du tableau de bord.",
+    title: 'Chat and interface improvements',
+    desc: 'Ongoing refinements to the chat experience and to the general ergonomics of the site and the dashboard.',
   },
   {
     icon: ShieldCheck,
-    title: 'Corrections de stabilité',
-    desc: "Corrections côté API et gestion des quotas pour une expérience plus fiable au quotidien.",
+    title: 'Stability fixes',
+    desc: 'Fixes on the API side and in quota handling, for a more dependable day-to-day experience.',
   },
 ]
 
@@ -41,11 +46,11 @@ export default function ChangelogPageClient() {
               Changelog
             </Badge>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 text-balance">
-              Journal des mises à jour
+              Update log
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Nexora évolue en continu. Ce journal met en avant les améliorations les plus notables —
-              sans prétendre à un historique exhaustif de chaque changement.
+              Nexora keeps evolving. This log highlights the most notable improvements —
+              it is not meant to be an exhaustive history of every change.
             </p>
           </motion.div>
         </div>
@@ -54,7 +59,7 @@ export default function ChangelogPageClient() {
       <SectionLayout background="default" className="pt-0 sm:pt-0">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Dernières mises à jour</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Latest updates</span>
             <div className="flex-1 h-px bg-border/60" />
           </div>
 
@@ -82,10 +87,10 @@ export default function ChangelogPageClient() {
 
           <div className="mt-10 pt-8 border-t border-border/50 text-center">
             <p className="text-sm text-muted-foreground mb-1">
-              Ce journal est volontairement synthétique et sera enrichi au fil des prochaines mises à jour.
+              This log is deliberately brief and will grow with each release.
             </p>
             <p className="text-sm text-muted-foreground">
-              Une idée, un bug à signaler ?{' '}
+              Got an idea, or a bug to report?{' '}
               <Link href="/contact" className="inline-flex items-center gap-1 text-foreground/80 hover:text-foreground underline underline-offset-4">
                 <Mail className="w-3.5 h-3.5" />
                 Contact us

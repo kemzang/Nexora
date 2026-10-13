@@ -8,7 +8,7 @@ import { MODELS } from '@/lib/models'
 
 export const metadata: Metadata = {
   title: 'Documentation — Nexora',
-  description: "Installez Nexora dans VS Code, IntelliJ ou en ligne de commande, et découvrez le chat IA, l'autocomplétion et le mode Agent.",
+  description: 'Install Nexora in VS Code, IntelliJ or the command line, and discover AI chat, autocomplete and Agent mode.',
 }
 
 const GITHUB_URL = 'https://github.com/kemzang-Bryan/Nexora'
@@ -56,7 +56,7 @@ function InstallCard({
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1.5 text-xs text-foreground/70 hover:text-foreground transition-colors mt-3"
       >
-        Code source <ExternalLink className="w-3 h-3" />
+        Source code <ExternalLink className="w-3 h-3" />
       </a>
     </div>
   )
@@ -85,7 +85,7 @@ function FeatureDocCard({
       <p className="text-xs text-muted-foreground leading-relaxed mb-3">{desc}</p>
       {href && (
         <span className="inline-flex items-center gap-1.5 text-xs text-foreground/70 font-medium">
-          Démarrage rapide <ArrowRight className="w-3 h-3" />
+          Quick start <ArrowRight className="w-3 h-3" />
         </span>
       )}
     </div>
@@ -98,81 +98,81 @@ export default function DocsIndexPage() {
 
   return (
     <article className="max-w-4xl">
-      <h1 className="text-3xl font-bold tracking-tight mb-3">Documentation Nexora</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-3">Nexora documentation</h1>
       <p className="text-muted-foreground text-base mb-10 leading-relaxed max-w-2xl">
-        Tout ce qu'il faut pour installer Nexora, connecter votre compte et utiliser le chat IA,
-        l'autocomplétion et le mode Agent — dans votre IDE ou en ligne de commande.
+        Everything you need to install Nexora, connect your account and use AI chat,
+        autocomplete and Agent mode — in your IDE or from the command line.
       </p>
 
       {/* Getting started */}
-      <h2 className="text-xl font-bold mb-1">Démarrage rapide</h2>
-      <p className="text-sm text-muted-foreground mb-5">Choisissez votre environnement pour installer Nexora.</p>
+      <h2 className="text-xl font-bold mb-1">Quick start</h2>
+      <p className="text-sm text-muted-foreground mb-5">Pick your environment to install Nexora.</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <InstallCard
           icon={Code2}
           title="VS Code"
-          desc="Extension officielle Nexora pour Visual Studio Code."
+          desc="The official Nexora extension for Visual Studio Code."
           steps={[
-            'Ouvrez l’onglet Extensions (Ctrl+Shift+X)',
-            'Recherchez « Nexora AI »',
-            'Cliquez sur Installer, puis relancez VS Code si demandé',
+            'Open the Extensions tab (Ctrl+Shift+X)',
+            'Search for “Nexora AI”',
+            'Click Install, then reload VS Code if prompted',
           ]}
         />
         <InstallCard
           icon={AppWindow}
           title="IntelliJ / JetBrains"
-          desc="Plugin Nexora pour IntelliJ IDEA, WebStorm, PyCharm et les autres IDE JetBrains."
+          desc="The Nexora plugin for IntelliJ IDEA, WebStorm, PyCharm and other JetBrains IDEs."
           steps={[
-            'Ouvrez Paramètres → Plugins → Marketplace',
-            'Recherchez « Nexora »',
-            'Installez puis redémarrez l’IDE',
+            'Open Settings → Plugins → Marketplace',
+            'Search for “Nexora”',
+            'Install, then restart the IDE',
           ]}
         />
         <InstallCard
           icon={Terminal}
           title="CLI"
-          desc="L'agent Nexora en ligne de commande — pratique pour les scripts, le CI/CD ou un usage headless."
+          desc="The Nexora agent on the command line — handy for scripts, CI/CD or headless use."
           code={`curl -fsSL https://raw.githubusercontent.com/kemzang-Bryan/Nexora/main/extensions/cli/scripts/install.sh | bash`}
-          codeNote="macOS / Linux — ou npm i -g @nexoracoding/cli (Node.js 20+)"
+          codeNote="macOS / Linux — or npm i -g @nexoracoding/cli (Node.js 20+)"
         />
       </div>
 
       <div className="border rounded-xl px-4 py-3 text-sm mb-10 leading-relaxed bg-sky-500/10 border-sky-500/25 text-sky-300">
         <span className="mr-2">ℹ️</span>
-        Une fois installé, connectez votre compte : commande <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">Nexora: Login</code> dans
-        la palette de commandes VS Code / IntelliJ, ou <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">nexora login</code> pour la CLI.
-        Vous serez redirigé vers votre navigateur pour vous authentifier.
+        Once installed, connect your account: run the <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">Nexora: Login</code> command
+        from the VS Code / IntelliJ command palette, or <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">nexora login</code> for the CLI.
+        You will be redirected to your browser to authenticate.
       </div>
 
       <div className="h-px bg-border/50 mb-10" />
 
       {/* Features */}
-      <h2 className="text-xl font-bold mb-1">Fonctionnalités</h2>
-      <p className="text-sm text-muted-foreground mb-5">Les quatre modes d'interaction avec l'IA au cœur de Nexora.</p>
+      <h2 className="text-xl font-bold mb-1">Features</h2>
+      <p className="text-sm text-muted-foreground mb-5">The four ways to work with the AI at the heart of Nexora.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         <FeatureDocCard
           icon={MessageSquare}
           title="Chat"
-          desc="Discutez avec l'IA directement dans votre éditeur pour poser des questions, analyser du code ou explorer des solutions."
+          desc="Talk to the AI straight from your editor to ask questions, review code or explore solutions."
           href="/docs/chat/quick-start"
         />
         <FeatureDocCard
           icon={SparklesIcon}
-          title="Autocomplétion"
-          desc="Recevez des suggestions de code en temps réel pendant que vous tapez, en mode Fill-In-the-Middle."
+          title="Autocomplete"
+          desc="Get real-time code suggestions as you type, using Fill-In-the-Middle."
           href="/docs/autocomplete/quick-start"
           badge="Starter+"
         />
         <FeatureDocCard
           icon={Bot}
-          title="Mode Agent"
-          desc="Déléguez des tâches de développement complètes à l'IA : création de fichiers, exécution de commandes, modifications multi-fichiers."
+          title="Agent mode"
+          desc="Hand whole development tasks to the AI: creating files, running commands, editing across multiple files."
           href="/docs/agent/quick-start"
         />
         <FeatureDocCard
           icon={PenLine}
-          title="Édition inline"
-          desc="Modifiez une sélection de code directement dans votre fichier courant à partir d'instructions en langage naturel."
+          title="Inline edit"
+          desc="Rewrite a code selection in place, in your current file, from plain-language instructions."
           href="/docs/edit/quick-start"
         />
       </div>
@@ -181,7 +181,7 @@ export default function DocsIndexPage() {
 
       {/* Guides */}
       <h2 className="text-xl font-bold mb-1">Guides</h2>
-      <p className="text-sm text-muted-foreground mb-5">Pour aller plus loin dans la configuration de Nexora.</p>
+      <p className="text-sm text-muted-foreground mb-5">Go further with configuring Nexora.</p>
       <Link
         href="/docs/guides/codebase-documentation-awareness"
         className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors mb-10"
@@ -190,8 +190,8 @@ export default function DocsIndexPage() {
           <BookOpen className="w-4 h-4 text-foreground/70" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm">Documentation du projet</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">Comment Nexora lit votre README, votre configuration et vos fichiers AGENTS.md / CLAUDE.md pour des suggestions adaptées à votre codebase.</p>
+          <h3 className="font-semibold text-sm">Project documentation</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">How Nexora reads your README, your configuration and your AGENTS.md / CLAUDE.md files to tailor its suggestions to your codebase.</p>
         </div>
         <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </Link>
@@ -199,18 +199,18 @@ export default function DocsIndexPage() {
       <div className="h-px bg-border/50 mb-10" />
 
       {/* Models */}
-      <h2 className="text-xl font-bold mb-1">Modèles IA disponibles</h2>
+      <h2 className="text-xl font-bold mb-1">Available AI models</h2>
       <p className="text-sm text-muted-foreground mb-5">
-        Nexora route automatiquement vos requêtes vers le modèle le plus adapté selon la complexité de la tâche et votre plan.
-        Voir <Link href="/pricing" className="text-foreground/70 hover:underline">les modèles inclus par plan</Link>.
+        Nexora routes each request to the model that best fits the task's complexity and your plan.
+        See <Link href="/pricing" className="text-foreground/70 hover:underline">which models each plan includes</Link>.
       </p>
       <div className="rounded-xl border border-border/50 overflow-hidden mb-10">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-white/[0.03] text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-2.5 font-medium">Modèle</th>
-              <th className="px-4 py-2.5 font-medium">Fournisseur</th>
-              <th className="px-4 py-2.5 font-medium hidden sm:table-cell">Contexte</th>
+              <th className="px-4 py-2.5 font-medium">Model</th>
+              <th className="px-4 py-2.5 font-medium">Provider</th>
+              <th className="px-4 py-2.5 font-medium hidden sm:table-cell">Context</th>
               <th className="px-4 py-2.5 font-medium hidden sm:table-cell">Vision</th>
             </tr>
           </thead>
@@ -219,8 +219,8 @@ export default function DocsIndexPage() {
               <tr key={m.id}>
                 <td className="px-4 py-2.5 font-medium">{m.name}</td>
                 <td className="px-4 py-2.5 text-muted-foreground">{m.provider}</td>
-                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{(m.contextWindow / 1000).toFixed(0)}K tokens</td>
-                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{m.supportsVision ? 'Oui' : 'Non'}</td>
+                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{m.contextWindow >= 1_000_000 ? `${m.contextWindow / 1_000_000}M` : `${(m.contextWindow / 1000).toFixed(0)}K`} tokens</td>
+                <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{m.supportsVision ? 'Yes' : 'No'}</td>
               </tr>
             ))}
           </tbody>
@@ -230,11 +230,11 @@ export default function DocsIndexPage() {
       <div className="h-px bg-border/50 mb-10" />
 
       {/* Resources */}
-      <h2 className="text-xl font-bold mb-5">Ressources</h2>
+      <h2 className="text-xl font-bold mb-5">Resources</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/pricing" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
           <CreditCard className="w-4 h-4 text-foreground/70 shrink-0" />
-          <span className="text-sm font-medium">Tarifs & plans</span>
+          <span className="text-sm font-medium">Pricing & plans</span>
         </Link>
         <Link href="/changelog" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
           <ScrollText className="w-4 h-4 text-foreground/70 shrink-0" />
@@ -242,7 +242,7 @@ export default function DocsIndexPage() {
         </Link>
         <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
           <ExternalLink className="w-4 h-4 text-foreground/70 shrink-0" />
-          <span className="text-sm font-medium">Code source (GitHub)</span>
+          <span className="text-sm font-medium">Source code (GitHub)</span>
         </a>
       </div>
     </article>

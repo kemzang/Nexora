@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Auto-complétion — Démarrage rapide | Nexora Docs',
-  description: 'Configurez l\'auto-complétion intelligente de Nexora dans VS Code',
+  title: 'Autocomplete — Quick start | Nexora Docs',
+  description: 'Set up Nexora smart autocomplete in VS Code',
 }
 
 function CodeBlock({ code, lang = 'json' }: { code: string; lang?: string }) {
@@ -49,32 +49,32 @@ export default function AutocompleteQuickStartPage() {
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-8">
         <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
         <span>/</span>
-        <span>Auto-complétion</span>
+        <span>Autocomplete</span>
         <span>/</span>
-        <span className="text-foreground">Démarrage rapide</span>
+        <span className="text-foreground">Quick start</span>
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight mb-3">Auto-complétion — Démarrage rapide</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-3">Autocomplete — Quick start</h1>
       <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-        L'auto-complétion Nexora utilise DeepSeek V3 en mode FIM (Fill-In-the-Middle) pour suggérer du code contextuel en temps réel. Elle s'active automatiquement pendant que vous tapez, disponible dès le plan <strong className="text-sky-400">Starter</strong>.
+        Nexora autocomplete uses DeepSeek Flash in FIM (Fill-In-the-Middle) mode to suggest contextual code in real time. It runs automatically as you type, and is available from the <strong className="text-sky-400">Starter</strong> plan up.
       </p>
 
       <Callout type="warning">
-        L'auto-complétion nécessite le plan <strong>Starter ou supérieur</strong>. Sur le plan Free, seul le mode Chat est disponible.
+        Autocomplete requires the <strong>Starter plan or above</strong>. On the Free plan, only chat is available.
       </Callout>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-5">Activation</h2>
+      <h2 className="text-xl font-bold mb-5">Turning it on</h2>
 
-      <Step n={1} title="Vérifier que vous êtes sur Starter ou supérieur">
+      <Step n={1} title="Check you are on Starter or above">
         <p>
-          Vérifiez votre plan dans le <a href="/dashboard" className="text-foreground/70 hover:underline">tableau de bord</a> → Abonnement. Si vous êtes sur Free, <a href="/checkout?plan=starter" className="text-foreground/70 hover:underline">passez au plan Starter</a>.
+          Check your plan in the <a href="/dashboard" className="text-foreground/70 hover:underline">dashboard</a> → Subscription. If you are on Free, <a href="/checkout?plan=starter" className="text-foreground/70 hover:underline">upgrade to Starter</a>.
         </p>
       </Step>
 
-      <Step n={2} title="Activer dans les paramètres VS Code">
-        <p>Ouvrez les paramètres VS Code (<kbd className="px-1.5 py-0.5 bg-white/[0.08] border border-border/60 rounded text-xs font-mono">Ctrl+,</kbd>) et recherchez <code className="px-1 py-0.5 bg-white/[0.06] rounded text-xs font-mono text-foreground/70">nexora</code>. Activez :</p>
+      <Step n={2} title="Enable it in the VS Code settings">
+        <p>Open the VS Code settings (<kbd className="px-1.5 py-0.5 bg-white/[0.08] border border-border/60 rounded text-xs font-mono">Ctrl+,</kbd>) et recherchez <code className="px-1 py-0.5 bg-white/[0.06] rounded text-xs font-mono text-foreground/70">nexora</code>. Turn on:</p>
         <CodeBlock lang="json" code={`{
   "nexora.autocomplete.enabled": true,
   "nexora.autocomplete.triggerDelay": 300,
@@ -82,8 +82,8 @@ export default function AutocompleteQuickStartPage() {
 }`} />
       </Step>
 
-      <Step n={3} title="Configurer les langages cibles">
-        <p>Par défaut, Nexora active l'auto-complétion sur tous les langages. Vous pouvez la restreindre :</p>
+      <Step n={3} title="Choose the target languages">
+        <p>By default Nexora autocompletes in every language. You can narrow that down:</p>
         <CodeBlock lang="json" code={`{
   "nexora.autocomplete.languages": [
     "typescript",
@@ -95,14 +95,14 @@ export default function AutocompleteQuickStartPage() {
 }`} />
       </Step>
 
-      <Step n={4} title="Utiliser les suggestions">
-        <p>Commencez à taper — une suggestion apparaît en grisé après le curseur. Pour l'accepter :</p>
+      <Step n={4} title="Work with the suggestions">
+        <p>Start typing — a greyed-out suggestion appears after the cursor. To accept it:</p>
         <div className="mt-3 space-y-2">
           {[
-            ['Accepter toute la suggestion', 'Tab'],
-            ['Accepter mot par mot', 'Ctrl+→'],
-            ['Ignorer la suggestion', 'Échap'],
-            ['Forcer une suggestion', 'Alt+\\'],
+            ['Accept the whole suggestion', 'Tab'],
+            ['Accept word by word', 'Ctrl+→'],
+            ['Dismiss the suggestion', 'Esc'],
+            ['Force a suggestion', 'Alt+\\'],
           ].map(([action, key]) => (
             <div key={action} className="flex items-center gap-3">
               <kbd className="px-2 py-0.5 bg-white/[0.08] border border-border/60 rounded text-xs font-mono text-foreground min-w-fit">{key}</kbd>
@@ -114,38 +114,38 @@ export default function AutocompleteQuickStartPage() {
 
       <div className="h-px bg-border/50 my-8" />
 
-      <h2 className="text-xl font-bold mb-5">Comment ça fonctionne</h2>
+      <h2 className="text-xl font-bold mb-5">How it works</h2>
 
       <div className="space-y-4 mb-8">
         <div className="p-4 rounded-xl bg-white/[0.03] border border-border/50">
           <h3 className="text-sm font-semibold mb-1">Mode FIM (Fill-In-the-Middle)</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            L'extension envoie le texte <em>avant</em> et <em>après</em> votre curseur à DeepSeek. Le modèle génère le code manquant au milieu, ce qui donne des complétions beaucoup plus précises qu'une simple prédiction de la suite.
+            The extension sends the text <em>before</em> and <em>after</em> your cursor to DeepSeek. The model fills in the missing middle, which gives far more accurate completions than simply predicting what comes next.
           </p>
         </div>
         <div className="p-4 rounded-xl bg-white/[0.03] border border-border/50">
-          <h3 className="text-sm font-semibold mb-1">Contexte de fichier</h3>
+          <h3 className="text-sm font-semibold mb-1">File context</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Nexora analyse les imports, les types et les fonctions déjà définies dans le fichier courant pour des suggestions cohérentes avec votre codebase.
+            Nexora reads the imports, types and functions already defined in the current file so its suggestions fit your codebase.
           </p>
         </div>
         <div className="p-4 rounded-xl bg-white/[0.03] border border-border/50">
-          <h3 className="text-sm font-semibold mb-1">Consommation de tokens</h3>
+          <h3 className="text-sm font-semibold mb-1">Token usage</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Chaque suggestion consomme entre 50 et 300 tokens selon la complexité. Le délai de déclenchement (<code className="text-foreground/70 font-mono text-xs">triggerDelay</code>) permet de réduire les requêtes inutiles.
+            Each suggestion costs between 50 and 300 tokens depending on complexity. The trigger delay (<code className="text-foreground/70 font-mono text-xs">triggerDelay</code>) cuts down on wasted requests.
           </p>
         </div>
       </div>
 
       <Callout type="tip">
-        Augmentez <code className="font-mono text-xs">triggerDelay</code> à 500ms ou plus si vous trouvez que les suggestions s'activent trop souvent et consomment vos tokens rapidement.
+        Raise <code className="font-mono text-xs">triggerDelay</code> to 500ms or more if suggestions fire too often and burn through your credits.
       </Callout>
 
       <div className="h-px bg-border/50 my-8" />
 
-      <h2 className="text-xl font-bold mb-4">Désactivation temporaire</h2>
+      <h2 className="text-xl font-bold mb-4">Turning it off temporarily</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Cliquez sur le bouton Nexora dans la barre de statut VS Code (en bas à droite) pour activer/désactiver rapidement l'auto-complétion sans toucher aux paramètres.
+        Click the Nexora button in the VS Code status bar (bottom right) to toggle autocomplete on and off without touching the settings.
       </p>
 
       <div className="h-px bg-border/50 my-8" />
@@ -155,7 +155,7 @@ export default function AutocompleteQuickStartPage() {
           ← Chat
         </Link>
         <Link href="/docs/agent/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
-          Mode Agent →
+          Agent mode →
         </Link>
       </div>
     </article>

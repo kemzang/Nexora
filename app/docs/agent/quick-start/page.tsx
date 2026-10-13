@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Mode Agent — Démarrage rapide | Nexora Docs',
-  description: 'Déléguez des tâches de développement complètes à l\'IA avec le mode Agent de Nexora',
+  title: 'Agent mode — Quick start | Nexora Docs',
+  description: 'Hand whole development tasks to the AI with Nexora Agent mode',
 }
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
@@ -41,50 +41,50 @@ export default function AgentQuickStartPage() {
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-8">
         <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
         <span>/</span>
-        <span>Mode Agent</span>
+        <span>Agent mode</span>
         <span>/</span>
-        <span className="text-foreground">Démarrage rapide</span>
+        <span className="text-foreground">Quick start</span>
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight mb-3">Mode Agent — Démarrage rapide</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-3">Agent mode — Quick start</h1>
       <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-        Le mode Agent laisse l'IA travailler de façon autonome sur une tâche : lire vos fichiers, en créer ou en modifier plusieurs, exécuter des commandes, et vous demander votre accord avant toute action sensible.
+        Agent mode lets the AI work through a task on its own: reading your files, creating or editing several of them, running commands, and asking for your approval before anything sensitive.
       </p>
 
       <div className="h-px bg-border/50 mb-8" />
 
-      <h2 className="text-xl font-bold mb-5">Activation</h2>
+      <h2 className="text-xl font-bold mb-5">Turning it on</h2>
 
-      <Step n={1} title="Choisir le mode Agent">
+      <Step n={1} title="Select Agent mode">
         <p>
-          En bas du panneau Chat, à côté de la zone de saisie, cliquez sur le sélecteur de mode et choisissez <strong className="text-foreground">Agent</strong>. C'est le mode par défaut à l'ouverture de Nexora.
+          At the bottom of the chat panel, next to the input box, click the mode selector and choose <strong className="text-foreground">Agent</strong>. It is the default mode when Nexora opens.
         </p>
         <p className="mt-2">
-          Les deux autres modes : <strong className="text-foreground">Chat</strong> (conversation simple, aucune action sur vos fichiers) et <strong className="text-foreground">Plan</strong> (l'IA réfléchit et propose une marche à suivre sans encore l'exécuter).
+          The other two modes: <strong className="text-foreground">Chat</strong> (plain conversation, no action on your files) and <strong className="text-foreground">Plan</strong> (the AI thinks it through and proposes a course of action without carrying it out yet).
         </p>
       </Step>
 
-      <Step n={2} title="Décrire la tâche">
+      <Step n={2} title="Describe the task">
         <p>
-          Donnez un objectif plutôt qu'une suite d'instructions précises — « ajoute la pagination à la liste des utilisateurs », « corrige le bug de connexion signalé dans l'issue #42 ». L'agent explore votre code, planifie les étapes et les exécute.
+          Give it a goal rather than a list of precise instructions — &ldquo;add pagination to the user list&rdquo;, &ldquo;fix the login bug reported in issue #42&rdquo;. The agent explores your code, plans the steps and carries them out.
         </p>
       </Step>
 
-      <Step n={3} title="Suivre la progression">
+      <Step n={3} title="Follow the progress">
         <p>
-          Pour une tâche à plusieurs étapes, une liste de tâches apparaît au-dessus de la zone de saisie et se met à jour au fil de l'exécution. Chaque modification de fichier s'affiche avec un aperçu des lignes ajoutées et supprimées, et le raisonnement de l'IA est consultable en dépliant le bandeau « Thinking ».
+          For a multi-step task, a task list appears above the input box and updates as work proceeds. Every file change is shown with a preview of the added and removed lines, and the model&rsquo;s reasoning is available by expanding the &ldquo;Thinking&rdquo; banner.
         </p>
       </Step>
 
-      <Step n={4} title="Valider les actions sensibles">
+      <Step n={4} title="Approve sensitive actions">
         <p>
-          Créer un fichier ou exécuter une commande dans le terminal déclenche toujours une demande d'autorisation, affichée juste au-dessus de la zone de saisie :
+          Creating a file or running a terminal command always triggers a permission request, shown just above the input box:
         </p>
         <div className="mt-3 space-y-1.5">
           {[
-            ['Allow', 'Autorise cette action, une seule fois'],
-            ['Always allow', 'Autorise ce type d’action pour le reste de la session, sans redemander'],
-            ['Reject', 'Refuse et laisse l’agent proposer autre chose'],
+            ['Allow', 'Approves this one action, once'],
+            ['Always allow', 'Approves this kind of action for the rest of the session, without asking again'],
+            ['Reject', 'Declines and lets the agent propose something else'],
           ].map(([action, desc]) => (
             <div key={action} className="flex items-start gap-3 text-sm">
               <span className="w-28 font-medium text-foreground/80 shrink-0">{action}</span>
@@ -93,29 +93,29 @@ export default function AgentQuickStartPage() {
           ))}
         </div>
         <Callout type="tip">
-          Les lectures de fichiers et recherches dans le code n'ont jamais besoin d'autorisation — seules les actions qui modifient quelque chose (fichiers, terminal) en demandent une.
+          Reading files and searching your code never needs permission — only actions that change something (files, terminal) ask for it.
         </Callout>
       </Step>
 
       <div className="h-px bg-border/50 my-8" />
 
-      <h2 className="text-xl font-bold mb-5">Choix du modèle</h2>
+      <h2 className="text-xl font-bold mb-5">Choosing the model</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Le modèle sélectionné en haut du Chat s'applique aussi au mode Agent — voir <Link href="/docs/chat/quick-start" className="text-foreground/70 hover:underline">le démarrage rapide du Chat</Link> pour la disponibilité par plan.
+        The model you pick at the top of the chat applies to Agent mode too — see the <Link href="/docs/chat/quick-start" className="text-foreground/70 hover:underline">chat quick start</Link> for what each plan includes.
       </p>
 
       <Callout type="warning">
-        Le mode Agent peut consommer davantage de tokens qu'une conversation Chat simple, car chaque lecture de fichier, recherche et action fait partie de l'échange avec le modèle. La consommation reste visible dans votre <a href="/dashboard" className="underline underline-offset-2">tableau de bord</a>.
+        Agent mode can use more credits than a plain chat, because every file read, search and action is part of the exchange with the model. Your usage stays visible in your <a href="/dashboard" className="underline underline-offset-2">dashboard</a>.
       </Callout>
 
       <div className="h-px bg-border/50 my-8" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/autocomplete/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
-          ← Auto-complétion
+          ← Autocomplete
         </Link>
         <Link href="/docs/edit/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">
-          Édition inline →
+          Inline edit →
         </Link>
       </div>
     </article>

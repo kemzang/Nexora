@@ -12,7 +12,7 @@ import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
   title: 'À propos — Nexora',
-  description: "La mission de Nexora : donner accès aux meilleurs modèles d'IA, directement dans votre éditeur de code.",
+  description: 'Nexora\'s mission: put the best AI models within reach, right inside your code editor.',
 }
 
 const VALUES = [

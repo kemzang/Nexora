@@ -3,7 +3,7 @@ import PricingPageClient from './pricing-client'
 
 export const metadata: Metadata = {
   title: 'Pricing — Nexora',
-  description: 'Plans Nexora : Free, Starter, Pro, Business et Enterprise. Comparez les crédits, modèles IA et fonctionnalités inclus dans chaque plan.',
+  description: 'Nexora plans: Free, Starter, Pro, Business and Enterprise. Compare the credits, AI models and features each plan includes.',
 }
 
 export default function PricingPage() {

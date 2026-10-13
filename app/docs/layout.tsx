@@ -5,32 +5,44 @@ import { BrandLogo } from '@/components/patterns/brand-logo'
 
 export const metadata: Metadata = {
   title: 'Documentation — Nexora',
-  description: 'Documentation officielle de l\'extension VS Code Nexora',
+  description: 'Official documentation for the Nexora VS Code extension',
 }
 
 const docLinks = [
   {
     section: 'Documentation',
     links: [
-      { href: '/docs', label: 'Aperçu & installation' },
+      { href: '/docs', label: 'Overview & install' },
     ],
   },
   {
     section: 'Chat',
     links: [
-      { href: '/docs/chat/quick-start', label: 'Démarrage rapide' },
+      { href: '/docs/chat/quick-start', label: 'Quick start' },
     ],
   },
   {
-    section: 'Auto-complétion',
+    section: 'Autocomplete',
     links: [
-      { href: '/docs/autocomplete/quick-start', label: 'Démarrage rapide' },
+      { href: '/docs/autocomplete/quick-start', label: 'Quick start' },
+    ],
+  },
+  {
+    section: 'Agent',
+    links: [
+      { href: '/docs/agent/quick-start', label: 'Quick start' },
+    ],
+  },
+  {
+    section: 'Inline edit',
+    links: [
+      { href: '/docs/edit/quick-start', label: 'Quick start' },
     ],
   },
   {
     section: 'Guides',
     links: [
-      { href: '/docs/guides/codebase-documentation-awareness', label: 'Documentation du projet' },
+      { href: '/docs/guides/codebase-documentation-awareness', label: 'Project documentation' },
     ],
   },
 ]
@@ -44,7 +56,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" />
-              Retour au site
+              Back to site
             </Link>
             <span className="text-border/60">|</span>
             <div className="flex items-center gap-2">

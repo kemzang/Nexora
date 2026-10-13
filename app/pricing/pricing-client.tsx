@@ -65,7 +65,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Does the Free plan expire?',
-    a: "No — the Free plan stays available for as long as you want, with 1 million credits every month.",
+    a: "No — the Free plan stays available for as long as you want, with 500,000 credits every month.",
   },
   {
     q: 'Can I collaborate with my team?',
@@ -196,7 +196,7 @@ export default function PricingPageClient() {
           </table>
         </div>
         <p className="text-center text-xs text-muted-foreground/70 mt-6 max-w-2xl mx-auto">
-          Autocomplete requires the Starter plan or above. The Free plan includes 1 million credits every month.
+          Autocomplete requires the Starter plan or above. The Free plan includes 500,000 credits every month.
         </p>
       </SectionLayout>
 

@@ -174,11 +174,14 @@ export const PLANS: Record<PlanId, Plan> = {
     nameFr: 'Découverte',
     price: 0,
     priceLabel: '$0',
-    // 1M et non 100k : a 100 000 credits, deux echanges en mode agent
-    // suffisaient a tout epuiser — un prospect ne pouvait pas se faire d'avis.
-    // Un compte gratuit entierement consomme coute ~0.35$, plafonne par la
-    // limite de deux comptes par machine.
-    tokensPerMonth: 1000000,
+    // 500k : a 100 000 credits, deux echanges en mode agent suffisaient a
+    // tout epuiser — un prospect ne pouvait pas se faire d'avis. A 500k il
+    // en a une douzaine, assez pour tester l'agent sur du vrai code.
+    // Coute au pire 0.30$ par compte entierement consomme (0.09$ sur Haiku
+    // 5.5, le modele par defaut), plafonne par la limite de deux comptes
+    // par machine. Ne pas remonter sans refaire le calcul d'exposition :
+    // c'est la seule ligne du produit que personne ne paie.
+    tokensPerMonth: 500000,
     maxRequestsPerDay: 200,
     webSearchesPerMonth: 30,
     webCrawlsPerMonth: 5,
@@ -189,7 +192,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'claude-haiku',
     ],
     features: [
-      '1M credits/month',
+      '500K credits/month',
       '200 requests/day',
       'DeepSeek Flash & Claude Haiku 5.5',
       'AI chat + autocomplete',

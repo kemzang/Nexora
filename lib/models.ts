@@ -14,7 +14,18 @@ export interface AIModel {
   capability: number
   sortOrder: number
   supportsVision: boolean
-  /** Coût relatif en crédits (1x = référence). Pondère la consommation par modèle. */
+  /**
+   * Cout relatif en credits. DeepSeek V3 (1.25x) sert de reference.
+   *
+   * Les valeurs sont calees sur le cout reel d'appel, pas choisies a la main :
+   * a ces multiplicateurs, un million de credits coute ~0.349$ quel que soit le
+   * modele. Les precedentes penalisaient Claude d'un facteur 4 a 5 — Opus etait
+   * a 375 pour un cout equivalent a 77 — ce qui ne rapportait rien et reduisait
+   * un plan Pro a cinq echanges en mode agent sur Sonnet.
+   *
+   * A recalculer si les tarifs des fournisseurs bougent : le rapport entre
+   * multiplicateurs doit suivre le rapport entre prix d'API.
+   */
   creditMultiplier: number
 }
 
@@ -88,7 +99,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 2,
     sortOrder: 2,
     supportsVision: true,
-    creditMultiplier: 2.5,
+    creditMultiplier: 2,
   },
   'gemini-pro': {
     id: 'gemini-pro',
@@ -108,7 +119,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 3,
     sortOrder: 3,
     supportsVision: true,
-    creditMultiplier: 10,
+    creditMultiplier: 9,
   },
   'claude-haiku': {
     id: 'claude-haiku',
@@ -122,7 +133,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 3,
     sortOrder: 4,
     supportsVision: true,
-    creditMultiplier: 20,
+    creditMultiplier: 5,
   },
   'claude-sonnet': {
     id: 'claude-sonnet',
@@ -136,7 +147,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 4,
     sortOrder: 5,
     supportsVision: true,
-    creditMultiplier: 75,
+    creditMultiplier: 15,
   },
   'claude-opus': {
     id: 'claude-opus',
@@ -150,7 +161,7 @@ export const MODELS: Record<ModelId, AIModel> = {
     capability: 5,
     sortOrder: 6,
     supportsVision: true,
-    creditMultiplier: 375,
+    creditMultiplier: 77,
   },
 }
 
@@ -161,14 +172,18 @@ export const PLANS: Record<PlanId, Plan> = {
     nameFr: 'Découverte',
     price: 0,
     priceLabel: '$0',
-    tokensPerMonth: 100000,
+    // 1M et non 100k : a 100 000 credits, deux echanges en mode agent
+    // suffisaient a tout epuiser — un prospect ne pouvait pas se faire d'avis.
+    // Un compte gratuit entierement consomme coute ~0.35$, plafonne par la
+    // limite de deux comptes par machine.
+    tokensPerMonth: 1000000,
     maxRequestsPerDay: 200,
     webSearchesPerMonth: 30,
     webCrawlsPerMonth: 5,
     maxCollaborators: 1,
     models: ['deepseek-chat', 'gemini-flash'],
     features: [
-      '100,000 credits/month',
+      '1M credits/month',
       '200 requests/day',
       'DeepSeek V3 & Gemini Flash',
       'AI chat + autocomplete',

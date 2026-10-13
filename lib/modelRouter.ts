@@ -69,7 +69,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.anthropic.com/v1/messages',
     keyEnv: 'ANTHROPIC_API_KEY',
     format: 'anthropic',
-    upstreamModel: 'claude-3-haiku-20240307',
+    upstreamModel: 'claude-haiku-4-5-20251001',
     minPlan: 'pro',
   },
   'claude-sonnet': {
@@ -85,7 +85,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.anthropic.com/v1/messages',
     keyEnv: 'ANTHROPIC_API_KEY',
     format: 'anthropic',
-    upstreamModel: 'claude-opus-4-5',
+    upstreamModel: 'claude-opus-4-7',
     minPlan: 'business',
   },
 }

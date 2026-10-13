@@ -82,8 +82,8 @@ export default function ChatQuickStartPage() {
         </p>
         <div className="mt-3 space-y-1.5">
           {[
-            { plan: 'Free',       models: 'DeepSeek V3, Gemini Flash', color: 'text-muted-foreground' },
-            { plan: 'Neo',        models: '+ Gemini Pro', color: 'text-sky-400' },
+            { plan: 'Free',       models: 'DeepSeek Flash, Gemini Flash, Claude Haiku 5.5', color: 'text-muted-foreground' },
+            { plan: 'Starter',    models: '+ Claude Sonnet 5.5, Gemini 3.1 Pro', color: 'text-sky-400' },
             { plan: 'Pro',        models: '+ Claude Haiku, Claude Sonnet', color: 'text-amber-400' },
             { plan: 'Business',   models: '+ Claude Opus', color: 'text-emerald-400' },
             { plan: 'Enterprise', models: 'Tous les modèles', color: 'text-foreground/70' },

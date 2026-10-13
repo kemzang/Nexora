@@ -36,7 +36,7 @@ const UPGRADE_PLANS = [
     border: 'hover:border-sky-500/40',
     activeBorder: 'border-sky-500/40',
     badgeColor: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
-    features: ['4M credits/month', '500 requests/day', 'DeepSeek, Gemini Flash', 'Gemini 2.5 Pro', 'Unlimited autocomplete'],
+    features: ['4M credits/month', '500 requests/day', 'DeepSeek Flash, Gemini Flash', 'Claude Sonnet 5.5, Gemini 3.1 Pro', 'Unlimited autocomplete'],
   },
   {
     slug: 'pro',
@@ -49,7 +49,7 @@ const UPGRADE_PLANS = [
     activeBorder: 'border-amber-500/40',
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     popular: true,
-    features: ['15M credits/month', '2,000 requests/day', '+ Claude Haiku & Sonnet 4.6', 'Mode Agent IA', 'Support prioritaire'],
+    features: ['15M credits/month', '2,000 requests/day', '+ Claude Opus 5.5', 'AI Agent mode', 'Priority support'],
   },
   {
     slug: 'business',
@@ -61,7 +61,7 @@ const UPGRADE_PLANS = [
     border: 'hover:border-emerald-500/40',
     activeBorder: 'border-emerald-500/40',
     badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-    features: ['40M credits/month', '5,000 requests/day', '+ Claude Opus 4.7', 'Direct API access', 'Dedicated support'],
+    features: ['40M credits/month', '5,000 requests/day', 'All models, no limits', 'Direct API access', 'Dedicated support'],
   },
   {
     slug: 'enterprise',

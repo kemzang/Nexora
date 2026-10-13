@@ -69,12 +69,12 @@ function buildModels(plan: PlanId, token: string) {
 
   // Seul modèle avec une route FIM côté serveur → seul porteur du rôle
   // autocomplete.
-  const deepseek    = m('DeepSeek V3',      'deepseek-chat', false, 'openai', FIM_ROLES)
-  const geminiFlash = m('Gemini Flash',      'gemini-flash',    true)
-  const geminiPro   = m('Gemini Pro',        'gemini-pro',      true)
-  const haiku       = m('Claude Haiku',      'claude-haiku',    true)
-  const sonnet      = m('Claude Sonnet',     'claude-sonnet',   true)
-  const opus        = m('Claude Opus',       'claude-opus',     true)
+  const deepseek    = m('DeepSeek Flash',   'deepseek-chat', false, 'openai', FIM_ROLES)
+  const geminiFlash = m('Gemini 3.8 Flash', 'gemini-flash',    true)
+  const geminiPro   = m('Gemini 3.1 Pro',   'gemini-pro',      true)
+  const haiku       = m('Claude Haiku 5.5',  'claude-haiku',    true)
+  const sonnet      = m('Claude Sonnet 5.5', 'claude-sonnet',   true)
+  const opus        = m('Claude Opus 5.5',   'claude-opus',     true)
 
   // Tous les modèles sont toujours visibles et sélectionnables, quel que soit
   // le plan : selectBestModel() (lib/models.ts, appelé par
@@ -87,8 +87,9 @@ function buildModels(plan: PlanId, token: string) {
   // plan, pas la liste elle-même.
   switch (plan) {
     case 'starter':
-      // Gemini Flash par défaut (capable, multimodal, peu cher)
-      return { models: [geminiFlash, geminiPro, deepseek, sonnet, opus, haiku], autocomplete: deepseek }
+      // Haiku 5.5 par défaut : multiplicateur ×1, donc 4x moins de crédits
+      // par jeton que Gemini Flash, pour un modèle plus fort sur le code.
+      return { models: [haiku, sonnet, geminiPro, geminiFlash, deepseek, opus], autocomplete: deepseek }
     case 'pro':
       // Claude Sonnet par défaut (excellent pour l'agent / le code)
       return { models: [sonnet, geminiPro, haiku, geminiFlash, deepseek, opus], autocomplete: deepseek }
@@ -99,8 +100,10 @@ function buildModels(plan: PlanId, token: string) {
       // Claude Sonnet par défaut ; Opus disponible pour le maximum
       return { models: [sonnet, opus, geminiPro, haiku, geminiFlash, deepseek], autocomplete: deepseek }
     default: // free
-      // Gemini Flash par défaut au lieu de DeepSeek → bien meilleure 1re impression
-      return { models: [geminiFlash, deepseek, geminiPro, sonnet, opus, haiku], autocomplete: deepseek }
+      // Haiku 5.5 par défaut : le moins cher du catalogue (×1) et le plus
+      // convaincant en première impression. Le quota gratuit dure 4x plus
+      // longtemps qu'avec Gemini Flash.
+      return { models: [haiku, deepseek, geminiFlash, sonnet, geminiPro, opus], autocomplete: deepseek }
   }
 }
 

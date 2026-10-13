@@ -33,7 +33,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     fimUrl: 'https://api.deepseek.com/beta/completions', // beta required for FIM
     keyEnv: 'DEEPSEEK_API_KEY',
     format: 'openai',
-    upstreamModel: 'deepseek-chat',
+    upstreamModel: 'deepseek-flash',
     minPlan: 'free',
   },
   'deepseek-reasoner': {
@@ -41,7 +41,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.deepseek.com/v1/chat/completions',
     keyEnv: 'DEEPSEEK_API_KEY',
     format: 'openai',
-    upstreamModel: 'deepseek-reasoner',
+    upstreamModel: 'deepseek-v4-pro',
     minPlan: 'pro',
   },
 
@@ -51,7 +51,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://generativelanguage.googleapis.com/v1beta',
     keyEnv: 'GEMINI_API_KEY',
     format: 'gemini',
-    upstreamModel: 'gemini-2.0-flash',
+    upstreamModel: 'gemini-3.8-flash',
     minPlan: 'free',
   },
   'gemini-pro': {
@@ -59,7 +59,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://generativelanguage.googleapis.com/v1beta',
     keyEnv: 'GEMINI_API_KEY',
     format: 'gemini',
-    upstreamModel: 'gemini-2.0-pro-exp',
+    upstreamModel: 'gemini-3.1-pro-preview',
     minPlan: 'starter',
   },
 
@@ -69,7 +69,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.anthropic.com/v1/messages',
     keyEnv: 'ANTHROPIC_API_KEY',
     format: 'anthropic',
-    upstreamModel: 'claude-haiku-4-5-20251001',
+    upstreamModel: 'claude-haiku-5-5',
     minPlan: 'pro',
   },
   'claude-sonnet': {
@@ -77,7 +77,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.anthropic.com/v1/messages',
     keyEnv: 'ANTHROPIC_API_KEY',
     format: 'anthropic',
-    upstreamModel: 'claude-sonnet-4-6',
+    upstreamModel: 'claude-sonnet-5-5',
     minPlan: 'pro',
   },
   'claude-opus': {
@@ -85,7 +85,7 @@ export const MODEL_ROUTES: Record<string, ModelRoute> = {
     chatUrl: 'https://api.anthropic.com/v1/messages',
     keyEnv: 'ANTHROPIC_API_KEY',
     format: 'anthropic',
-    upstreamModel: 'claude-opus-4-7',
+    upstreamModel: 'claude-opus-5-5',
     minPlan: 'business',
   },
 }

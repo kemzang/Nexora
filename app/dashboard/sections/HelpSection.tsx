@@ -19,7 +19,7 @@ const FAQ = [
   },
   {
     q: 'What is a credit and how is it counted?',
-    a: 'A credit corresponds to one token (about 4 characters of text), weighted by the model used — more powerful models (Claude Opus, Sonnet…) consume more credits per token than economical ones (DeepSeek, Gemini Flash). Each AI request consumes credits on input (your message plus context) and on output (the generated response). The count is visible in your dashboard.',
+    a: 'A credit corresponds to one token (about 4 characters of text), weighted by the model used — more powerful models (Claude Opus, Sonnet…) consume more credits per token than economical ones (DeepSeek Flash, Claude Haiku 5.5). Each AI request consumes credits on input (your message plus context) and on output (the generated response). The count is visible in your dashboard.',
   },
   {
     q: 'Do my unused credits carry over to the next month?',

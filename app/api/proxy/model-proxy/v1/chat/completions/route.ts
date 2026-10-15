@@ -749,8 +749,27 @@ export async function POST(req: NextRequest) {
     // autre modele de son plan peut repondre. On se limite a trois tentatives :
     // au-dela, l'attente cumulee coute plus cher a l'utilisateur que l'echec.
     const MAX_ATTEMPTS = 3
-    /** 429 = quota fournisseur, 5xx = panne passagere. Les deux valent un autre modele. */
-    const worthRetrying = (status: number) => status === 429 || status >= 500
+    /**
+     * 429 = quota fournisseur, 5xx = panne passagere : un autre modele vaut la
+     * peine. S'y ajoute le compte a sec, que les fournisseurs signalent par un
+     * 400 ou un 402 et non par un 429 — Anthropic repond « Your credit balance
+     * is too low to access the Anthropic API ».
+     *
+     * Sans ce cas, une ardoise vide chez UN fournisseur coupait le service
+     * entier : l'utilisateur recevait l'erreur brute alors que DeepSeek et
+     * Gemini, payes et disponibles, figuraient dans ses candidats.
+     *
+     * On reste strict sur le reste : un 400 de requete malformee se
+     * reproduirait a l'identique ailleurs, et reessayer ne ferait que retarder
+     * l'erreur de trois appels.
+     */
+    const OUT_OF_CREDIT =
+      /credit balance|insufficient[_ ]quota|insufficient credit|exceeded your current quota|billing|payment required|RESOURCE_EXHAUSTED|quota exceeded/i
+    const worthRetrying = (status: number, body = '') =>
+      status === 429 ||
+      status >= 500 ||
+      ((status === 400 || status === 402 || status === 403) &&
+        OUT_OF_CREDIT.test(body))
 
     let selectedModel: AIModel | null = null
     let route: any = null
@@ -786,7 +805,7 @@ export async function POST(req: NextRequest) {
 
       // Erreur imputable a la requete (400, 401, 403...) : reessayer ailleurs
       // donnerait le meme resultat.
-      if (!worthRetrying(resp.status)) break
+      if (!worthRetrying(resp.status, errorText)) break
     }
 
     if (!selectedModel || !route || !upstreamResp) {
@@ -806,6 +825,25 @@ export async function POST(req: NextRequest) {
             details: lastFailure.text,
           },
           { status: 429, headers: { 'Retry-After': '60' } }
+        )
+      }
+      // Le corps brut du fournisseur nomme son service et son portail de
+      // facturation (« Please go to Plans & Billing… ») : ce sont nos comptes,
+      // pas ceux de l'utilisateur. On journalise le detail et on ne renvoie
+      // qu'un message qui le concerne.
+      if (OUT_OF_CREDIT.test(lastFailure.text)) {
+        console.error(
+          `[model-proxy] credit epuise chez ${lastFailure.modelId} (essayes : ${attempted.join(', ')}) :`,
+          lastFailure.text
+        )
+        return NextResponse.json(
+          {
+            error:
+              'Service temporarily unavailable. Our team has been notified — please try again shortly.',
+            code: 'UPSTREAM_UNAVAILABLE',
+            models_attempted: attempted,
+          },
+          { status: 503, headers: { 'Retry-After': '120' } }
         )
       }
       return NextResponse.json({ error: lastFailure.text }, { status: lastFailure.status })

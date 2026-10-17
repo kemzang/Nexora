@@ -61,6 +61,14 @@ interface ComplexMessage {
 
 const GREETING_PATTERNS = /^(salut|bonjour|bonsoir|coucou|hello|hi|hey|merci|oui|non|ok|okay|d'accord|super|parfait)\b/i
 const CODE_PATTERNS = /```|\b(function|class|import\s|export\s|const\s+\w+\s*=\s*\(|=>|interface\s|type\s|async\s|await\s|Promise|new\s+\w+\(|\.map\(|\.filter\(|\.reduce\()/
+/**
+ * Verbes de conception : refonte, architecture, migration, conception de
+ * systeme. Ce sont eux qui justifient un modele plus capable, bien plus que
+ * la longueur du message.
+ */
+const DEEP_WORK_PATTERNS =
+  /\b(refactor|refonte|reecri|rewrite|architectur|concev|conception|design\s+(a|the|un|une)|migrat|port(er|ing)\s+(vers|to)|optimis|debug|deboguer|diagnosti|pourquoi\s+(ca|cela|ce)|why\s+(does|is|are)|implement|mettre\s+en\s+place|plan(ifier)?\s|strateg|comparer?\s+les|trade-?off|securis|secure|vulnerab|performance|scalab|concurren|race\s+condition|deadlock|algorithm|complexit)\b/i
+
 const TECHNICAL_TERMS = /\b(refactor|architecture|optimis|pattern\s+[a-z]|algorithme|asynchrone|performances?|sécurité|design\s+pattern|scalabilit|déploiement|microservice|api\s+rest|graphql|middleware|middleware|endpoint|thread|mutex|deadlock|race\s+condition|compliquit|big\s*o|time\s*complexity|espace\s*complexit)\b/i
 const COMPLEX_TERMS = /\b(architect|refactor|cache|cluster|load\s+balanc|index\s+compos|re-render|bundler|lazy\s+load|stream|webhook|orm|transaction|sharding|replicat|failover|container|docker|kubernetes|ci\/cd)\b/i
 
@@ -210,17 +218,16 @@ export const PLANS: Record<PlanId, Plan> = {
     webSearchesPerMonth: 200,
     webCrawlsPerMonth: 25,
     maxCollaborators: 2,
-    models: [
-      'deepseek-chat',
-      'gemini-flash',
-      'claude-haiku',
-      'gemini-pro',
-      'claude-sonnet',
-    ],
+    // Pas de Sonnet (x11) ni de Gemini Pro (x12) ici : a 4M credits, un seul
+    // tour d'agent sur ces modeles coute environ 440 000 credits, soit neuf
+    // tours pour le mois entier. Promettre un modele que le plafond ne peut
+    // pas financer fait fuir le client des le premier jour ; les modeles
+    // chers sont la vraie raison de passer a Pro.
+    models: ['deepseek-chat', 'gemini-flash', 'claude-haiku'],
     features: [
       '4M credits/month',
       '500 requests/day',
-      '+ Claude Sonnet 5.5 & Gemini 3.1 Pro',
+      'DeepSeek, Gemini Flash & Claude Haiku 5.5',
       'Advanced autocomplete',
       'Full Agent mode',
     ],
@@ -396,40 +403,82 @@ function estimateOutputLength(messages: ComplexMessage[]): number {
   return totalChars
 }
 
+/**
+ * Ne garde que l'instruction de l'utilisateur, sans le contexte qu'on y a
+ * injecte : blocs de code, contenus de fichiers et citations.
+ *
+ * C'est la cle du calcul. En mode agent, chaque message embarque des
+ * fichiers entiers — mesurer sa longueur brute revient a mesurer la taille
+ * du projet, pas la difficulte de la demande.
+ */
+function instructionOnly(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')        // blocs de code
+    .replace(/^\s*>.*$/gm, ' ')              // citations
+    .replace(/<[^>]+>[\s\S]*?<\/[^>]+>/g, ' ') // blocs de contexte balises
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Difficulte estimee de la demande, de 1 a 5.
+ *
+ * L'ancienne version notait surtout le VOLUME : un message de plus de 1000
+ * caracteres valait 5 a lui seul. En mode agent ou chaque requete transporte
+ * le contenu des fichiers, la note etait donc toujours au maximum, et seul
+ * le modele le plus capable du plan etait retenu — a chaque tour, quel que
+ * soit le travail demande. Un utilisateur qui demandait « renomme cette
+ * variable » payait le prix d'une refonte d'architecture.
+ *
+ * On juge maintenant l'instruction seule, et surtout ce qu'elle demande.
+ */
 export function analyzeComplexity(messages: ComplexMessage[]): number {
-  const lastMsg = getLastMessage(messages)
-  const totalLen = estimateOutputLength(messages)
+  const raw = getLastMessage(messages)
+  const ask = instructionOnly(raw)
   const msgCount = messages.length
 
-  let score = 0
+  // Une salutation ou un remerciement n'a pas besoin d'un gros modele,
+  // meme en fin de longue conversation.
+  if (isGreeting(ask) && ask.length < 80) return 1
 
-  // Axe 1 : Longueur du dernier message
-  if (lastMsg.length < 30) score += 1
-  else if (lastMsg.length < 100) score += 2
-  else if (lastMsg.length < 350) score += 3
-  else if (lastMsg.length < 1000) score += 4
-  else score += 5
+  // L'echelle est calee sur les capacites declarees des modeles :
+  //   1-3 : retouche, question, tache de codage ordinaire   -> modeles rapides
+  //   4   : conception, diagnostic, refonte                 -> Sonnet
+  //   5   : conception ample ET specifiee en detail         -> Opus
+  let score = 1
 
-  // Axe 2 : Volume total de la conversation
-  if (totalLen > 5000) score += 1
+  // Axe 1 : nature de la tache. Le signal le plus fiable, et le seul qui
+  // justifie a lui seul un modele plus capable.
+  const deepWork = DEEP_WORK_PATTERNS.test(ask)
+  if (deepWork) score += 3
 
-  // Axe 3 : Présence de code
-  if (hasCode(lastMsg)) score += 1
-  if (hasCodeBlocks(lastMsg)) score += 1
+  // Axe 2 : vocabulaire technique, mais uniquement SUR LE RESTE de la
+  // phrase. Sans cette soustraction, « refactor » comptait deux fois — une
+  // fois comme tache de conception, une fois comme terme technique — et une
+  // simple refonte sautait directement sur le modele le plus cher.
+  const reste = ask.replace(DEEP_WORK_PATTERNS, ' ')
+  if (countTechnicalTerms(reste) >= 2) score += 1
 
-  // Axe 4 : Termes techniques avancés
-  const techTermCount = countTechnicalTerms(lastMsg)
-  if (techTermCount >= 3) score += 2
-  else if (techTermCount >= 1) score += 1
+  // Axe 3 : une instruction longue ET une tache de conception, c'est une
+  // specification detaillee. La longueur seule ne prouve rien.
+  if (deepWork && ask.length > 600) score += 1
 
-  // Axe 5 : Profondeur de la conversation
-  if (msgCount > 10) score += 2
-  else if (msgCount > 5) score += 1
+  // Axe 4 : du code ecrit dans l'instruction, hors blocs de contexte.
+  if (hasCode(ask) && !hasCodeBlocks(raw)) score += 1
 
-  // Axe 6 : Salutation simple → réduit la complexité
-  if (isGreeting(lastMsg) && msgCount <= 2) score -= 1
+  // Axe 5 : une conversation tres longue a accumule des contraintes a tenir
+  // ensemble. Un seul point, au-dela de 20 messages — l'ancien seuil de 5 se
+  // franchissait en trois echanges.
+  if (msgCount > 20) score += 1
 
-  return Math.max(1, Math.min(5, score))
+  // Le palier 5 ouvre le modele le plus cher du plan. On le reserve aux
+  // demandes qui sont A LA FOIS une tache de conception et une specification
+  // detaillee : sans cette condition, une phrase de huit mots contenant
+  // « refactor » suffisait a declencher Opus, a x22.
+  const merite5 = deepWork && ask.length > 600
+  const plafond = merite5 ? 5 : 4
+
+  return Math.max(1, Math.min(plafond, score))
 }
 
 /** Détecte si une liste de messages contient des images (data URL ou image_url) */
@@ -496,9 +545,19 @@ export function selectBestModel(
     const aEnough = a.capability >= complexity ? 0 : 1
     const bEnough = b.capability >= complexity ? 0 : 1
     if (aEnough !== bEnough) return aEnough - bEnough
-    if (aEnough === 0) return a.sortOrder - b.sortOrder
+    // A capacite suffisante, le moins cher gagne. Le tri se faisait sur
+    // `sortOrder`, qui classe par prestige et non par prix : gemini-pro (x12)
+    // passait avant claude-haiku (x1) alors que les deux ont la meme
+    // capacite. En mode Auto l'utilisateur demande qu'on choisisse pour lui ;
+    // a qualite egale, prendre douze fois plus cher est indefendable.
+    if (aEnough === 0) {
+      if (a.creditMultiplier !== b.creditMultiplier) {
+        return a.creditMultiplier - b.creditMultiplier
+      }
+      return a.sortOrder - b.sortOrder
+    }
     if (a.capability !== b.capability) return b.capability - a.capability
-    return b.sortOrder - a.sortOrder
+    return a.creditMultiplier - b.creditMultiplier
   })
 
   return {
@@ -545,8 +604,15 @@ export function getFailoverCandidates(
       const aEnough = a.capability >= complexity ? 0 : 1
       const bEnough = b.capability >= complexity ? 0 : 1
       if (aEnough !== bEnough) return aEnough - bEnough
-      if (aEnough === 0) return a.sortOrder - b.sortOrder
-      return b.capability - a.capability
+      // Meme regle : un repli ne doit pas couter plus cher que l'original.
+      if (aEnough === 0) {
+        if (a.creditMultiplier !== b.creditMultiplier) {
+          return a.creditMultiplier - b.creditMultiplier
+        }
+        return a.sortOrder - b.sortOrder
+      }
+      if (a.capability !== b.capability) return b.capability - a.capability
+      return a.creditMultiplier - b.creditMultiplier
     })
 
   return { candidates: [first, ...rest], complexity, downgraded }

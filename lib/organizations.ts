@@ -114,11 +114,14 @@ export async function getOrgRemainingCredits(
     p_org_id: org.orgId,
   })
   if (error) {
-    // Une panne de calcul ne doit pas couper l'acces a une equipe qui paie.
-    // On la laisse travailler et on trace : le pire cas est un depassement
-    // temporaire, pas un service interrompu.
-    console.error('[org] usage failed, allowing through', error)
-    return Number.POSITIVE_INFINITY
+    // Une panne de calcul ne doit pas couper l'acces a une equipe qui paie,
+    // mais elle ne doit pas non plus ouvrir un robinet sans fin : renvoyer
+    // l'infini ici donnait des credits illimites des que la fonction SQL
+    // manquait — exactement ce qui arrive si la migration n'a ete appliquee
+    // qu'a moitie. On retombe sur le plafond vendu, donc l'equipe continue
+    // de travailler et l'exposition reste bornee par ce qu'elle a paye.
+    console.error('[org] usage unavailable, falling back to full quota', error)
+    return orgCreditLimit(org)
   }
   return Math.max(0, orgCreditLimit(org) - Number(data ?? 0))
 }

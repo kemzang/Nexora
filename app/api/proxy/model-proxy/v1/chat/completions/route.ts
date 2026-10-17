@@ -377,6 +377,46 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
 
 // ── Anthropic ─────────────────────────────────────────────────────────────────
 
+/**
+ * Traduit le contenu d'un message du format OpenAI vers celui d'Anthropic.
+ *
+ * Les deux s'accordent sur `text` mais divergent sur les images : OpenAI
+ * envoie `image_url` avec une URL (souvent une data-URL base64), Anthropic
+ * attend `image` avec une `source` structuree. Sans cette traduction,
+ * Anthropic refusait tout le message — et comme une image reste dans
+ * l'historique, TOUTES les requetes suivantes de la conversation
+ * echouaient, pas seulement celle qui portait l'image.
+ */
+function toAnthropicContent(content: any): any {
+  if (!Array.isArray(content)) return content ?? ''
+
+  const parts = content
+    .map((p: any) => {
+      if (!p || typeof p !== 'object') return null
+      if (p.type === 'text') return { type: 'text', text: p.text ?? '' }
+      // Deja au format Anthropic : laisser passer.
+      if (p.type === 'image' && p.source) return p
+      if (p.type === 'image_url') {
+        const url = p.image_url?.url ?? p.image_url
+        if (typeof url !== 'string') return null
+        const m = url.match(/^data:([^;,]+);base64,(.*)$/)
+        if (m) {
+          return { type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } }
+        }
+        if (/^https?:\/\//.test(url)) {
+          return { type: 'image', source: { type: 'url', url } }
+        }
+        return null
+      }
+      return null
+    })
+    .filter(Boolean)
+
+  // Un message sans aucune partie exploitable serait refuse : on met un
+  // texte vide plutot qu'un tableau vide.
+  return parts.length > 0 ? parts : ''
+}
+
 function buildAnthropicMessages(messages: any[]): any[] {
   const result: any[] = []
   let i = 0
@@ -417,7 +457,7 @@ function buildAnthropicMessages(messages: any[]): any[] {
 
     result.push({
       role: msg.role === 'assistant' ? 'assistant' : 'user',
-      content: msg.content ?? '',
+      content: toAnthropicContent(msg.content),
     })
     i++
   }
@@ -549,6 +589,37 @@ function anthropicStreamToOpenAI(stream: ReadableStream<Uint8Array>, modelId: st
 
 // ── Gemini ────────────────────────────────────────────────────────────────────
 
+/**
+ * Traduit le contenu d'un message du format OpenAI vers celui de Gemini.
+ *
+ * Le code precedent faisait `JSON.stringify(msg.content)` : une capture
+ * d'ecran devenait des centaines de milliers de caracteres de base64
+ * envoyes comme de la prose. Pas d'erreur visible, mais le modele recevait
+ * du bruit et le quota de l'utilisateur fondait pour rien.
+ */
+function toGeminiParts(content: any): any[] {
+  if (typeof content === 'string') return [{ text: content }]
+  if (!Array.isArray(content)) return [{ text: String(content ?? '') }]
+
+  const parts = content
+    .map((p: any) => {
+      if (!p || typeof p !== 'object') return null
+      if (p.type === 'text') return { text: p.text ?? '' }
+      if (p.type === 'image_url') {
+        const url = p.image_url?.url ?? p.image_url
+        if (typeof url !== 'string') return null
+        const m = url.match(/^data:([^;,]+);base64,(.*)$/)
+        if (m) return { inlineData: { mimeType: m[1], data: m[2] } }
+        if (/^https?:\/\//.test(url)) return { fileData: { mimeType: 'image/*', fileUri: url } }
+        return null
+      }
+      return null
+    })
+    .filter(Boolean)
+
+  return parts.length > 0 ? parts : [{ text: '' }]
+}
+
 function buildGeminiContents(messages: any[]): any[] {
   const result: any[] = []
   let i = 0
@@ -585,8 +656,7 @@ function buildGeminiContents(messages: any[]): any[] {
     }
 
     const role = msg.role === 'assistant' ? 'model' : 'user'
-    const text = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content ?? '')
-    result.push({ role, parts: [{ text }] })
+    result.push({ role, parts: toGeminiParts(msg.content) })
     i++
   }
   return result

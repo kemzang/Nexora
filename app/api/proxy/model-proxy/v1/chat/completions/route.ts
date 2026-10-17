@@ -1,3 +1,9 @@
+import {
+  getOrgRemainingCredits,
+  getUserOrg,
+  orgCreditLimit,
+  type UserOrg,
+} from '@/lib/organizations'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
@@ -296,6 +302,23 @@ async function sumMonthlyUsage(userId: string, since: string): Promise<number> {
  * checkMonthlyLimit() ne repond que par oui ou non. Pour adapter la requete au
  * solde plutot que de la refuser, il faut le nombre.
  */
+/**
+ * Quota d'une equipe : le pot commun de l'organisation remplace le quota
+ * personnel. L'appartenance est mise en cache brievement — la route la
+ * consulte a chaque requete, et elle ne change qu'a une invitation ou un
+ * retrait.
+ */
+async function resolveOrg(userId: string): Promise<UserOrg | null> {
+  // cacheGet renvoie null aussi bien pour « absent du cache » que pour une
+  // valeur nulle. On encapsule donc la reponse, sinon la grande majorite des
+  // utilisateurs — ceux sans equipe — interrogeraient la base a chaque appel.
+  const cached = await cacheGet<{ org: UserOrg | null }>(`org:${userId}`)
+  if (cached) return cached.org
+  const org = await getUserOrg(supabase, userId)
+  void cacheSet(`org:${userId}`, { org }, 120)
+  return org
+}
+
 async function getRemainingCredits(userId: string, plan: PlanId): Promise<number> {
   const createdAt = await getUserCreatedAt(userId)
   const planLimit = getEffectiveTokenLimit(plan, createdAt)
@@ -716,12 +739,28 @@ export async function POST(req: NextRequest) {
 
     // Plan check
     const userPlan = await getUserPlan(userId)
-    const limitReached = await checkMonthlyLimit(userId, userPlan)
+
+    // Membre d'une equipe : c'est le pot commun qui fait foi, pas le plan
+    // personnel. Un membre sans abonnement propre doit pouvoir travailler
+    // sur les credits de son organisation.
+    const org = await resolveOrg(userId)
+    const orgRemaining = org
+      ? await getOrgRemainingCredits(supabase, org)
+      : null
+
+    const limitReached = org
+      ? orgRemaining !== null && orgRemaining <= 0
+        ? String(orgCreditLimit(org))
+        : null
+      : await checkMonthlyLimit(userId, userPlan)
     if (limitReached) {
       const now = new Date()
       const retryAfter = secondsUntilReset(await getUserCreatedAt(userId), now)
       return NextResponse.json(
-        { error: `Monthly token limit reached (${limitReached}). Upgrade your plan to continue.`, code: 'MONTHLY_LIMIT_REACHED', plan: userPlan, limit: Number(limitReached), retry_after: retryAfter },
+        { error: org
+            ? `Your team has used all its credits (${limitReached}). Ask an administrator of ${org.name} to add seats.`
+            : `Monthly token limit reached (${limitReached}). Upgrade your plan to continue.`,
+          code: 'MONTHLY_LIMIT_REACHED', plan: userPlan, limit: Number(limitReached), retry_after: retryAfter },
         { status: 429, headers: { 'Retry-After': String(retryAfter) } }
       )
     }
@@ -749,7 +788,10 @@ export async function POST(req: NextRequest) {
      *   2. plafonner la reponse a ce que le reliquat permet de produire.
      */
     const MIN_USEFUL_OUTPUT = 256
-    const remaining = await getRemainingCredits(userId, userPlan)
+    const remaining =
+      orgRemaining !== null
+        ? orgRemaining
+        : await getRemainingCredits(userId, userPlan)
     let budgetNote: string | null = null
 
     if (Number.isFinite(remaining)) {

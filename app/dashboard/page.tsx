@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   Settings, LogOut, LayoutDashboard, Key, FileText, HelpCircle, ChevronRight,
   Bell, Menu, X, Activity, Wallet, Users, History, Radio
-, Inbox} from 'lucide-react'
+, Inbox, Building2} from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
@@ -24,11 +24,13 @@ import HistorySection from '@/app/dashboard/sections/HistorySection'
 import ActivitySection from '@/app/dashboard/sections/ActivitySection'
 import SettingsSection from '@/app/dashboard/sections/SettingsSection'
 import LeadsSection from '@/app/dashboard/sections/LeadsSection'
+import { TeamSection } from '@/app/dashboard/sections/TeamSection'
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Overview', section: 'dashboard' },
   { icon: Key, label: 'API keys', section: 'api-keys' },
   { icon: Users, label: 'Collaborations', section: 'collaborations' },
+  { icon: Building2, label: 'Team', section: 'equipe' },
   { icon: Radio, label: 'Activity', section: 'activite' },
   { icon: History, label: 'History', section: 'historique' },
   { icon: Activity, label: 'Usage', section: 'utilisation' },
@@ -58,6 +60,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   abonnement: ({ onNavigate }) => <SubscriptionSection onNavigate={onNavigate} />,
   factures: () => <InvoicesSection />,
   aide: () => <HelpSection />,
+  equipe: () => <TeamSection />,
   leads: () => <LeadsSection />,
   parametres: () => <SettingsSection />,
 }

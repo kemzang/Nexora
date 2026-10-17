@@ -5,6 +5,7 @@ import { Building2, Rocket, Loader2, ExternalLink, RefreshCw } from 'lucide-reac
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
+import { CreateTeamForm } from './CreateTeamForm'
 
 /**
  * Revue des demandes Enterprise et des candidatures start-up.
@@ -68,6 +69,9 @@ export default function LeadsSection() {
   const [loading, setLoading] = useState(true)
   const [denied, setDenied] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
+  // Leads ayant deja une organisation : le bouton laisse place au nom de
+  // l'equipe, sinon on en creerait une seconde par inadvertance.
+  const [teamByLead, setTeamByLead] = useState<Record<string, string>>({})
 
   const token = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -86,6 +90,19 @@ export default function LeadsSection() {
       setApps(d.startups ?? [])
       setDenied(false)
     }
+
+    const orgsRes = await fetch('/api/admin/organizations', {
+      headers: { Authorization: `Bearer ${t}` },
+    })
+    if (orgsRes.ok) {
+      const { organizations } = await orgsRes.json()
+      const map: Record<string, string> = {}
+      for (const o of organizations ?? []) {
+        if (o.lead_id) map[o.lead_id] = o.name
+      }
+      setTeamByLead(map)
+    }
+
     setLoading(false)
   }, [token])
 
@@ -208,6 +225,16 @@ export default function LeadsSection() {
                 </Button>
               ))}
             </div>
+
+            {/* La creation d'equipe n'apparait qu'une fois l'affaire gagnee :
+                une organisation sans contrat signe n'a pas lieu d'etre. */}
+            {teamByLead[l.id] ? (
+              <p className="text-xs text-muted-foreground mt-3">
+                Team already created: <span className="text-foreground">{teamByLead[l.id]}</span>
+              </p>
+            ) : l.status === 'won' ? (
+              <CreateTeamForm lead={l} token={token} onCreated={() => void load()} />
+            ) : null}
           </GlassCard>
         ))}
 

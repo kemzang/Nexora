@@ -678,8 +678,12 @@ export async function POST(req: NextRequest) {
       }
       totalChars += typeof msg.content === 'string' ? msg.content.length : JSON.stringify(msg.content ?? '').length
     }
-    if (totalChars > 200_000) {
-      return NextResponse.json({ error: 'Content too large (max 200k chars)' }, { status: 400 })
+    // Garde-fou grossier contre l'abus uniquement : la vraie limite depend du
+    // modele retenu et se verifie plus bas, une fois celui-ci connu. Le plus
+    // grand contexte du catalogue est de 1 M de jetons, soit environ 4 M de
+    // caracteres ; on laisse une marge au-dela.
+    if (totalChars > 5_000_000) {
+      return NextResponse.json({ error: 'Request too large' }, { status: 413 })
     }
 
     // Plan check
@@ -702,6 +706,33 @@ export async function POST(req: NextRequest) {
     }
 
     const maxTokens = Math.min(rest.max_tokens ?? MAX_TOKENS_PER_PLAN[userPlan] ?? 4096, MAX_TOKENS_PER_PLAN[userPlan] ?? 4096)
+
+    /**
+     * La limite par requete suit la fenetre de contexte du modele retenu, et
+     * non plus un plafond fixe.
+     *
+     * Elle valait 200 000 caracteres — environ 50 000 jetons — fixes avant le
+     * passage en generation 5, ou les contextes sont montes a 1 M de jetons.
+     * En mode agent chaque fichier lu s'ajoute a la conversation : l'agent
+     * tombait sur « Content too large » apres quelques lectures, alors que le
+     * modele pouvait en absorber vingt fois plus.
+     *
+     * On reserve la place de la reponse et on compte quatre caracteres par
+     * jeton, l'approximation deja utilisee par estimateTokens().
+     */
+    const primary = candidates[0]
+    const maxInputChars = Math.max(0, primary.contextWindow - maxTokens) * 4
+    if (totalChars > maxInputChars) {
+      return NextResponse.json(
+        {
+          error: `Conversation too long for ${primary.name}: ${Math.round(totalChars / 4).toLocaleString('en-US')} tokens for a ${primary.contextWindow.toLocaleString('en-US')}-token window. Start a new chat, or pick a model with a larger context.`,
+          code: 'CONTEXT_EXCEEDED',
+          model: primary.id,
+          context_window: primary.contextWindow,
+        },
+        { status: 400 }
+      )
+    }
 
     /** Retire les images quand le modèle retenu ne sait pas les lire (sinon 400 côté provider). */
     const messagesFor = (model: AIModel) =>

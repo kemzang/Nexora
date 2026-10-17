@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
-import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, type AIModel, type ModelId, type PlanId } from '@/lib/models'
+import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, getCreditMultiplier, type AIModel, type ModelId, type PlanId } from '@/lib/models'
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
@@ -288,6 +288,34 @@ async function sumMonthlyUsage(userId: string, since: string): Promise<number> {
     (sum, r) => sum + (r.tokens_total ?? r.tokens_input ?? 0),
     0,
   )
+}
+
+/**
+ * Credits restants, ou Infinity quand le plan n'en compte pas.
+ *
+ * checkMonthlyLimit() ne repond que par oui ou non. Pour adapter la requete au
+ * solde plutot que de la refuser, il faut le nombre.
+ */
+async function getRemainingCredits(userId: string, plan: PlanId): Promise<number> {
+  const createdAt = await getUserCreatedAt(userId)
+  const planLimit = getEffectiveTokenLimit(plan, createdAt)
+
+  if (plan === 'free' && (await isFreeQuotaBlocked(supabase, userId))) return 0
+  if (planLimit <= 0) return Number.POSITIVE_INFINITY
+
+  const cached = usageCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return Math.max(0, planLimit - cached.total)
+  }
+  const shared = await cacheGet<number>(`usage:${userId}`)
+  if (shared !== null) {
+    usageCache.set(userId, { total: shared, expiresAt: Date.now() + 60_000 })
+    return Math.max(0, planLimit - shared)
+  }
+  const usage = await sumMonthlyUsage(userId, windowStartIso(createdAt, new Date()))
+  usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
+  void cacheSet(`usage:${userId}`, usage, 60)
+  return Math.max(0, planLimit - usage)
 }
 
 async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string | null> {
@@ -705,7 +733,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No model available for this plan' }, { status: 500 })
     }
 
-    const maxTokens = Math.min(rest.max_tokens ?? MAX_TOKENS_PER_PLAN[userPlan] ?? 4096, MAX_TOKENS_PER_PLAN[userPlan] ?? 4096)
+    let maxTokens = Math.min(rest.max_tokens ?? MAX_TOKENS_PER_PLAN[userPlan] ?? 4096, MAX_TOKENS_PER_PLAN[userPlan] ?? 4096)
+
+    /**
+     * Adapter la requete au solde, au lieu de la refuser.
+     *
+     * checkMonthlyLimit() ne bloque qu'a zero credit. Entre les deux, un
+     * utilisateur qui voit encore du solde doit obtenir une reponse, meme
+     * courte, meme sur un modele moins cher — et aller au bout de ses credits
+     * plutot que de se heurter a un mur.
+     *
+     * Deux leviers, dans cet ordre :
+     *   1. choisir le premier candidat dont l'entree tient dans le solde — les
+     *      candidats sont deja tries, les moins chers suivent ;
+     *   2. plafonner la reponse a ce que le reliquat permet de produire.
+     */
+    const MIN_USEFUL_OUTPUT = 256
+    const remaining = await getRemainingCredits(userId, userPlan)
+    let budgetNote: string | null = null
+
+    if (Number.isFinite(remaining)) {
+      const inputTokens = estimateTokens(messages as { content?: string }[])
+      const affordableIndex = candidates.findIndex(
+        (c) => computeCreditsConsumed(c.id, inputTokens, MIN_USEFUL_OUTPUT) <= remaining
+      )
+
+      // Aucun modele ne tient, meme le moins cher : on garde le moins cher et
+      // on reduit la reponse au maximum. Mieux vaut trois phrases que rien.
+      const chosen = affordableIndex >= 0 ? affordableIndex : candidates.length - 1
+      if (chosen > 0) {
+        const [cheaper] = candidates.splice(chosen, 1)
+        candidates.unshift(cheaper)
+        budgetNote = `switched to ${cheaper.name} to fit your remaining credits`
+      }
+
+      const head = candidates[0]
+      const inputCost = computeCreditsConsumed(head.id, inputTokens, 0)
+      const leftForOutput = Math.max(0, remaining - inputCost)
+      const affordableOutput = Math.floor(leftForOutput / getCreditMultiplier(head.id))
+      if (affordableOutput < maxTokens) {
+        // Au moins une reponse breve : on ne descend jamais sous 64 jetons,
+        // sinon le modele s'arrete au milieu d'un mot et le credit est perdu
+        // pour rien.
+        maxTokens = Math.max(64, affordableOutput)
+        if (!budgetNote) budgetNote = 'response shortened to fit your remaining credits'
+      }
+    }
 
     /**
      * La limite par requete suit la fenetre de contexte du modele retenu, et
@@ -909,6 +982,10 @@ export async function POST(req: NextRequest) {
       // le client peut ainsi l'expliquer au lieu de laisser croire que le
       // modele demande a repondu.
       'X-Nexora-Failover': String(failedOver),
+      // Dit pourquoi la reponse differe de ce qui etait demande quand le solde
+      // a impose un modele moins cher ou une reponse plus courte. Sans ca,
+      // l'utilisateur constate une reponse tronquee sans comprendre.
+      ...(budgetNote ? { 'X-Nexora-Budget': budgetNote } : {}),
       'X-Nexora-Requested-Model': (preferredModel as string) || selectedModel.id,
     }
 

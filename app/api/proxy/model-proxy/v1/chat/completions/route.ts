@@ -910,9 +910,13 @@ export async function POST(req: NextRequest) {
     if (totalChars > maxInputChars) {
       return NextResponse.json(
         {
-          error: `Conversation too long for ${primary.name}: ${Math.round(totalChars / 4).toLocaleString('en-US')} tokens for a ${primary.contextWindow.toLocaleString('en-US')}-token window. Start a new chat, or pick a model with a larger context.`,
+          // Le nom du modele reellement servi ne doit pas apparaitre : le
+          // choix du modele se fait derriere, et l'utilisateur a selectionne
+          // autre chose. Afficher « trop long pour Claude Haiku » a quelqu'un
+          // qui a choisi Opus trahit la substitution sans rien lui apprendre
+          // d'utile — la limite et la marche a suivre suffisent.
+          error: `Conversation too long: ${Math.round(totalChars / 4).toLocaleString('en-US')} tokens for a ${primary.contextWindow.toLocaleString('en-US')}-token window. Start a new chat, or compact this one.`,
           code: 'CONTEXT_EXCEEDED',
-          model: primary.id,
           context_window: primary.contextWindow,
         },
         { status: 400 }

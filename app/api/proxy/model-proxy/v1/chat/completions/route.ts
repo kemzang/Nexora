@@ -81,7 +81,7 @@ class BoundedTtlMap<V extends { expiresAt: number }> {
   }
 }
 
-const planCache = new BoundedTtlMap<{ plan: PlanId; expiresAt: number }>()
+const planCache = new BoundedTtlMap<{ value: PlanWindow; expiresAt: number }>()
 const usageCache = new BoundedTtlMap<{ total: number; expiresAt: number }>()
 const createdAtCache = new BoundedTtlMap<{
   createdAt: string
@@ -224,28 +224,89 @@ function trackOutputStream(
 }
 
 // ── Plan helpers ─────────────────────────────────────────────────────────────
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const cached = planCache.get(userId)
-  if (cached && cached.expiresAt > Date.now()) return cached.plan
+/**
+ * Plan de l'utilisateur et periode de son abonnement.
+ *
+ * La periode est lue ici plutot que dans une requete a part : les deux
+ * viennent de la meme ligne, et cette fonction est sur le chemin critique.
+ */
+type PlanWindow = {
+  plan: PlanId
+  periodStart?: string
+  periodEnd?: string
+}
 
-  const shared = await cacheGet<PlanId>(`plan:${userId}`)
+async function getUserPlanWindow(userId: string): Promise<PlanWindow> {
+  const cached = planCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) return cached.value
+
+  const shared = await cacheGet<PlanWindow>(`plan:${userId}`)
   if (shared) {
-    planCache.set(userId, { plan: shared, expiresAt: Date.now() + 300_000 })
+    planCache.set(userId, { value: shared, expiresAt: Date.now() + 300_000 })
     return shared
   }
 
   const { data } = await supabase
     .from('user_subscriptions')
-    .select('subscription_plans!inner(slug)')
+    .select('current_period_start, current_period_end, subscription_plans!inner(slug)')
     .eq('user_id', userId)
     .eq('status', 'active')
     // Exclut les abonnements expirés (forfaits test 7/14j, ou tout plan échu).
     .gt('current_period_end', new Date().toISOString())
     .maybeSingle()
-  const plan = ((data?.subscription_plans as any)?.slug as PlanId) || 'free'
-  planCache.set(userId, { plan, expiresAt: Date.now() + 300_000 })
-  void cacheSet(`plan:${userId}`, plan, 300)
-  return plan
+
+  const value: PlanWindow = {
+    plan: ((data?.subscription_plans as any)?.slug as PlanId) || 'free',
+    periodStart: data?.current_period_start ?? undefined,
+    periodEnd: data?.current_period_end ?? undefined,
+  }
+  planCache.set(userId, { value, expiresAt: Date.now() + 300_000 })
+  void cacheSet(`plan:${userId}`, value, 300)
+  return value
+}
+
+async function getUserPlan(userId: string): Promise<PlanId> {
+  return (await getUserPlanWindow(userId)).plan
+}
+
+/**
+ * Fenetre de consommation.
+ *
+ * Elle se calait sur la date d'inscription a la plateforme, jamais sur
+ * l'abonnement. Deux consequences, toutes deux au detriment du client qui
+ * paie :
+ *
+ *   - le quota repartait a l'anniversaire de l'inscription pendant que
+ *     Paddle prelevait au jour de l'achat, deux cycles qui derivaient ;
+ *   - une montee en gamme n'effacait pas la consommation precedente, donc
+ *     quelqu'un qui passait de Starter a Pro payait 15M et en recevait 11.
+ *
+ * Pour un abonne, la fenetre est desormais celle de son abonnement : le
+ * compteur repart au jour du prelevement, et un changement de plan ecrit un
+ * `current_period_start` a maintenant, donc un quota neuf.
+ *
+ * Les comptes gratuits gardent l'anniversaire d'inscription : sans ancrage,
+ * quelqu'un inscrit le 28 obtiendrait deux quotas en trois jours.
+ */
+async function getQuotaWindow(
+  userId: string,
+  now = new Date(),
+): Promise<{ startIso: string; secondsUntilReset: number }> {
+  const { periodStart, periodEnd } = await getUserPlanWindow(userId)
+
+  if (periodStart && periodEnd) {
+    const end = new Date(periodEnd).getTime()
+    return {
+      startIso: new Date(periodStart).toISOString(),
+      secondsUntilReset: Math.max(1, Math.ceil((end - now.getTime()) / 1000)),
+    }
+  }
+
+  const createdAt = await getUserCreatedAt(userId)
+  return {
+    startIso: windowStartIso(createdAt, now),
+    secondsUntilReset: secondsUntilReset(createdAt, now),
+  }
 }
 
 async function getUserCreatedAt(userId: string): Promise<string | undefined> {
@@ -320,8 +381,7 @@ async function resolveOrg(userId: string): Promise<UserOrg | null> {
 }
 
 async function getRemainingCredits(userId: string, plan: PlanId): Promise<number> {
-  const createdAt = await getUserCreatedAt(userId)
-  const planLimit = getEffectiveTokenLimit(plan, createdAt)
+  const planLimit = getEffectiveTokenLimit(plan)
 
   if (plan === 'free' && (await isFreeQuotaBlocked(supabase, userId))) return 0
   if (planLimit <= 0) return Number.POSITIVE_INFINITY
@@ -335,15 +395,14 @@ async function getRemainingCredits(userId: string, plan: PlanId): Promise<number
     usageCache.set(userId, { total: shared, expiresAt: Date.now() + 60_000 })
     return Math.max(0, planLimit - shared)
   }
-  const usage = await sumMonthlyUsage(userId, windowStartIso(createdAt, new Date()))
+  const usage = await sumMonthlyUsage(userId, (await getQuotaWindow(userId)).startIso)
   usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
   void cacheSet(`usage:${userId}`, usage, 60)
   return Math.max(0, planLimit - usage)
 }
 
 async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string | null> {
-  const createdAt = await getUserCreatedAt(userId)
-  let planLimit = getEffectiveTokenLimit(plan, createdAt)
+  let planLimit = getEffectiveTokenLimit(plan)
 
   // Le palier gratuit ne vaut que pour les deux premiers comptes d'une meme
   // machine. Au-dela, l'acces au produit reste ouvert mais sans credits
@@ -369,7 +428,7 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
   }
 
   const now = new Date()
-  const usage = await sumMonthlyUsage(userId, windowStartIso(createdAt, now))
+  const usage = await sumMonthlyUsage(userId, (await getQuotaWindow(userId, now)).startIso)
   usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
   void cacheSet(`usage:${userId}`, usage, 60)
   return usage >= planLimit ? planLimit.toString() : null
@@ -825,7 +884,7 @@ export async function POST(req: NextRequest) {
       : await checkMonthlyLimit(userId, userPlan)
     if (limitReached) {
       const now = new Date()
-      const retryAfter = secondsUntilReset(await getUserCreatedAt(userId), now)
+      const retryAfter = (await getQuotaWindow(userId, now)).secondsUntilReset
       return NextResponse.json(
         { error: org
             ? `Your team has used all its credits (${limitReached}). Ask an administrator of ${org.name} to add seats.`

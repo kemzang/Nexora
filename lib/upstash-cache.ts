@@ -47,4 +47,15 @@ export async function cacheSet(key: string, value: unknown, ttlSeconds: number):
   await pipeline([['SET', key, JSON.stringify(value), 'EX', Math.max(1, Math.floor(ttlSeconds))]])
 }
 
+/**
+ * Supprime des cles. Indispensable apres un paiement : le plan et la
+ * consommation sont mis en cache cinq minutes, et sans invalidation un
+ * client qui vient de payer resterait bloque sur son ancien quota —
+ * exactement le moment ou il demande un remboursement.
+ */
+export async function cacheDel(...keys: string[]): Promise<void> {
+  if (keys.length === 0) return
+  await pipeline(keys.map((k) => ['DEL', k]))
+}
+
 export const isDistributedCacheConfigured = Boolean(UPSTASH_URL && UPSTASH_TOKEN)

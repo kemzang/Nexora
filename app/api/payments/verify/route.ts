@@ -1,3 +1,4 @@
+import { cacheDel } from '@/lib/upstash-cache'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPayment } from '@/lib/payment'
 import { createClient } from '@supabase/supabase-js'
@@ -67,6 +68,12 @@ async function activateSubscription(
     stripe_subscription_id: reference, // sert de clé d'idempotence (réf. de paiement)
   })
   if (error) return { activated: false, reason: error.message }
+
+  // Le proxy met le plan et la consommation en cache cinq minutes. Sans
+  // cette invalidation, quelqu'un qui vient de payer resterait bloque sur
+  // son ancien quota le temps que le cache expire — au moment precis ou il
+  // attend que son achat prenne effet.
+  await cacheDel(`plan:${userId}`, `usage:${userId}`, `created-at:${userId}`)
 
   return { activated: true }
 }

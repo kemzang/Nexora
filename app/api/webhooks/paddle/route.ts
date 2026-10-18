@@ -1,3 +1,4 @@
+import { cacheDel } from '@/lib/upstash-cache'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
@@ -109,6 +110,7 @@ async function activateFromCustomData(
     stripe_subscription_id: reference,
   })
   if (error) console.error('[paddle webhook] insert user_subscriptions failed:', error.message)
+  else await invalidateUser(userId)
 }
 
 async function renewSubscription(
@@ -120,23 +122,48 @@ async function renewSubscription(
   // `scheduled_change.action === 'cancel'` reflète une résiliation programmée
   // (via notre bouton ou le portail client Paddle) : on garde ce champ en
   // phase avec Paddle, quelle que soit son origine.
+  // `current_period_start` doit AUSSI avancer. La fenetre de quota part de
+  // cette date : en ne repoussant que la fin, la fenetre s'allongeait de mois
+  // en mois et la consommation s'accumulait sans jamais repartir de zero. Un
+  // abonne se serait retrouve definitivement au-dela de son quota des son
+  // deuxieme mois.
+  const { data: row } = await admin
+    .from('user_subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', reference)
+    .maybeSingle()
+
   const { error } = await admin
     .from('user_subscriptions')
     .update({
+      current_period_start: new Date().toISOString(),
       current_period_end: new Date(periodEnd).toISOString(),
       status: 'active',
       cancel_at_period_end: scheduledChange?.action === 'cancel',
     })
     .eq('stripe_subscription_id', reference)
   if (error) console.error('[paddle webhook] renew failed:', error.message)
+  else if (row?.user_id) await invalidateUser(row.user_id)
+}
+
+/** Le proxy met plan et consommation en cache : a purger a chaque changement. */
+async function invalidateUser(userId: string): Promise<void> {
+  await cacheDel(`plan:${userId}`, `usage:${userId}`, `created-at:${userId}`)
 }
 
 async function deactivateSubscription(reference: string): Promise<void> {
+  const { data: row } = await admin
+    .from('user_subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', reference)
+    .maybeSingle()
+
   const { error } = await admin
     .from('user_subscriptions')
     .update({ status: 'cancelled' })
     .eq('stripe_subscription_id', reference)
   if (error) console.error('[paddle webhook] deactivate failed:', error.message)
+  else if (row?.user_id) await invalidateUser(row.user_id)
 }
 
 /**

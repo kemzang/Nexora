@@ -294,8 +294,15 @@ export const PLANS: Record<PlanId, Plan> = {
     nameFr: 'Enterprise',
     // Facture par siege : 35$/dev/mois, 10 sieges minimum = 350$ plancher.
     // `price` reste le plancher par siege pour les calculs de quota existants.
-    price: 35,
-    priceLabel: 'from $35',
+    // 30 $ par siege : au tarif precedent de 35 $, le credit revenait a
+    // 0,875 $ le million contre 0,800 $ pour dix comptes Pro — l'offre
+    // d'equipe coutait donc PLUS cher que des comptes individuels, et
+    // n'avait aucune raison d'etre signee. A 30 $, c'est le tarif Business
+    // exactement, et la mutualisation des credits devient le seul argument
+    // a faire valoir : elle suffit, puisqu'elle evite de perdre les quotas
+    // des membres peu actifs.
+    price: 30,
+    priceLabel: 'from $30',
     // 40M par siege, mis en commun pour l'equipe. A 35$/siege, un siege
     // entierement consomme sur le modele le plus cher coute au pire 24$ :
     // la marge reste positive. 100M/siege mettait le plan en perte de 27$.

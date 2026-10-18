@@ -73,7 +73,12 @@ export const PROOF_TYPES = ['registration', 'accelerator', 'funding', 'other'] a
 
 /** Conditions publiees du programme start-up. Une seule source de verite. */
 export const STARTUP_PROGRAM = {
-  discountPercent: 30,
+  // 20 % et non 30 : a 30 %, un client Business tombait a 21 $ pour un cout
+  // d'API pouvant atteindre 21,82 $ — la remise rendait le forfait
+  // deficitaire au pire cas, et Pro ne gardait que 22 centimes de marge.
+  // A 20 %, la remise reste substantielle (2,40 $ sur Pro, 6 $ sur Business)
+  // et la marge demeure positive quelle que soit la consommation.
+  discountPercent: 20,
   durationMonths: 12,
   eligiblePlans: ['pro', 'business'] as const,
   maxAgeYears: 3,

@@ -3,7 +3,7 @@ import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { getEffectiveTokenLimit, type PlanId } from '@/lib/models'
 import type { FimModelId } from '@/lib/modelRouter'
-import { windowStartIso, secondsUntilReset } from '@/lib/billingWindow'
+import { quotaWindow, secondsUntilReset } from '@/lib/billingWindow'
 
 export const runtime = 'nodejs'
 
@@ -71,7 +71,20 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
   if (cached && cached.expiresAt > Date.now()) {
     return cached.total >= planLimit ? planLimit.toString() : null
   }
-  const startOfMonth = windowStartIso(createdAt)
+  // Meme fenetre que le proxy de chat : l'autocompletion puise dans le meme
+  // quota, les deux compteurs doivent repartir ensemble.
+  const { data: sub } = await supabase
+    .from('user_subscriptions')
+    .select('current_period_start, current_period_end')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .gt('current_period_end', new Date().toISOString())
+    .maybeSingle()
+  const startOfMonth = quotaWindow({
+    createdAt,
+    periodStart: sub?.current_period_start as string | undefined,
+    periodEnd: sub?.current_period_end as string | undefined,
+  }).start.toISOString()
   const { data } = await supabase
     .from('usage_sessions')
     .select('tokens_input, tokens_total')

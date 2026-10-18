@@ -69,3 +69,59 @@ export function windowStartIso(createdAt: string | Date | null | undefined, now 
 export function secondsUntilReset(createdAt: string | Date | null | undefined, now = new Date()): number {
   return Math.max(1, Math.ceil((billingWindow(createdAt, now).end.getTime() - now.getTime()) / 1000))
 }
+
+/**
+ * Fenetre de quota d'un utilisateur, source unique de verite.
+ *
+ * Pour un abonne, c'est la periode de son abonnement : le compteur repart au
+ * jour du prelevement, et un changement de plan ecrit un
+ * `current_period_start` a maintenant, donc un quota neuf. Pour un compte
+ * gratuit, c'est l'anniversaire de l'inscription — sans ancrage, quelqu'un
+ * inscrit le 28 obtiendrait deux quotas en trois jours.
+ *
+ * Cette fonction existe parce que quatre endroits calculaient la fenetre
+ * chacun a sa maniere : le proxy de chat, celui de completion, le point
+ * d'entree des credits et lib/quota. Ils pouvaient se contredire, et
+ * l'utilisateur voyait un pourcentage qui ne correspondait pas a ce qui le
+ * bloquait.
+ */
+export type QuotaWindow = {
+  start: Date
+  end: Date
+  /** Secondes avant la remise a zero, pour l'en-tete Retry-After. */
+  secondsUntilReset: number
+  /** true si la fenetre suit un abonnement plutot que l'inscription. */
+  fromSubscription: boolean
+}
+
+export function quotaWindow(
+  opts: {
+    createdAt?: string | Date | null
+    periodStart?: string | Date | null
+    periodEnd?: string | Date | null
+  },
+  now = new Date(),
+): QuotaWindow {
+  const { createdAt, periodStart, periodEnd } = opts
+
+  if (periodStart && periodEnd) {
+    const start = new Date(periodStart)
+    const end = new Date(periodEnd)
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      return {
+        start,
+        end,
+        secondsUntilReset: Math.max(1, Math.ceil((end.getTime() - now.getTime()) / 1000)),
+        fromSubscription: true,
+      }
+    }
+  }
+
+  const w = billingWindow(createdAt, now)
+  return {
+    start: w.start,
+    end: w.end,
+    secondsUntilReset: Math.max(1, Math.ceil((w.end.getTime() - now.getTime()) / 1000)),
+    fromSubscription: false,
+  }
+}

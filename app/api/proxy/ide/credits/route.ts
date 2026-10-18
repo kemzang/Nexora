@@ -3,7 +3,7 @@ import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { PLANS, type PlanId } from '@/lib/models'
 import { captureServerError } from '@/lib/sentry'
-import { windowStartIso, billingWindow } from '@/lib/billingWindow'
+import { quotaWindow } from '@/lib/billingWindow'
 
 export const runtime = 'nodejs'
 
@@ -12,7 +12,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const usageCache = new Map<string, { used: number; plan: PlanId; periodEnd: string | null; createdAt: string | null; expiresAt: number }>()
+const usageCache = new Map<string, { used: number; plan: PlanId; periodEnd: string | null; periodStart: string | null; createdAt: string | null; expiresAt: number }>()
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   // Cached to avoid hammering Supabase on every call
   const cached = usageCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) {
-    return buildResponse(cached.plan, cached.used, cached.periodEnd, cached.createdAt)
+    return buildResponse(cached.plan, cached.used, cached.periodEnd, cached.createdAt, cached.periodStart)
   }
 
   // Sans ce try/catch, un hoquet Supabase (reseau, timeout) remontait en 500
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   try {
     const { data: subscription, error: subError } = await supabase
       .from('user_subscriptions')
-      .select('current_period_end, subscription_plans!inner(slug)')
+      .select('current_period_start, current_period_end, subscription_plans!inner(slug)')
       .eq('user_id', userId)
       .eq('status', 'active')
       // Exclut un abonnement expiré → l'utilisateur repasse en Free.
@@ -47,12 +47,18 @@ export async function GET(req: NextRequest) {
 
     const plan = ((subscription?.subscription_plans as { slug?: string } | null)?.slug ?? 'free') as PlanId
     const periodEnd = (subscription?.current_period_end as string | undefined) ?? null
+    const periodStart = (subscription?.current_period_start as string | undefined) ?? null
 
     const now = new Date()
-    // La fenetre est ancree sur la date d'inscription, pas sur le mois civil.
+    // Meme fenetre que le proxy : celle de l'abonnement pour un abonne,
+    // l'anniversaire d'inscription sinon. Les deux doivent s'accorder, sinon
+    // le pourcentage affiche ne correspond pas a ce qui bloque l'utilisateur.
     const { data: authUser } = await supabase.auth.admin.getUserById(userId)
     const createdAt = authUser?.user?.created_at ?? null
-    const startOfMonth = windowStartIso(createdAt, now)
+    const startOfMonth = quotaWindow(
+      { createdAt, periodStart, periodEnd },
+      now,
+    ).start.toISOString()
 
     const { data: sessions, error: sessionsError } = await supabase
       .from('usage_sessions')
@@ -64,9 +70,9 @@ export async function GET(req: NextRequest) {
 
     const used = (sessions ?? []).reduce((s, r) => s + (r.tokens_total ?? r.tokens_input ?? 0), 0)
 
-    usageCache.set(userId, { used, plan, periodEnd, createdAt, expiresAt: Date.now() + 60_000 })
+    usageCache.set(userId, { used, plan, periodEnd, periodStart, createdAt, expiresAt: Date.now() + 60_000 })
 
-    return buildResponse(plan, used, periodEnd, createdAt)
+    return buildResponse(plan, used, periodEnd, createdAt, periodStart)
   } catch (error) {
     console.error('[ide/credits] Supabase error:', error)
     captureServerError(error, { route: 'ide/credits', userId })
@@ -74,7 +80,7 @@ export async function GET(req: NextRequest) {
     // Repli sur le dernier cache connu (meme perime) plutot qu'un 503 sec :
     // mieux vaut un chiffre legerement en retard qu'un ecran d'erreur.
     if (cached) {
-      return buildResponse(cached.plan, cached.used, cached.periodEnd, cached.createdAt)
+      return buildResponse(cached.plan, cached.used, cached.periodEnd, cached.createdAt, cached.periodStart)
     }
 
     return NextResponse.json(
@@ -84,12 +90,20 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function buildResponse(plan: PlanId, used: number, periodEnd: string | null, createdAt: string | null) {
+function buildResponse(
+  plan: PlanId,
+  used: number,
+  periodEnd: string | null,
+  createdAt: string | null,
+  periodStart: string | null,
+) {
   const planConfig = PLANS[plan]
   const limit = planConfig?.tokensPerMonth ?? 1000
   const remaining = Math.max(0, limit - used)
   const now = new Date()
-  const resetAt = billingWindow(createdAt, now).end.toISOString()
+  // Meme fenetre que le proxy : sans cela, le pourcentage affiche ne
+  // correspondrait pas a ce qui bloque reellement l'utilisateur.
+  const resetAt = quotaWindow({ createdAt, periodStart, periodEnd }, now).end.toISOString()
   const daysUntilReset = Math.ceil((new Date(resetAt).getTime() - now.getTime()) / 86_400_000)
 
   // Fin d'abonnement (utile surtout pour les forfaits test à durée limitée).

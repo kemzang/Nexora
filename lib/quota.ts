@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { cacheGet, cacheSet } from './upstash-cache'
 import type { PlanId } from './models'
-import { windowStartIso } from '@/lib/billingWindow'
+import { quotaWindow } from '@/lib/billingWindow'
 
 // ── Plan + monthly call-count quota ─────────────────────────────────────────
 // Same L1 (Map, per-instance) → L2 (Upstash, shared) → L3 (Supabase) pattern
@@ -53,10 +53,22 @@ async function getMonthlyCallCount(userId: string, sessionType: string): Promise
     return shared
   }
 
-  // Meme fenetre que les credits : ancree sur la date d'inscription, pour que
-  // les deux compteurs se remettent a zero ensemble.
+  // Meme fenetre que les credits, pour que les deux compteurs se remettent a
+  // zero ensemble : celle de l'abonnement pour un abonne, l'anniversaire
+  // d'inscription sinon.
   const { data: authUser } = await supabase.auth.admin.getUserById(userId)
-  const startOfMonth = windowStartIso(authUser?.user?.created_at ?? null)
+  const { data: sub } = await supabase
+    .from('user_subscriptions')
+    .select('current_period_start, current_period_end')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .gt('current_period_end', new Date().toISOString())
+    .maybeSingle()
+  const startOfMonth = quotaWindow({
+    createdAt: authUser?.user?.created_at ?? null,
+    periodStart: sub?.current_period_start as string | undefined,
+    periodEnd: sub?.current_period_end as string | undefined,
+  }).start.toISOString()
   const { data } = await supabase
     .from('usage_sessions')
     .select('id')

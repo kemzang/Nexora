@@ -11,7 +11,7 @@ import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTok
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
-import { windowStartIso, secondsUntilReset } from '@/lib/billingWindow'
+import { quotaWindow } from '@/lib/billingWindow'
 
 export const runtime = 'nodejs'
 
@@ -295,18 +295,13 @@ async function getQuotaWindow(
   const { periodStart, periodEnd } = await getUserPlanWindow(userId)
 
   if (periodStart && periodEnd) {
-    const end = new Date(periodEnd).getTime()
-    return {
-      startIso: new Date(periodStart).toISOString(),
-      secondsUntilReset: Math.max(1, Math.ceil((end - now.getTime()) / 1000)),
-    }
+    const w = quotaWindow({ periodStart, periodEnd }, now)
+    return { startIso: w.start.toISOString(), secondsUntilReset: w.secondsUntilReset }
   }
 
   const createdAt = await getUserCreatedAt(userId)
-  return {
-    startIso: windowStartIso(createdAt, now),
-    secondsUntilReset: secondsUntilReset(createdAt, now),
-  }
+  const w = quotaWindow({ createdAt }, now)
+  return { startIso: w.start.toISOString(), secondsUntilReset: w.secondsUntilReset }
 }
 
 async function getUserCreatedAt(userId: string): Promise<string | undefined> {

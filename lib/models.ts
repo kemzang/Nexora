@@ -339,17 +339,51 @@ export function getCreditMultiplier(modelId: string): number {
 }
 
 /**
+ * Part du prix d'entrée encore facturée quand le fournisseur a servi les
+ * jetons depuis son cache, par fournisseur. Ce sont leurs tarifs réels :
+ * Anthropic et DeepSeek relisent à 0,1x le prix d'entrée, Google à 0,25x.
+ *
+ * Un fournisseur inconnu reste à 1 : on ne rend jamais une remise qu'on n'a
+ * pas obtenue.
+ */
+const CACHE_READ_DISCOUNT: Record<string, number> = {
+  Anthropic: 0.1,
+  DeepSeek: 0.1,
+  Google: 0.25,
+}
+
+/** Facteur applique aux jetons d'entree relus depuis le cache du fournisseur. */
+export function cacheReadFactor(modelId: string): number {
+  const provider = MODELS[modelId as ModelId]?.provider ?? ''
+  return CACHE_READ_DISCOUNT[provider] ?? 1
+}
+
+/**
  * Calcule les crédits (= tokens pondérés) consommés par une requête.
  * On pondère les tokens réels par le coût relatif du modèle, de sorte qu'un
  * modèle cher (Opus 5x) consomme bien plus du quota qu'un modèle bon marché (DeepSeek 0.25x).
+ *
+ * `cachedInputTokens` est la part de `inputTokens` que le fournisseur a
+ * relue depuis son cache — donc comprise dans le total, pas en plus. Elle est
+ * facturée au tarif du cache, sinon la boucle d'agent fait payer sept fois le
+ * même contexte : un testeur a brûlé 72 % du quota gratuit sur UN prompt,
+ * dont ~330 000 crédits de contexte identique renvoyé à chaque étape.
+ *
+ * L'écriture du cache coûte 1,25x chez Anthropic ; on l'absorbe au lieu de la
+ * refacturer. Le premier appel d'une conversation ne doit pas devenir plus
+ * cher qu'avant pour l'utilisateur, et la marge reste largement gagnante sur
+ * l'ensemble de la session.
  */
 export function computeCreditsConsumed(
   modelId: string,
   inputTokens: number,
   outputTokens: number,
+  cachedInputTokens = 0,
 ): number {
-  const totalTokens = inputTokens + outputTokens
-  return Math.ceil(totalTokens * getCreditMultiplier(modelId))
+  const cached = Math.min(Math.max(0, cachedInputTokens), Math.max(0, inputTokens))
+  const fresh = Math.max(0, inputTokens - cached)
+  const weighted = fresh + cached * cacheReadFactor(modelId) + outputTokens
+  return Math.ceil(weighted * getCreditMultiplier(modelId))
 }
 
 // Limite mensuelle du plan. `userCreatedAt` n'est plus utilisé pour un bonus

@@ -7,6 +7,8 @@ import {
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
+import { applyAnthropicCache, expectedBillableInput } from '@/lib/promptCache'
+import { readOpenAIUsage, trackSseUsage, type SseUsage as UpstreamUsage } from '@/lib/sseUsage'
 import { getFailoverCandidates, hasImageContent, estimateTokens, getEffectiveTokenLimit, computeCreditsConsumed, getCreditMultiplier, type AIModel, type ModelId, type PlanId } from '@/lib/models'
 import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
@@ -129,11 +131,26 @@ interface UsageContext {
   preferred: string | null
   complexity: number
   downgraded: boolean
+  /**
+   * Consommation reelle rapportee par le fournisseur, remplie au vol pendant
+   * la reponse. Elle prime sur `inputTokens`, qui n'est qu'une estimation a
+   * quatre caracteres par jeton faite avant l'appel : c'est elle qui porte la
+   * part relue depuis le cache, donc la seule facon de ne pas refacturer sept
+   * fois le meme contexte dans une boucle d'agent.
+   */
+  upstream: UpstreamUsage
 }
 
 /** Enregistre la consommation finale (entrée + sortie, pondérée par le crédit du modèle). */
 async function recordUsage(ctx: UsageContext, outputTokens: number): Promise<void> {
-  const credits = computeCreditsConsumed(ctx.modelId, ctx.inputTokens, outputTokens)
+  const realInput = ctx.upstream.inputTokens
+  const inputTokens = typeof realInput === 'number' && realInput > 0 ? realInput : ctx.inputTokens
+  const cachedInput = ctx.upstream.cachedInputTokens ?? 0
+  const outTokens =
+    typeof ctx.upstream.outputTokens === 'number' && ctx.upstream.outputTokens > 0
+      ? ctx.upstream.outputTokens
+      : outputTokens
+  const credits = computeCreditsConsumed(ctx.modelId, inputTokens, outTokens, cachedInput)
   try {
     const { error } = await supabase.from('usage_sessions').insert({
       user_id: ctx.userId,
@@ -150,8 +167,8 @@ async function recordUsage(ctx: UsageContext, outputTokens: number): Promise<voi
       // a zero ligne pour TOUT le monde, quel que soit l'usage reel. Le slug
       // est deja conserve dans metadata.model plus bas ; recordCall() dans
       // lib/quota.ts evite deja ce meme piege, avec le meme commentaire.
-      tokens_input: ctx.inputTokens,
-      tokens_output: outputTokens,
+      tokens_input: inputTokens,
+      tokens_output: outTokens,
       tokens_total: credits, // crédits pondérés — c'est ce qui décompte le quota
       metadata: {
         plan: ctx.plan,
@@ -159,7 +176,13 @@ async function recordUsage(ctx: UsageContext, outputTokens: number): Promise<voi
         preferred: ctx.preferred,
         complexity: ctx.complexity,
         downgraded: ctx.downgraded,
-        creditMultiplier: credits / Math.max(1, ctx.inputTokens + outputTokens),
+        creditMultiplier: credits / Math.max(1, inputTokens + outTokens),
+        // Garde la trace de ce que le cache a fait economiser : c'est la seule
+        // facon de verifier en base qu'il mord vraiment, et d'ou vient l'ecart
+        // entre jetons traites et credits decomptes.
+        cachedInputTokens: cachedInput,
+        estimatedInputTokens: ctx.inputTokens,
+        usageFromProvider: typeof realInput === 'number' && realInput > 0,
       },
     })
     if (error) {
@@ -187,40 +210,7 @@ function trackOutputStream(
   body: ReadableStream<Uint8Array>,
   ctx: UsageContext,
 ): ReadableStream<Uint8Array> {
-  let outputChars = 0
-  const decoder = new TextDecoder()
-  const transform = new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      try {
-        const text = decoder.decode(chunk, { stream: true })
-        for (const line of text.split('\n')) {
-          const trimmed = line.trim()
-          if (!trimmed.startsWith('data:')) continue
-          const payload = trimmed.slice(5).trim()
-          if (!payload || payload === '[DONE]') continue
-          try {
-            const json = JSON.parse(payload)
-            const delta = json?.choices?.[0]?.delta?.content
-            if (typeof delta === 'string') outputChars += delta.length
-          } catch {
-            /* ligne SSE partielle — ignorée */
-          }
-        }
-      } catch {
-        /* ignore decode errors */
-      }
-      controller.enqueue(chunk)
-    },
-    async flush() {
-      // IMPORTANT : on AWAIT l'enregistrement. En fire-and-forget (`void`), sur
-      // Vercel la fonction peut être gelée avant la fin de l'insert → conso
-      // perdue (compteur bloqué à 0). En awaitant, le flux reste ouvert tant que
-      // l'insert n'est pas terminé → conso fiablement enregistrée.
-      const outputTokens = Math.ceil(outputChars / 4)
-      await recordUsage(ctx, outputTokens)
-    },
-  })
-  return body.pipeThrough(transform)
+  return trackSseUsage(body, ctx.upstream, (outputTokens) => recordUsage(ctx, outputTokens))
 }
 
 // ── Plan helpers ─────────────────────────────────────────────────────────────
@@ -524,13 +514,21 @@ function buildAnthropicBody(body: any, modelApiId: string): any {
     .map((m: any) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))
     .join('\n')
 
+  const msgs = buildAnthropicMessages(body.messages)
+
   const req: any = {
     model: modelApiId,
     max_tokens: body.max_tokens ?? 4096,
-    messages: buildAnthropicMessages(body.messages),
+    messages: msgs,
     stream: body.stream ?? true,
   }
-  if (system) req.system = system
+
+  // Pose les points de cache et renvoie le `system` a envoyer (chaine nue si
+  // la conversation est trop courte pour etre mise en cache). Modifie `msgs`
+  // sur place — voir lib/promptCache.ts.
+  const systemField = applyAnthropicCache(system, msgs)
+  if (system) req.system = systemField
+
   if (body.temperature != null) req.temperature = body.temperature
   if (body.top_p != null) req.top_p = body.top_p
 
@@ -578,15 +576,29 @@ function anthropicNonStreamingToOpenAI(json: any, modelId: string): any {
       logprobs: null,
     }],
     usage: {
-      prompt_tokens: json.usage?.input_tokens ?? 0,
+      // Meme regle que dans le flux : on recompose le total d'entree, cache
+      // compris, et on expose la part relue pour la facturation.
+      prompt_tokens:
+        (json.usage?.input_tokens ?? 0) +
+        (json.usage?.cache_read_input_tokens ?? 0) +
+        (json.usage?.cache_creation_input_tokens ?? 0),
       completion_tokens: json.usage?.output_tokens ?? 0,
-      total_tokens: (json.usage?.input_tokens ?? 0) + (json.usage?.output_tokens ?? 0),
+      total_tokens:
+        (json.usage?.input_tokens ?? 0) +
+        (json.usage?.cache_read_input_tokens ?? 0) +
+        (json.usage?.cache_creation_input_tokens ?? 0) +
+        (json.usage?.output_tokens ?? 0),
+      prompt_cache_hit_tokens: json.usage?.cache_read_input_tokens ?? 0,
     },
   }
 }
 
 // Transforms Anthropic SSE → OpenAI SSE
-function anthropicStreamToOpenAI(stream: ReadableStream<Uint8Array>, modelId: string): ReadableStream<Uint8Array> {
+function anthropicStreamToOpenAI(
+  stream: ReadableStream<Uint8Array>,
+  modelId: string,
+  usage?: UpstreamUsage,
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -612,6 +624,23 @@ function anthropicStreamToOpenAI(stream: ReadableStream<Uint8Array>, modelId: st
         const emit = (delta: any, finishReason: string | null = null) => {
           const c: any = { id: msgId, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: modelId, choices: [{ index: 0, delta, finish_reason: finishReason, logprobs: null }] }
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(c)}\n\n`))
+        }
+
+        if (event.type === 'message_start' && usage) {
+          // `input_tokens` chez Anthropic ne compte QUE le reste non mis en
+          // cache. Le total d'entree est donc la somme des trois, et c'est ce
+          // total que la facturation doit voir : sans ca, un prefixe
+          // integralement relu afficherait une entree quasi nulle et la
+          // remise serait appliquee deux fois.
+          const u = event.message?.usage ?? {}
+          const fresh = u.input_tokens ?? 0
+          const read = u.cache_read_input_tokens ?? 0
+          const written = u.cache_creation_input_tokens ?? 0
+          usage.inputTokens = fresh + read + written
+          usage.cachedInputTokens = read
+          if (typeof u.output_tokens === 'number') usage.outputTokens = u.output_tokens
+        } else if (event.type === 'message_delta' && usage && event.usage?.output_tokens != null) {
+          usage.outputTokens = event.usage.output_tokens
         }
 
         if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
@@ -763,12 +792,17 @@ function geminiNonStreamingToOpenAI(json: any, modelId: string): any {
       prompt_tokens: json.usageMetadata?.promptTokenCount ?? 0,
       completion_tokens: json.usageMetadata?.candidatesTokenCount ?? 0,
       total_tokens: json.usageMetadata?.totalTokenCount ?? 0,
+      prompt_cache_hit_tokens: json.usageMetadata?.cachedContentTokenCount ?? 0,
     },
   }
 }
 
 // Transforms Gemini SSE → OpenAI SSE
-function geminiStreamToOpenAI(stream: ReadableStream<Uint8Array>, modelId: string): ReadableStream<Uint8Array> {
+function geminiStreamToOpenAI(
+  stream: ReadableStream<Uint8Array>,
+  modelId: string,
+  usage?: UpstreamUsage,
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -788,6 +822,18 @@ function geminiStreamToOpenAI(stream: ReadableStream<Uint8Array>, modelId: strin
 
         let event: any
         try { event = JSON.parse(dataStr) } catch { continue }
+
+        if (usage && event.usageMetadata) {
+          // Google ne facture pas separement la mise en cache implicite : le
+          // prefixe retrouve apparait dans `cachedContentTokenCount`, deja
+          // compris dans `promptTokenCount`.
+          const m = event.usageMetadata
+          if (typeof m.promptTokenCount === 'number') usage.inputTokens = m.promptTokenCount
+          if (typeof m.cachedContentTokenCount === 'number') {
+            usage.cachedInputTokens = m.cachedContentTokenCount
+          }
+          if (typeof m.candidatesTokenCount === 'number') usage.outputTokens = m.candidatesTokenCount
+        }
 
         const candidate = event.candidates?.[0]
         if (!candidate) continue
@@ -919,9 +965,12 @@ export async function POST(req: NextRequest) {
     let budgetNote: string | null = null
 
     if (Number.isFinite(remaining)) {
-      const inputTokens = estimateTokens(messages as { content?: string }[])
+      // Estimation par candidat : la remise de cache attendue depend du
+      // fournisseur, et compter plein tarif un prefixe deja en cache faisait
+      // declasser et tronquer des requetes largement finançables.
+      const billableInput = (m: AIModel) => expectedBillableInput(m.id, messages as any[])
       const affordableIndex = candidates.findIndex(
-        (c) => computeCreditsConsumed(c.id, inputTokens, MIN_USEFUL_OUTPUT) <= remaining
+        (c) => computeCreditsConsumed(c.id, billableInput(c), MIN_USEFUL_OUTPUT) <= remaining
       )
 
       // Aucun modele ne tient, meme le moins cher : on garde le moins cher et
@@ -934,7 +983,7 @@ export async function POST(req: NextRequest) {
       }
 
       const head = candidates[0]
-      const inputCost = computeCreditsConsumed(head.id, inputTokens, 0)
+      const inputCost = computeCreditsConsumed(head.id, billableInput(head), 0)
       const leftForOutput = Math.max(0, remaining - inputCost)
       const affordableOutput = Math.floor(leftForOutput / getCreditMultiplier(head.id))
       if (affordableOutput < maxTokens) {
@@ -993,7 +1042,21 @@ export async function POST(req: NextRequest) {
         return fetch(modelRoute.baseUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body: JSON.stringify({ ...rest, model: model.apiIdentifier, messages: msgs, stream, max_tokens: maxTokens }),
+          body: JSON.stringify({
+            ...rest,
+            model: model.apiIdentifier,
+            messages: msgs,
+            stream,
+            max_tokens: maxTokens,
+            // DeepSeek met son contexte en cache tout seul, cote serveur : il
+            // n'y a rien a demander, mais le decompte des jetons relus ne
+            // remonte qu'avec ce drapeau. Sans lui, on continuerait a
+            // facturer un contexte identique au plein tarif alors qu'il ne
+            // nous coute plus rien. Le morceau de fin qu'il ajoute (un
+            // `usage` avec un `choices` vide) est retire du flux par
+            // trackOutputStream, donc le client ne voit aucun changement.
+            ...(stream ? { stream_options: { include_usage: true } } : {}),
+          }),
         })
       }
       if (modelRoute.format === 'anthropic') {
@@ -1130,6 +1193,7 @@ export async function POST(req: NextRequest) {
 
     // Usage tracking context — credits are weighted by the model's cost multiplier
     const inputTokens = estimateTokens(messages)
+    const upstreamUsage: UpstreamUsage = {}
     const usageCtx: UsageContext = {
       userId,
       plan: userPlan,
@@ -1138,6 +1202,7 @@ export async function POST(req: NextRequest) {
       preferred: (preferredModel as string) || null,
       complexity,
       downgraded,
+      upstream: upstreamUsage,
     }
 
     const responseHeaders: Record<string, string> = {
@@ -1162,9 +1227,11 @@ export async function POST(req: NextRequest) {
     // Helper: estimate output tokens from a non-streamed OpenAI-format completion
     const recordFromJson = async (json: any) => {
       const content = json?.choices?.[0]?.message?.content
+      const u = json?.usage
+      readOpenAIUsage(u, upstreamUsage)
       const outTokens =
-        typeof json?.usage?.completion_tokens === 'number'
-          ? json.usage.completion_tokens
+        typeof u?.completion_tokens === 'number'
+          ? u.completion_tokens
           : Math.ceil((typeof content === 'string' ? content.length : 0) / 4)
       await recordUsage(usageCtx, outTokens)
     }
@@ -1189,7 +1256,7 @@ export async function POST(req: NextRequest) {
     // For Anthropic: convert SSE or JSON to OpenAI format
     if (route.format === 'anthropic') {
       if (stream) {
-        const converted = anthropicStreamToOpenAI(upstreamResp.body!, selectedModel.id)
+        const converted = anthropicStreamToOpenAI(upstreamResp.body!, selectedModel.id, upstreamUsage)
         return new NextResponse(trackOutputStream(converted, usageCtx), { status: 200, headers: responseHeaders })
       } else {
         const json = await upstreamResp.json()
@@ -1201,7 +1268,7 @@ export async function POST(req: NextRequest) {
 
     // For Gemini: convert SSE or JSON to OpenAI format
     if (stream) {
-      const converted = geminiStreamToOpenAI(upstreamResp.body!, selectedModel.id)
+      const converted = geminiStreamToOpenAI(upstreamResp.body!, selectedModel.id, upstreamUsage)
       return new NextResponse(trackOutputStream(converted, usageCtx), { status: 200, headers: responseHeaders })
     } else {
       const json = await upstreamResp.json()

@@ -187,3 +187,31 @@ describe('expectedBillableInput', () => {
     expect(expectedBillableInput('claude-haiku', msgs)).toBeGreaterThan(0)
   })
 })
+
+describe('estimateTokens', () => {
+  it('mesure le texte des messages multimodaux', () => {
+    // Avant, `content.length` valait le nombre de parts : une capture d'ecran
+    // passait pour un jeton et le controle de solde la laissait filer.
+    const n = estimateTokens([
+      { content: [{ type: 'text', text: 'x'.repeat(400) }] },
+    ] as any)
+    expect(n).toBe(100)
+  })
+
+  it('compte une image au forfait, pas a la longueur du base64', () => {
+    const base64 = 'data:image/png;base64,' + 'A'.repeat(200_000)
+    const n = estimateTokens([
+      { content: [{ type: 'image_url', image_url: { url: base64 } }] },
+    ] as any)
+    // Ni ~1 jeton (l'ancien bug), ni 50 000 (la longueur du base64).
+    expect(n).toBe(1600)
+  })
+
+  it('reste inchange sur une chaine simple', () => {
+    expect(estimateTokens([{ content: 'x'.repeat(40) }] as any)).toBe(10)
+  })
+
+  it('tolere un contenu absent', () => {
+    expect(estimateTokens([{}, { content: null }, { content: 42 }] as any)).toBe(0)
+  })
+})

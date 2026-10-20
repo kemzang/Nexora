@@ -659,10 +659,47 @@ export function getFailoverCandidates(
   return { candidates: [first, ...rest], complexity, downgraded }
 }
 
-export function estimateTokens(messages: { content?: string }[]): number {
+/**
+ * Cout d'une image en jetons, forfaitaire.
+ *
+ * C'est l'ordre de grandeur d'un plein cadre chez Anthropic. Mesurer la
+ * longueur du base64 n'a aucun sens : les fournisseurs facturent au pave de
+ * pixels, pas au caractere, et quatre caracteres par jeton donnerait des
+ * centaines de milliers de jetons pour une seule capture d'ecran.
+ */
+const IMAGE_TOKENS = 1600
+
+/**
+ * Estimation a quatre caracteres par jeton. Grossiere mais suffisante : elle
+ * ne sert qu'au controle de solde fait avant l'appel et a la garde de taille
+ * de contexte. Le decompte reel vient du fournisseur.
+ *
+ * Un message multimodal a un `content` en tableau de parts. `content.length`
+ * y vaut le NOMBRE de parts : une capture d'ecran etait donc estimee a un
+ * jeton, et une conversation pleine d'images passait le controle de solde
+ * comme si elle etait vide.
+ */
+export function estimateTokens(messages: { content?: unknown }[]): number {
   let total = 0
   for (const msg of messages) {
-    total += Math.ceil((msg.content?.length || 0) / 4)
+    const content = msg?.content
+    if (typeof content === 'string') {
+      total += Math.ceil(content.length / 4)
+      continue
+    }
+    if (!Array.isArray(content)) continue
+    for (const part of content) {
+      if (typeof part === 'string') {
+        total += Math.ceil(part.length / 4)
+      } else if (part?.type === 'text' && typeof part.text === 'string') {
+        total += Math.ceil(part.text.length / 4)
+      } else if (part?.type === 'image' || part?.type === 'image_url') {
+        total += IMAGE_TOKENS
+      } else if (part && typeof part === 'object') {
+        // Resultat d'outil ou bloc inconnu : on mesure sa forme serialisee.
+        total += Math.ceil(JSON.stringify(part).length / 4)
+      }
+    }
   }
   return total
 }

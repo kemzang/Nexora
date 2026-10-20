@@ -1156,7 +1156,13 @@ export async function POST(req: NextRequest) {
         // rate limit exceeded" et on ne sait pas CE QUE dit le fournisseur.
         return NextResponse.json(
           {
-            error: `Tous les modèles disponibles sont saturés (essayés : ${attempted.join(', ')}). Dernier retour de ${lastFailure.modelId} : ${lastFailure.text.slice(0, 200)}`,
+            // Le produit parle anglais ; ce message etait reste en francais.
+            error: `All available models are busy right now (tried: ${attempted.join(', ')}). Please try again in a moment.`,
+            // Distingue la saturation passagere — qui vaut la peine d'etre
+            // reessayee — du quota mensuel epuise, qui ne bougera pas avant la
+            // remise a zero. Sans ce code, le client reessayait neuf fois une
+            // erreur definitive.
+            code: 'UPSTREAM_SATURATED',
             retry_after: 60,
             models_attempted: attempted,
             details: lastFailure.text,

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       contact_role: body.contactRole ? String(body.contactRole).trim().slice(0, 200) : null,
       work_email: String(body.workEmail).trim().toLowerCase().slice(0, 300),
       phone: body.phone ? String(body.phone).trim().slice(0, 50) : null,
-      developers: Number.isFinite(+body.developers) ? Math.max(0, Math.min(100000, +body.developers)) : null,
+      developers: Number.isFinite(+body.developers) ? Math.max(1, Math.min(100000, Math.floor(+body.developers))) : null,
       ides: keep(body.ides, IDES),
       timeline: body.timeline || null,
       requirements: keep(body.requirements, REQUIREMENTS),

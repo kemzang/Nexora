@@ -2,6 +2,18 @@ import { resend, FROM_EMAIL } from '@/lib/resend'
 import { STARTUP_PROGRAM, type StartupEligibility } from '@/lib/leads'
 
 /** Boite ou arrivent les demandes commerciales. */
+import { findCountry } from './countries'
+
+/**
+ * Le formulaire enregistre le code ISO : l'e-mail doit nommer le pays, pas
+ * en afficher l'abreviation. Les demandes d'avant la liste fermee portent
+ * deja un nom en clair, on les laisse telles quelles.
+ */
+function countryLabel(value: string | null | undefined): string {
+  if (!value) return '—'
+  return findCountry(value.toUpperCase())?.name ?? value
+}
+
 const SALES_INBOX = process.env.SALES_INBOX_EMAIL || 'contact@nexoracoding.com'
 
 const esc = (s: unknown) =>
@@ -34,7 +46,7 @@ export async function notifyEnterpriseLead(lead: {
       row('Company', lead.company_name),
       row('Website', lead.company_website),
       row('Size', lead.company_size),
-      row('Country', lead.country),
+      row('Country', countryLabel(lead.country)),
       row('Contact', `${lead.contact_name}${lead.contact_role ? ` — ${lead.contact_role}` : ''}`),
       row('Email', lead.work_email),
       row('Email matches website', lead.domainMatches ? 'yes' : 'NO — verify'),
@@ -80,7 +92,7 @@ export async function notifyStartupApplication(app: {
     [
       row('Company', app.company_name),
       row('Website', app.company_website),
-      row('Country', app.country),
+      row('Country', countryLabel(app.country)),
       row('Founded', app.founded_year),
       row('Team size', app.team_size),
       row('Funding', `${app.funding_stage}${app.funding_amount ? ` — ${app.funding_amount}` : ''}`),

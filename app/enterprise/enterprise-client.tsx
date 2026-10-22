@@ -5,8 +5,9 @@ import { CheckCircle, Loader2, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
 import {
-  TextField, SelectField, TextArea, CheckGroup, Honeypot,
+  TextField, SelectField, TextArea, CheckGroup, Honeypot, PhoneField,
 } from '@/components/patterns/lead-form-fields'
+import { COUNTRIES, checkPhone, toE164 } from '@/lib/countries'
 
 const SIZES = [
   { value: '1-10', label: '1–10 employees' },
@@ -26,12 +27,39 @@ const IDE_OPTIONS = [
   { value: 'jetbrains', label: 'JetBrains IDEs' },
   { value: 'cli', label: 'Command line' },
 ]
+/*
+ * Chaque exigence dit ce qu'elle engage concretement.
+ *
+ * « SSO / SAML » ou « Data residency » sont du jargon de decideur technique.
+ * Quelqu'un qui remplit le formulaire sans savoir ce qu'ils recouvrent coche
+ * au hasard ou ne coche rien — et la demande arrive moins exploitable.
+ */
 const REQ_OPTIONS = [
-  { value: 'sso', label: 'SSO / SAML' },
-  { value: 'sla', label: 'Contractual SLA' },
-  { value: 'invoicing', label: 'Invoice & PO billing' },
-  { value: 'residency', label: 'Data residency' },
-  { value: 'onprem', label: 'Self-hosted' },
+  {
+    value: 'sso',
+    label: 'SSO / SAML',
+    desc: 'Your team signs in with your company identity provider (Okta, Entra ID, Google Workspace) instead of a separate Nexora password. New hires get access automatically, departures lose it.',
+  },
+  {
+    value: 'sla',
+    label: 'Contractual SLA',
+    desc: 'A written uptime and support-response commitment, with agreed consequences if we miss it.',
+  },
+  {
+    value: 'invoicing',
+    label: 'Invoice & PO billing',
+    desc: 'Pay by bank transfer against an invoice and a purchase order, instead of a card charged monthly.',
+  },
+  {
+    value: 'residency',
+    label: 'Data residency',
+    desc: 'Your requests are processed in a region you choose — typically the EU — rather than wherever capacity is available.',
+  },
+  {
+    value: 'onprem',
+    label: 'Self-hosted',
+    desc: 'Nexora runs inside your own infrastructure, so no code or prompt leaves your network.',
+  },
 ]
 
 export function EnterpriseForm() {
@@ -47,18 +75,35 @@ export function EnterpriseForm() {
   const [error, setError] = useState<string | null>(null)
 
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
+
+  // Le numero n'est verifie qu'une fois le pays choisi : sans lui on ne sait
+  // ni quel indicatif attendre, ni combien de chiffres.
+  const phone = f.country ? checkPhone(f.phone, f.country) : { ok: true as const }
+  const phoneError = phone.ok ? null : phone.reason
   const toggle = (list: string[], setList: (v: string[]) => void) => (v: string) =>
     setList(list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (phoneError) {
+      setError(phoneError)
+      return
+    }
     setState('sending')
     try {
       const res = await fetch('/api/leads/enterprise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...f, ides, requirements: reqs, website_url: trap }),
+        body: JSON.stringify({
+          ...f,
+          // Enregistre au format international : un numero sans indicatif
+          // n'est rappelable que depuis le pays d'origine.
+          phone: toE164(f.phone, f.country),
+          ides,
+          requirements: reqs,
+          website_url: trap,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -101,8 +146,12 @@ export function EnterpriseForm() {
             onChange={(e) => set('companyWebsite')(e.target.value)} placeholder="acme.com" />
           <SelectField label="Company size" required value={f.companySize}
             onChange={set('companySize')} options={SIZES} />
-          <TextField label="Country" required value={f.country}
-            onChange={(e) => set('country')(e.target.value)} placeholder="Germany" />
+          {/* Liste fermee : en champ libre on recevait « cameroun »,
+              « Cameroun » et « CMR » pour un meme endroit. On stocke le code
+              ISO, jamais le nom saisi. */}
+          <SelectField label="Country" required value={f.country}
+            onChange={set('country')}
+            options={COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag}  ${c.name}` }))} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -113,13 +162,20 @@ export function EnterpriseForm() {
           <TextField label="Work email" type="email" required value={f.workEmail}
             hint="Your company address — personal mailboxes are not accepted."
             onChange={(e) => set('workEmail')(e.target.value)} placeholder="you@acme.com" />
-          <TextField label="Phone" value={f.phone}
-            onChange={(e) => set('phone')(e.target.value)} />
+          <PhoneField country={f.country} value={f.phone}
+            onChange={set('phone')} error={phoneError} />
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
-          <TextField label="Developers to equip" type="number" min={1} value={f.developers}
-            onChange={(e) => set('developers')(e.target.value)} placeholder="25" />
+          {/* `min` n'est qu'une indication : le navigateur laisse taper -87,
+              et les fleches du champ descendent sous zero. On filtre donc la
+              saisie plutot que de faire confiance a l'attribut. */}
+          <TextField label="Developers to equip" type="number" min={1} step={1} value={f.developers}
+            onChange={(e) => {
+              const n = e.target.value.replace(/[^0-9]/g, '')
+              set('developers')(n.replace(/^0+(?=\d)/, ''))
+            }}
+            placeholder="25" />
           <SelectField label="Timeline" value={f.timeline}
             onChange={set('timeline')} options={TIMELINE} />
         </div>

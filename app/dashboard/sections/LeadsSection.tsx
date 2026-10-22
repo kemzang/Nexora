@@ -6,6 +6,15 @@ import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
 import { CreateTeamForm } from './CreateTeamForm'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { findCountry } from '@/lib/countries'
+
+/** Code ISO vers nom. Laisse passer ce qui n'en est pas un (saisies d'avant). */
+function countryLabel(value: string | null): string {
+  if (!value) return ''
+  const c = findCountry(value.toUpperCase())
+  return c ? `${c.flag} ${c.name}` : value
+}
 
 /**
  * Revue des demandes Enterprise et des candidatures start-up.
@@ -70,6 +79,9 @@ export default function LeadsSection() {
   // La corbeille n'est pas un onglet : c'est une bascule, pour qu'on la
   // consulte sans jamais la confondre avec la revue courante.
   const [showArchived, setShowArchived] = useState(false)
+  // Demande d'archivage en attente de confirmation. On garde l'intitule pour
+  // que la modale nomme ce qu'on s'apprete a ecarter.
+  const [pendingArchive, setPendingArchive] = useState<{ id: string; label: string } | null>(null)
   const [denied, setDenied] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   // Leads ayant deja une organisation : le bouton laisse place au nom de
@@ -133,11 +145,7 @@ export default function LeadsSection() {
     table: 'enterprise' | 'startup',
     id: string,
     archived: boolean,
-    label: string,
   ) {
-    if (archived && !window.confirm(`Archive "${label}"? You can restore it from the archive.`)) {
-      return
-    }
     setBusy(id)
     const t = await token()
     await fetch('/api/admin/leads', {
@@ -245,7 +253,10 @@ export default function LeadsSection() {
                   {l.company_website}<ExternalLink className="w-3 h-3" />
                 </a>} />
               <Line label="Size" value={l.company_size} />
-              <Line label="Country" value={l.country} />
+              {/* La base stocke le code ISO ; on affiche le nom, sinon on
+                  lit « CM » au lieu de « Cameroon ». Les demandes d'avant la
+                  liste fermee portent deja un nom : on les laisse passer. */}
+              <Line label="Country" value={countryLabel(l.country)} />
               <Line label="Developers" value={l.developers} />
               <Line label="Timeline" value={l.timeline} />
               <Line label="Phone" value={l.phone} />
@@ -268,7 +279,10 @@ export default function LeadsSection() {
               <div className="flex-1" />
               <Button variant="ghost" size="sm" disabled={busy === l.id}
                 className="text-muted-foreground hover:text-foreground"
-                onClick={() => void setArchived('enterprise', l.id, !showArchived, l.company_name)}>
+                onClick={() => {
+                  if (showArchived) void setArchived('enterprise', l.id, false)
+                  else setPendingArchive({ id: l.id, label: l.company_name })
+                }}>
                 {showArchived ? (
                   <><RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restore</>
                 ) : (
@@ -314,7 +328,7 @@ export default function LeadsSection() {
                    className="inline-flex items-center gap-1 underline underline-offset-2">
                   {a.company_website}<ExternalLink className="w-3 h-3" />
                 </a>} />
-              <Line label="Country" value={a.country} />
+              <Line label="Country" value={countryLabel(a.country)} />
               <Line label="Founded" value={a.founded_year} />
               <Line label="Team" value={`${a.team_size} developers`} />
               <Line label="Funding" value={`${a.funding_stage}${a.funding_amount ? ` — ${a.funding_amount}` : ''}`} />
@@ -342,6 +356,22 @@ export default function LeadsSection() {
           </GlassCard>
         ))}
       </div>
+    <ConfirmDialog
+      open={!!pendingArchive}
+      title="Archive this request?"
+      description={
+        pendingArchive
+          ? `"${pendingArchive.label}" will be hidden from the list. Nothing is deleted — you can bring it back from the archive at any time.`
+          : undefined
+      }
+      confirmLabel="Archive"
+      onCancel={() => setPendingArchive(null)}
+      onConfirm={() => {
+        const target = pendingArchive
+        setPendingArchive(null)
+        if (target) void setArchived('enterprise', target.id, true)
+      }}
+    />
     </div>
   )
 }

@@ -48,6 +48,14 @@ export function CreateTeamForm({
   const [seats, setSeats] = useState(String(lead.developers || 5))
   const [creditsPerSeat, setCreditsPerSeat] = useState('40000000')
   const [ssoDomain, setSsoDomain] = useState(domainOf(lead.company_website))
+  // Un an par defaut : c'est la duree d'un contrat entreprise ordinaire, et
+  // une valeur proposee vaut mieux qu'un champ vide qu'on oublie de remplir.
+  // Elle reste modifiable, et peut etre effacee pour une duree indeterminee.
+  const [contractEndsAt, setContractEndsAt] = useState(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + 1)
+    return d.toISOString().slice(0, 10)
+  })
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +79,7 @@ export function CreateTeamForm({
           // Le domaine SSO est facultatif : sans IdP configure, il ne sert
           // qu'au rattachement automatique, qu'on peut vouloir eviter.
           ssoDomains: ssoDomain ? [ssoDomain] : [],
+          contractEndsAt: contractEndsAt || null,
           leadId: lead.id,
         }),
       })
@@ -159,7 +168,20 @@ export function CreateTeamForm({
             onChange={(e) => setCreditsPerSeat(e.target.value)}
           />
         </label>
-        <label className="block sm:col-span-2">
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground">
+            Contract ends — the team loses the shared pool after this date.
+            Leave empty for no end date.
+          </span>
+          <input
+            type="date"
+            className={field}
+            value={contractEndsAt}
+            min={new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)}
+            onChange={(e) => setContractEndsAt(e.target.value)}
+          />
+        </label>
+        <label className="block">
           <span className="text-[11px] text-muted-foreground">
             SSO domain — anyone signing up with this domain joins the team
             automatically. Leave empty to invite people one by one.

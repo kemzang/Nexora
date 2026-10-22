@@ -8,6 +8,43 @@ import { Button } from '@/components/ui/button'
 import { CreateTeamForm } from './CreateTeamForm'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { findCountry } from '@/lib/countries'
+import { contractLabel, contractState } from '@/lib/contractStatus'
+
+/**
+ * Etat de l'equipe sous une demande gagnee.
+ *
+ * L'echeance ne sert a rien si on ne la decouvre qu'une fois depassee : le
+ * client appelle pour dire que son equipe n'a plus acces, et on apprend
+ * qu'on avait un mois pour le relancer. Le rappel est donc ici, dans la
+ * liste qu'on ouvre tous les jours, et pas seulement dans une colonne de la
+ * base.
+ */
+function ContractLine({
+  team,
+}: {
+  team: { name: string; contractEndsAt: string | null }
+}) {
+  const state = contractState(team.contractEndsAt)
+  const label = contractLabel(state)
+  const tone =
+    state.kind === 'expired'
+      ? 'text-red-400'
+      : state.kind === 'ending'
+        ? 'text-amber-400'
+        : 'text-muted-foreground'
+  return (
+    <div className="mt-3 text-xs">
+      <p className="text-muted-foreground">
+        Team already created: <span className="text-foreground">{team.name}</span>
+      </p>
+      {label ? (
+        <p className={`mt-0.5 ${tone}`}>{label}</p>
+      ) : (
+        <p className="mt-0.5 text-muted-foreground">No contract end date</p>
+      )}
+    </div>
+  )
+}
 
 /** Code ISO vers nom. Laisse passer ce qui n'en est pas un (saisies d'avant). */
 function countryLabel(value: string | null): string {
@@ -86,7 +123,9 @@ export default function LeadsSection() {
   const [busy, setBusy] = useState<string | null>(null)
   // Leads ayant deja une organisation : le bouton laisse place au nom de
   // l'equipe, sinon on en creerait une seconde par inadvertance.
-  const [teamByLead, setTeamByLead] = useState<Record<string, string>>({})
+  const [teamByLead, setTeamByLead] = useState<
+    Record<string, { name: string; contractEndsAt: string | null }>
+  >({})
 
   const token = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -112,9 +151,11 @@ export default function LeadsSection() {
     })
     if (orgsRes.ok) {
       const { organizations } = await orgsRes.json()
-      const map: Record<string, string> = {}
+      const map: Record<string, { name: string; contractEndsAt: string | null }> = {}
       for (const o of organizations ?? []) {
-        if (o.lead_id) map[o.lead_id] = o.name
+        if (o.lead_id) {
+          map[o.lead_id] = { name: o.name, contractEndsAt: o.contract_ends_at ?? null }
+        }
       }
       setTeamByLead(map)
     }
@@ -294,9 +335,7 @@ export default function LeadsSection() {
             {/* La creation d'equipe n'apparait qu'une fois l'affaire gagnee :
                 une organisation sans contrat signe n'a pas lieu d'etre. */}
             {teamByLead[l.id] ? (
-              <p className="text-xs text-muted-foreground mt-3">
-                Team already created: <span className="text-foreground">{teamByLead[l.id]}</span>
-              </p>
+              <ContractLine team={teamByLead[l.id]} />
             ) : l.status === 'won' ? (
               <CreateTeamForm lead={l} token={token} onCreated={() => void load()} />
             ) : null}

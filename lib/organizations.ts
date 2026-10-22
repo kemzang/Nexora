@@ -22,6 +22,40 @@ export interface UserOrg {
   seats: number
   creditsPerSeat: number
   status: 'active' | 'suspended' | 'cancelled'
+  /** Fin du contrat. `null` = sans echeance. */
+  contractEndsAt: string | null
+}
+
+/**
+ * Une organisation dont le contrat est echu ne donne plus acces au pot
+ * commun — ses membres retombent sur leur plan personnel, comme si elle
+ * etait suspendue.
+ *
+ * L'echeance est verifiee a la lecture plutot que par une tache planifiee :
+ * une tache qui ne tourne pas laisse l'acces ouvert sans que personne le
+ * sache, alors qu'un calcul fait sur le chemin critique ne peut pas etre
+ * oublie. Le cout est d'une comparaison de dates par requete.
+ */
+export function isOrgActive(
+  org: Pick<UserOrg, 'status' | 'contractEndsAt'>,
+  now = new Date(),
+): boolean {
+  if (org.status !== 'active') return false
+  if (!org.contractEndsAt) return true
+  const end = new Date(org.contractEndsAt)
+  // Une date illisible n'interdit pas l'acces. Deux raisons.
+  //
+  // La colonne est un timestamptz : Postgres refuserait une valeur abimee,
+  // donc ce cas ne devrait pas exister. S'il se produit quand meme, couper
+  // une equipe qui paie a cause d'une donnee corrompue est un degat bien
+  // plus visible qu'un jour d'acces offert a tort.
+  //
+  // Surtout, l'affichage cote administration traite deja une date illisible
+  // comme « pas d'echeance ». Couper ici donnerait un tableau de bord qui
+  // n'annonce rien d'anormal pendant que l'equipe perd son acces — le pire
+  // des deux mondes pour diagnostiquer.
+  if (Number.isNaN(end.getTime())) return true
+  return end > now
 }
 
 export function serviceClient(): SupabaseClient {
@@ -69,7 +103,7 @@ export async function getUserOrg(
   const { data, error } = await db
     .from('organization_members')
     .select(
-      'role, organizations!inner(id, name, slug, seats, credits_per_seat, status)',
+      'role, organizations!inner(id, name, slug, seats, credits_per_seat, status, contract_ends_at)',
     )
     .eq('user_id', userId)
     .maybeSingle()
@@ -82,10 +116,11 @@ export async function getUserOrg(
     seats: number
     credits_per_seat: number
     status: UserOrg['status']
+    contract_ends_at: string | null
   }
-  if (!org || org.status !== 'active') return null
+  if (!org) return null
 
-  return {
+  const resolved: UserOrg = {
     orgId: org.id,
     name: org.name,
     slug: org.slug,
@@ -93,7 +128,10 @@ export async function getUserOrg(
     seats: org.seats,
     creditsPerSeat: org.credits_per_seat,
     status: org.status,
+    contractEndsAt: org.contract_ends_at ?? null,
   }
+
+  return isOrgActive(resolved) ? resolved : null
 }
 
 /** Plafond du pot commun : sieges payes x credits par siege. */

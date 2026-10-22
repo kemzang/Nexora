@@ -58,6 +58,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (event === 'SIGNED_OUT') {
           setUser(null)
           setToken(null)
+        } else if (session?.access_token) {
+          /*
+           * TOKEN_REFRESHED, et tout evenement qui apporte une session.
+           *
+           * Les jetons Supabase expirent au bout d'une heure. Le client les
+           * renouvelle tout seul en arriere-plan, mais cet ecouteur ne
+           * traitait que la connexion et la deconnexion : le contexte gardait
+           * donc l'ancien jeton, desormais expire, jusqu'au rechargement de
+           * la page.
+           *
+           * Toute section qui s'en servait pour appeler notre API recevait
+           * alors un 401 — « Unauthorized » sur les factures, le
+           * telechargement du PDF en echec, et la meme chose sur
+           * l'abonnement et l'historique. Le symptome n'apparaissait qu'apres
+           * une heure d'onglet ouvert, ce qui le rendait difficile a
+           * reproduire.
+           */
+          setToken(session.access_token)
         }
       }
     )

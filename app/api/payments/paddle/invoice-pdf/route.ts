@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const apiKey = process.env.PADDLE_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: 'Paddle non configuré (PADDLE_API_KEY manquant)' }, { status: 503 })
+      return NextResponse.json({ error: 'Billing is not configured' }, { status: 503 })
     }
 
     const authHeader = req.headers.get('authorization')
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const invoiceId = req.nextUrl.searchParams.get('id')
-    if (!invoiceId) return NextResponse.json({ error: 'Paramètre "id" manquant' }, { status: 400 })
+    if (!invoiceId) return NextResponse.json({ error: 'Missing invoice id' }, { status: 400 })
 
     const admin = makeClient()
     // La condition user_id=user.id est ce qui empêche un utilisateur de lire
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       .maybeSingle()
 
     if (!invoice || !invoice.stripe_payment_intent_id) {
-      return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 })
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
     let upstreamResp: Response
@@ -56,24 +56,24 @@ export async function GET(req: NextRequest) {
       })
     } catch (err) {
       console.error('[paddle invoice-pdf] upstream fetch failed:', err)
-      return NextResponse.json({ error: 'Impossible de contacter Paddle' }, { status: 502 })
+      return NextResponse.json({ error: 'Could not reach the billing provider' }, { status: 502 })
     }
 
     if (!upstreamResp.ok) {
       const detail = await upstreamResp.text().catch(() => '')
       console.error(`[paddle invoice-pdf] upstream error ${upstreamResp.status}:`, detail)
-      return NextResponse.json({ error: `Erreur Paddle (${upstreamResp.status})` }, { status: 502 })
+      return NextResponse.json({ error: `Billing provider error (${upstreamResp.status})` }, { status: 502 })
     }
 
     const json = await upstreamResp.json()
     const url = json?.data?.url
     if (!url) {
-      return NextResponse.json({ error: 'Réponse invalide de Paddle' }, { status: 502 })
+      return NextResponse.json({ error: 'Unexpected response from the billing provider' }, { status: 502 })
     }
 
     return NextResponse.json({ url })
   } catch (err) {
     console.error('[paddle invoice-pdf] error:', err)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

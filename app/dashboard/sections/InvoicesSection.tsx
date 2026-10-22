@@ -170,14 +170,20 @@ export default function InvoicesSection() {
     setDownloadError(null)
     setDownloadingId(invoiceId)
     try {
+      // Le jeton est relu a l'appel plutot que pris dans le contexte : s'il
+      // vient d'etre renouvele, c'est la session qui fait foi. Le contexte
+      // suit desormais les renouvellements, mais dependre de deux sources
+      // d'accord pour une requete authentifiee est inutilement fragile.
+      const { data: { session } } = await supabase.auth.getSession()
+      const fresh = session?.access_token ?? token
       const res = await fetch(`/api/payments/paddle/invoice-pdf?id=${invoiceId}`, {
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { ...(fresh ? { Authorization: `Bearer ${fresh}` } : {}) },
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.url) throw new Error(data.error || 'PDF indisponible')
+      if (!res.ok || !data.url) throw new Error(data.error || 'Could not open the invoice PDF')
       window.open(data.url, '_blank', 'noopener,noreferrer')
     } catch (err) {
-      setDownloadError(err instanceof Error ? err.message : 'PDF indisponible')
+      setDownloadError(err instanceof Error ? err.message : 'Could not open the invoice PDF')
     } finally {
       setDownloadingId(null)
     }

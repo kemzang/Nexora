@@ -19,7 +19,7 @@ export default defineConfig({
     alias: { '@': resolve(__dirname, '.') },
   },
   test: {
-    include: ['lib/**/*.test.ts', 'app/**/*.test.ts'],
+    include: ['lib/**/*.test.ts', 'app/**/*.test.ts', 'hooks/**/*.test.ts'],
     exclude: ['**/node_modules/**', '.claude/**', 'tests/**'],
   },
 })

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { emailSchema } from '@/lib/email'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +16,7 @@ import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
-const schema = z.object({ email: z.string().email('Email invalide') })
+const schema = z.object({ email: emailSchema() })
 type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {

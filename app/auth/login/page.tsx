@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { emailSchema } from '@/lib/email'
 import { PasswordInput } from '@/components/ui/password-input'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
@@ -19,7 +20,7 @@ import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
 const loginSchema = z.object({
-  email: z.string().email('Email invalide'),
+  email: emailSchema(),
   password: z.string().min(6, 'Password must be at least 6 characters')
 })
 

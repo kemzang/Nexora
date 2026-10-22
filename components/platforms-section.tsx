@@ -127,12 +127,16 @@ const JETBRAINS_IDES = [
 const VSCODE_URL = 'https://marketplace.visualstudio.com/items?itemName=nexoracoding.nexora-ai'
 const JETBRAINS_URL = 'https://plugins.jetbrains.com/plugin/34609-nexora'
 
-// Ces deux places de marche ne servent pas encore l'extension : les liens
-// renvoyaient un 404 a quiconque cliquait « Installer sur VS Code ». Promettre
-// trois installations dont deux mènent a une page d'erreur est pire que d'en
-// annoncer une seule. Passer a `true` le jour de la publication.
+// Promettre une installation qui mene a une page d'erreur est pire que de
+// l'annoncer « bientot » : ces drapeaux ne passent a `true` que lorsque la
+// place de marche sert reellement le client.
+//
+// Attention pour JetBrains : « approuve » ne veut pas dire « visible ». Un
+// plugin approuve reste masque tant qu'il n'a pas ete publie depuis la
+// fiche, et la page repond alors 404 aux visiteurs. Le plugin a ete publie
+// le 22 octobre 2026, apres approbation de la 1.0.75-253.
 const VSCODE_PUBLISHED = true
-const JETBRAINS_PUBLISHED = false
+const JETBRAINS_PUBLISHED = true
 const CLI_INSTALL = 'npm install -g @nexoracoding/cli'
 
 export function PlatformsSection({ lang }: { lang: Lang }) {

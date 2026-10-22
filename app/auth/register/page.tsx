@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { emailSchema } from '@/lib/email'
 import { PasswordInput } from '@/components/ui/password-input'
 import { PasswordRequirements } from '@/components/ui/password-requirements'
 import { passwordSchema } from '@/lib/password'
@@ -21,7 +22,7 @@ import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
 const registerSchema = z.object({
-  email: z.string().email('Email invalide'),
+  email: emailSchema(),
   password: passwordSchema(),
   confirmPassword: z.string(),
   firstName: z.string().min(2, 'First name must be at least 2 characters'),

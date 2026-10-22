@@ -11,8 +11,6 @@ export const metadata: Metadata = {
   description: 'Install Nexora in VS Code, IntelliJ or the command line, and discover AI chat, autocomplete and Agent mode.',
 }
 
-const GITHUB_URL = 'https://github.com/kemzang-Bryan/Nexora'
-
 function CodeBlock({ code }: { code: string }) {
   return (
     <pre className="bg-white/[0.04] border border-border/60 rounded-xl p-3.5 overflow-x-auto text-xs font-mono text-foreground/90 my-3">
@@ -50,14 +48,6 @@ function InstallCard({
         </>
       )}
       <div className="flex-1" />
-      <a
-        href={GITHUB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-xs text-foreground/70 hover:text-foreground transition-colors mt-3"
-      >
-        Source code <ExternalLink className="w-3 h-3" />
-      </a>
     </div>
   )
 }
@@ -132,8 +122,11 @@ export default function DocsIndexPage() {
           icon={Terminal}
           title="CLI"
           desc="The Nexora agent on the command line — handy for scripts, CI/CD or headless use."
-          code={`curl -fsSL https://raw.githubusercontent.com/kemzang-Bryan/Nexora/main/extensions/cli/scripts/install.sh | bash`}
-          codeNote="macOS / Linux — or npm i -g @nexoracoding/cli (Node.js 20+)"
+          // Le script d'installation vivait dans un depot prive : la commande
+          // repondait 404 a tout le monde. npm sert le paquet publiquement et
+          // marche sur les trois systemes, donc c'est lui la voie principale.
+          code={`npm install -g @nexoracoding/cli`}
+          codeNote="Requires Node.js 20+ — then run nexora login"
         />
       </div>
 
@@ -240,10 +233,10 @@ export default function DocsIndexPage() {
           <ScrollText className="w-4 h-4 text-foreground/70 shrink-0" />
           <span className="text-sm font-medium">Changelog</span>
         </Link>
-        <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
+        <Link href="/contact" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
           <ExternalLink className="w-4 h-4 text-foreground/70 shrink-0" />
-          <span className="text-sm font-medium">Source code (GitHub)</span>
-        </a>
+          <span className="text-sm font-medium">Contact support</span>
+        </Link>
       </div>
     </article>
   )

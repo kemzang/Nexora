@@ -12,8 +12,6 @@ export const metadata: Metadata = {
   description: 'Contact the Nexora team with a general question or a technical issue.',
 }
 
-const GITHUB_ISSUES_URL = 'https://github.com/kemzang-Bryan/Nexora/issues'
-
 const CHANNELS = [
   {
     icon: LifeBuoy,
@@ -84,16 +82,18 @@ export default function ContactPage() {
               <p className="text-xs text-muted-foreground">Installation, guides and product FAQ</p>
             </div>
           </Link>
+          {/* Cette carte renvoyait vers les tickets d'un depot prive : tout
+              le monde tombait sur un 404. Le depot n'est pas public, donc il
+              n'y a pas de lien a reparer — l'adresse de support est le seul
+              canal qui existe vraiment pour signaler un bogue. */}
           <a
-            href={GITHUB_ISSUES_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:support@nexoracoding.com?subject=Bug%20report"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors"
           >
             <GitBranch className="w-4 h-4 text-foreground/70 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium flex items-center gap-1.5">Report a bug on GitHub <ExternalLink className="w-3 h-3 opacity-60" /></p>
-              <p className="text-xs text-muted-foreground">For detailed technical bug reports</p>
+              <p className="text-sm font-medium">Report a bug</p>
+              <p className="text-xs text-muted-foreground">Send us the details and we will look into it</p>
             </div>
           </a>
         </div>

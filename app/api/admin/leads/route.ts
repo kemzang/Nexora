@@ -38,9 +38,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   const db = service()
+  // `?archived=1` montre la corbeille. Par defaut on ne sert que l'actif :
+  // les archives ne doivent pas encombrer la revue quotidienne, mais elles
+  // restent consultables — c'est tout l'interet de ne pas les supprimer.
+  const showArchived = req.nextUrl.searchParams.get('archived') === '1'
+  const scope = (q: any) => (showArchived ? q.not('archived_at', 'is', null) : q.is('archived_at', null))
   const [ent, start] = await Promise.all([
-    db.from('enterprise_leads').select('*').order('created_at', { ascending: false }).limit(200),
-    db.from('startup_applications').select('*').order('created_at', { ascending: false }).limit(200),
+    scope(db.from('enterprise_leads').select('*')).order('created_at', { ascending: false }).limit(200),
+    scope(db.from('startup_applications').select('*')).order('created_at', { ascending: false }).limit(200),
   ])
   if (ent.error || start.error) {
     console.error('[admin leads] read failed', ent.error ?? start.error)
@@ -53,19 +58,37 @@ const ENT_STATUS = ['new', 'contacted', 'won', 'lost']
 const APP_STATUS = ['pending', 'approved', 'rejected']
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin(req))) {
+  const admin = await requireAdmin(req)
+  if (!admin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
-  const { table, id, status, notes, discountPercent, discountUntil } = await req.json()
+  const { table, id, status, notes, discountPercent, discountUntil, archived } =
+    await req.json()
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
   const db = service()
+  /*
+   * Archiver, pas supprimer.
+   *
+   * La ligne reste en base, horodatee et signee de qui l'a ecartee : on peut
+   * revenir sur un clic malheureux, et retrouver un prospect mis de cote trop
+   * vite. `archived: false` le remet dans la liste.
+   *
+   * L'effacement reel existe, mais seulement en SQL a la main : une demande
+   * RGPD l'exige, et ce n'est pas un geste qu'on doit pouvoir faire d'un clic.
+   */
+  const archiveFields =
+    archived === undefined
+      ? {}
+      : archived
+        ? { archived_at: new Date().toISOString(), archived_by: admin }
+        : { archived_at: null, archived_by: null }
   if (table === 'enterprise') {
     if (status && !ENT_STATUS.includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
     const { error } = await db.from('enterprise_leads')
-      .update({ ...(status && { status }), ...(notes !== undefined && { notes }) })
+      .update({ ...(status && { status }), ...(notes !== undefined && { notes }), ...archiveFields })
       .eq('id', id)
     if (error) return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   } else if (table === 'startup') {
@@ -78,6 +101,7 @@ export async function POST(req: NextRequest) {
         ...(notes !== undefined && { notes }),
         ...(discountPercent !== undefined && { discount_percent: discountPercent }),
         ...(discountUntil !== undefined && { discount_until: discountUntil }),
+        ...archiveFields,
       })
       .eq('id', id)
     if (error) return NextResponse.json({ error: 'Update failed' }, { status: 500 })

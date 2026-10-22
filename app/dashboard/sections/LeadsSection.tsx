@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Building2, Rocket, Loader2, ExternalLink, RefreshCw } from 'lucide-react'
+import { Building2, Rocket, Loader2, ExternalLink, RefreshCw, Archive, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,9 @@ export default function LeadsSection() {
   const [apps, setApps] = useState<Startup[]>([])
   const [tab, setTab] = useState<'enterprise' | 'startups'>('enterprise')
   const [loading, setLoading] = useState(true)
+  // La corbeille n'est pas un onglet : c'est une bascule, pour qu'on la
+  // consulte sans jamais la confondre avec la revue courante.
+  const [showArchived, setShowArchived] = useState(false)
   const [denied, setDenied] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   // Leads ayant deja une organisation : le bouton laisse place au nom de
@@ -82,7 +85,8 @@ export default function LeadsSection() {
     setLoading(true)
     const t = await token()
     if (!t) { setDenied(true); setLoading(false); return }
-    const res = await fetch('/api/admin/leads', { headers: { Authorization: `Bearer ${t}` } })
+    const res = await fetch(`/api/admin/leads${showArchived ? '?archived=1' : ''}`,
+      { headers: { Authorization: `Bearer ${t}` } })
     if (res.status === 403) { setDenied(true); setLoading(false); return }
     if (res.ok) {
       const d = await res.json()
@@ -104,7 +108,7 @@ export default function LeadsSection() {
     }
 
     setLoading(false)
-  }, [token])
+  }, [token, showArchived])
 
   useEffect(() => { void load() }, [load])
 
@@ -115,6 +119,31 @@ export default function LeadsSection() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
       body: JSON.stringify({ table, id, status }),
+    })
+    await load()
+    setBusy(null)
+  }
+
+  /**
+   * Archiver retire de la liste sans effacer : la ligne reste en base, et
+   * « Restore » la ramene. La confirmation ne protege que l'archivage — rien
+   * n'est perdu, mais ecarter le mauvais prospect se remarque tard.
+   */
+  async function setArchived(
+    table: 'enterprise' | 'startup',
+    id: string,
+    archived: boolean,
+    label: string,
+  ) {
+    if (archived && !window.confirm(`Archive "${label}"? You can restore it from the archive.`)) {
+      return
+    }
+    setBusy(id)
+    const t = await token()
+    await fetch('/api/admin/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      body: JSON.stringify({ table, id, archived }),
     })
     await load()
     setBusy(null)
@@ -165,8 +194,20 @@ export default function LeadsSection() {
             <span className="opacity-60">{n}</span>
           </button>
         ))}
+        {/* Bascule plutot qu'onglet : la corbeille se consulte, elle ne fait
+            pas partie de la revue courante et ne doit pas s'y confondre. */}
+        <button
+          onClick={() => setShowArchived((v) => !v)}
+          className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+            showArchived
+              ? 'bg-foreground text-background border-foreground'
+              : 'border-border text-muted-foreground hover:text-foreground'}`}
+        >
+          <Archive className="w-3.5 h-3.5" />
+          {showArchived ? 'Viewing archive' : 'Archive'}
+        </button>
         <button onClick={() => void load()}
-          className="ml-auto p-2 rounded-lg hover:bg-white/[0.05] text-muted-foreground">
+          className="p-2 rounded-lg hover:bg-white/[0.05] text-muted-foreground">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
@@ -217,13 +258,23 @@ export default function LeadsSection() {
                             whitespace-pre-wrap mb-3">{l.message}</p>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap items-center">
               {['contacted', 'won', 'lost'].map((s) => (
                 <Button key={s} variant="outline" size="sm" disabled={busy === l.id || l.status === s}
                   onClick={() => void update('enterprise', l.id, s)}>
                   {s}
                 </Button>
               ))}
+              <div className="flex-1" />
+              <Button variant="ghost" size="sm" disabled={busy === l.id}
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => void setArchived('enterprise', l.id, !showArchived, l.company_name)}>
+                {showArchived ? (
+                  <><RotateCcw className="w-3.5 h-3.5 mr-1.5" />Restore</>
+                ) : (
+                  <><Archive className="w-3.5 h-3.5 mr-1.5" />Archive</>
+                )}
+              </Button>
             </div>
 
             {/* La creation d'equipe n'apparait qu'une fois l'affaire gagnee :

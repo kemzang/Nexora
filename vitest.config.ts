@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import { defineConfig } from 'vitest/config'
 
 /**
@@ -12,6 +13,11 @@ import { defineConfig } from 'vitest/config'
  * faisait executer deux fois les memes fichiers.
  */
 export default defineConfig({
+  // Meme alias que tsconfig : sans lui, un test qui importe '@/lib/...'
+  // echoue au chargement alors que le code de production compile.
+  resolve: {
+    alias: { '@': resolve(__dirname, '.') },
+  },
   test: {
     include: ['lib/**/*.test.ts', 'app/**/*.test.ts'],
     exclude: ['**/node_modules/**', '.claude/**', 'tests/**'],

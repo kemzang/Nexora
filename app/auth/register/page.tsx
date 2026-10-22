@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { PasswordInput } from '@/components/ui/password-input'
+import { PasswordRequirements } from '@/components/ui/password-requirements'
+import { passwordSchema } from '@/lib/password'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -19,7 +22,7 @@ import { useToast } from '@/components/ui/toast'
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: passwordSchema(),
   confirmPassword: z.string(),
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters')
@@ -51,9 +54,13 @@ function RegisterForm() {
     }
   }, [user, token, callback, router, success])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema)
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    // Les regles s'affichent pendant la frappe : attendre la soumission
+    // pour les reveler oblige a decouvrir la contrainte par l'echec.
+    mode: 'onChange',
   })
+  const passwordValue = watch('password') ?? ''
 
   const getRedirectUrl = (tokenValue: string) => {
     if (!callback) return null
@@ -215,14 +222,14 @@ function RegisterForm() {
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm ml-0.5">Password</Label>
-                  <Input id="password" type="password" placeholder="••••••••" {...register('password')}
+                  <PasswordInput id="password" {...register('password')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
-                  {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
+                  <PasswordRequirements value={passwordValue} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirm password</Label>
-                  <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')}
+                  <PasswordInput id="confirmPassword" placeholder="Re-enter your password" {...register('confirmPassword')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}
                 </div>

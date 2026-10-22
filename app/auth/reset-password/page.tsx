@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { PasswordInput } from '@/components/ui/password-input'
+import { PasswordRequirements } from '@/components/ui/password-requirements'
+import { passwordSchema } from '@/lib/password'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -18,7 +21,7 @@ import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
 
 const schema = z.object({
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: passwordSchema(),
   confirmPassword: z.string(),
 }).refine(d => d.password === d.confirmPassword, {
   message: 'Passwords do not match',
@@ -35,7 +38,11 @@ export default function ResetPasswordPage() {
   const router = useRouter()
   const { showToast } = useToast()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    mode: 'onChange',
+  })
+  const passwordValue = watch('password') ?? ''
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -105,13 +112,13 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm ml-0.5">New password</Label>
-                <Input id="password" type="password" placeholder="••••••••" {...register('password')}
+                <PasswordInput id="password" placeholder="Enter your new password" {...register('password')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
-                {errors.password && <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>}
+                <PasswordRequirements value={passwordValue} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirm</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')}
+                <PasswordInput id="confirmPassword" placeholder="Re-enter your new password" {...register('confirmPassword')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                 {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}
               </div>

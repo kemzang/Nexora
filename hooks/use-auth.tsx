@@ -128,15 +128,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    setLoading(true)
+    // L'etat local est vide AVANT l'appel reseau, pas apres : des cette
+    // ligne l'utilisateur est deconnecte pour toute l'application, et la
+    // redirection peut partir sans attendre le serveur.
+    //
+    // `setLoading(true)` a ete retire : il basculait le tableau de bord sur
+    // son rond de chargement, puis l'attente de la revocation le laissait
+    // tourner indefiniment quand l'appel ne rendait pas la main. Il n'y a
+    // rien a attendre pour se deconnecter.
+    setUser(null)
+    setToken(null)
     try {
       await AuthService.signOut()
-      setUser(null)
-      setToken(null)
     } catch (error) {
+      // La session locale est deja effacee : l'utilisateur est parti, meme
+      // si la revocation cote serveur a echoue.
       console.error('Error signing out:', error)
-    } finally {
-      setLoading(false)
     }
   }
 

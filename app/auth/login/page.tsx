@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { PasswordInput } from '@/components/ui/password-input'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -212,10 +213,12 @@ function LoginForm() {
                     Forgot?
                   </Link>
                 </div>
-                <Input
+                {/* L'oeil, mais AUCUNE regle de format ici : les comptes
+                    crees avant ces exigences ont des mots de passe a six
+                    caracteres, et les refuser a la connexion enfermerait
+                    dehors des gens qui n'ont rien fait de mal. */}
+                <PasswordInput
                   id="password"
-                  type="password"
-                  placeholder="••••••••"
                   {...register('password')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all"
                 />

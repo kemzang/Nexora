@@ -84,10 +84,33 @@ export class AuthService {
     }
   }
 
+  /**
+   * Se deconnecter ne doit jamais faire attendre.
+   *
+   * `signOut()` appelle le serveur pour revoquer la session, et souffre du
+   * meme verrou que `getUser()` plus bas : il peut ne jamais rendre la main.
+   * L'appelant restait alors bloque sur son `await`, l'ecran fige sur un
+   * rond qui tourne, et la redirection qui suivait n'arrivait jamais.
+   *
+   * On efface donc la session locale d'abord — c'est elle qui decide si
+   * l'utilisateur est connecte — puis on laisse la revocation serveur
+   * partir sans l'attendre au-dela de deux secondes. Elle reste utile : elle
+   * invalide le jeton de rafraichissement cote serveur. Mais une revocation
+   * lente ne doit pas retenir quelqu'un qui veut partir.
+   */
   static async signOut(): Promise<{ error?: string }> {
     try {
-      const { error } = await supabase.auth.signOut()
-      return { error: error?.message }
+      const timeout = new Promise<{ error?: string }>((resolve) =>
+        setTimeout(() => resolve({}), 2000),
+      )
+      const revoke = supabase.auth
+        .signOut()
+        .then(({ error }) => ({ error: error?.message }))
+        .catch((error: unknown) => ({
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }))
+
+      return await Promise.race([revoke, timeout])
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     }

@@ -64,10 +64,14 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
 
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
 
-      const [subResult, keysResult, sessionsResult] = await Promise.all([
+      const [subResult, keysResult, sessionsResult, orgResult] = await Promise.all([
         supabase.from('user_subscriptions').select('current_period_end, subscription_plans(name, slug, tokens_per_month)').eq('user_id', userId).eq('status', 'active').maybeSingle(),
         supabase.from('api_keys').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_active', true),
         supabase.from('usage_sessions').select('tokens_total, tokens_input, started_at').eq('user_id', userId).gte('started_at', startOfMonth),
+        // Le pot commun de l'equipe prime sur le plan personnel, comme cote
+        // serveur. Sans cette lecture, un membre d'equipe voyait le quota de
+        // son plan individuel au lieu des credits dont il dispose vraiment.
+        supabase.from('organization_members').select('organizations!inner(name, seats, credits_per_seat, status, contract_ends_at)').eq('user_id', userId).maybeSingle(),
       ])
 
       const sub = subResult.data as any
@@ -77,9 +81,26 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       const monthlyTokens = tokensUsed
       const monthlyRequests = sessions.length
 
-      const planName = plan?.name || 'Free'
-      const planSlug = plan?.slug || 'free'
-      const tokensPerMonth = plan?.tokens_per_month || PLANS.free.tokensPerMonth
+      const orgRow = (orgResult?.data as any)?.organizations as
+        | { name: string; seats: number; credits_per_seat: number; status: string; contract_ends_at: string | null }
+        | undefined
+      const orgActive =
+        orgRow &&
+        orgRow.status === 'active' &&
+        (!orgRow.contract_ends_at || new Date(orgRow.contract_ends_at) > new Date())
+
+      const planName = orgActive && orgRow ? `${orgRow.name} (team)` : plan?.name || 'Free'
+      const planSlug = orgActive ? 'team' : plan?.slug || 'free'
+      // Le plafond vient de PLANS (lib/models.ts), PAS de subscription_plans :
+      // c'est PLANS que le serveur applique via getEffectiveTokenLimit. La
+      // table portait encore 100 000 pour le plan Free quand le code etait
+      // passe a 500 000 — l'utilisateur lisait « 100 % consomme » a un
+      // cinquieme de son vrai quota.
+      const connu = PLANS[(plan?.slug ?? 'free') as keyof typeof PLANS]
+      const tokensPerMonth =
+        orgActive && orgRow
+          ? orgRow.seats * orgRow.credits_per_seat
+          : connu?.tokensPerMonth ?? plan?.tokens_per_month ?? PLANS.free.tokensPerMonth
 
       setStats({
         tokensRemaining: Math.max(0, tokensPerMonth - tokensUsed),

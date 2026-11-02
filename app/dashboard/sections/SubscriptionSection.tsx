@@ -127,7 +127,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
       const now = new Date()
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-      const [subResult, sessionsResult] = await Promise.all([
+      const [subResult, sessionsResult, orgResult] = await Promise.all([
         supabase
           .from('user_subscriptions')
           .select('status, current_period_end, cancel_at_period_end, subscription_plans(name, slug, price, tokens_per_month, features)')
@@ -139,15 +139,53 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
           .select('tokens_total, tokens_input')
           .eq('user_id', userId)
           .gte('started_at', startOfMonth),
+        // Membre d'une equipe : c'est le pot commun qui fait foi, comme cote
+        // serveur. Sans cette lecture, le proprietaire d'une equipe a 80 M de
+        // credits lisait « 0 % restants » sur son plan personnel.
+        supabase
+          .from('organization_members')
+          .select('organizations!inner(name, seats, credits_per_seat, status, contract_ends_at)')
+          .eq('user_id', userId)
+          .maybeSingle() as any,
       ])
 
       const data = subResult.data
       const sessions = (sessionsResult.data ?? []) as { tokens_total: number | null; tokens_input: number | null }[]
       const tokensUsed = sessions.reduce((s, r) => s + (r.tokens_total ?? r.tokens_input ?? 0), 0)
 
-      if (data?.subscription_plans) {
+      // Une equipe active prime sur l'abonnement personnel : le proxy facture
+      // sur le pot commun, cet ecran doit dire la meme chose.
+      const orgRow = orgResult?.data?.organizations as
+        | { name: string; seats: number; credits_per_seat: number; status: string; contract_ends_at: string | null }
+        | undefined
+      const orgActive =
+        orgRow &&
+        orgRow.status === 'active' &&
+        (!orgRow.contract_ends_at || new Date(orgRow.contract_ends_at) > new Date())
+
+      if (orgActive && orgRow) {
+        const plafond = orgRow.seats * orgRow.credits_per_seat
+        setSub({
+          planName: `${orgRow.name} (team)`,
+          planSlug: 'team',
+          price: 0,
+          tokensPerMonth: plafond,
+          tokensRemaining: Math.max(0, plafond - tokensUsed),
+          renewalDate: null,
+          status: 'active',
+          features: [`${orgRow.seats} seats`, 'Shared pool of credits'],
+          cancelAtPeriodEnd: false,
+        })
+      } else if (data?.subscription_plans) {
         const plan = data.subscription_plans
-        const tokensPerMonth: number = plan.tokens_per_month || PLANS.free.tokensPerMonth
+        // Le plafond vient de PLANS (lib/models.ts), PAS de la table : c'est
+        // PLANS que le serveur applique, via getEffectiveTokenLimit. La table
+        // portait encore 100 000 pour le plan Free quand le code etait passe a
+        // 500 000 — un utilisateur gratuit lisait donc « 100 % consomme » a un
+        // cinquieme de son vrai quota, et renoncait avant d'avoir pu juger.
+        const connu = PLANS[(plan.slug ?? 'free') as keyof typeof PLANS]
+        const tokensPerMonth: number =
+          connu?.tokensPerMonth ?? plan.tokens_per_month ?? PLANS.free.tokensPerMonth
         setSub({
           planName: plan.name || 'Free',
           planSlug: plan.slug || 'free',

@@ -59,6 +59,28 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
     if (authUser?.id) fetchStats(authUser.id)
   }, [authUser?.id])
 
+  /** Pot commun de l'equipe, via la route serveur. Null si pas d'equipe. */
+  async function fetchOrganization(): Promise<{
+    name: string
+    seats: number
+    credits: { used: number; limit: number; remaining: number }
+  } | null> {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) return null
+      const res = await fetch('/api/organizations/me', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) return null
+      const body = await res.json()
+      return body.organization ?? null
+    } catch {
+      return null
+    }
+  }
+
   async function fetchStats(userId: string) {
     try {
 
@@ -68,10 +90,14 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
         supabase.from('user_subscriptions').select('current_period_end, subscription_plans(name, slug, tokens_per_month)').eq('user_id', userId).eq('status', 'active').maybeSingle(),
         supabase.from('api_keys').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_active', true),
         supabase.from('usage_sessions').select('tokens_total, tokens_input, started_at').eq('user_id', userId).gte('started_at', startOfMonth),
-        // Le pot commun de l'equipe prime sur le plan personnel, comme cote
-        // serveur. Sans cette lecture, un membre d'equipe voyait le quota de
-        // son plan individuel au lieu des credits dont il dispose vraiment.
-        supabase.from('organization_members').select('organizations!inner(name, seats, credits_per_seat, status, contract_ends_at)').eq('user_id', userId).maybeSingle(),
+        // Le pot commun prime sur le plan personnel, comme cote serveur.
+        //
+        // Passe par /api/organizations/me et PAS par une lecture directe des
+        // tables : RLS est active dessus SANS politique permissive, par
+        // conception — le navigateur ne peut rien y lire, tout doit transiter
+        // par une route serveur qui verifie le role. Une premiere version
+        // interrogeait les tables ici et ne renvoyait jamais rien.
+        fetchOrganization(),
       ])
 
       const sub = subResult.data as any
@@ -81,32 +107,35 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
       const monthlyTokens = tokensUsed
       const monthlyRequests = sessions.length
 
-      const orgRow = (orgResult?.data as any)?.organizations as
-        | { name: string; seats: number; credits_per_seat: number; status: string; contract_ends_at: string | null }
-        | undefined
-      const orgActive =
-        orgRow &&
-        orgRow.status === 'active' &&
-        (!orgRow.contract_ends_at || new Date(orgRow.contract_ends_at) > new Date())
+      // La route ne rend une organisation que si elle est active : elle
+      // appelle getUserOrg, qui filtre deja par isOrgActive (statut et
+      // echeance de contrat). Rien a reverifier ici.
+      const org = orgResult as Awaited<ReturnType<typeof fetchOrganization>>
 
-      const planName = orgActive && orgRow ? `${orgRow.name} (team)` : plan?.name || 'Free'
-      const planSlug = orgActive ? 'team' : plan?.slug || 'free'
+      const planName = org ? `${org.name} (team)` : plan?.name || 'Free'
+      const planSlug = org ? 'team' : plan?.slug || 'free'
       // Le plafond vient de PLANS (lib/models.ts), PAS de subscription_plans :
       // c'est PLANS que le serveur applique via getEffectiveTokenLimit. La
       // table portait encore 100 000 pour le plan Free quand le code etait
       // passe a 500 000 — l'utilisateur lisait « 100 % consomme » a un
       // cinquieme de son vrai quota.
       const connu = PLANS[(plan?.slug ?? 'free') as keyof typeof PLANS]
-      const tokensPerMonth =
-        orgActive && orgRow
-          ? orgRow.seats * orgRow.credits_per_seat
-          : connu?.tokensPerMonth ?? plan?.tokens_per_month ?? PLANS.free.tokensPerMonth
+      const tokensPerMonth = org
+        ? org.credits.limit
+        : connu?.tokensPerMonth ?? plan?.tokens_per_month ?? PLANS.free.tokensPerMonth
+
+      // En equipe, la consommation affichee est celle du POT, pas celle de
+      // l'utilisateur seul : comparer une conso individuelle a un plafond
+      // collectif donnerait un pourcentage faux.
+      const consoAffichee = org ? org.credits.used : tokensUsed
 
       setStats({
-        tokensRemaining: Math.max(0, tokensPerMonth - tokensUsed),
+        tokensRemaining: org
+          ? org.credits.remaining
+          : Math.max(0, tokensPerMonth - tokensUsed),
         tokensTotal: tokensPerMonth,
         apiKeysCount: keysResult.count ?? 0,
-        monthlyTokens,
+        monthlyTokens: consoAffichee,
         monthlyRequests,
         planName,
         planSlug,

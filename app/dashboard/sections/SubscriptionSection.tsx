@@ -122,6 +122,28 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
     })()
   }, [])
 
+  /** Pot commun de l'equipe, via la route serveur. Null si pas d'equipe. */
+  async function fetchOrganization(): Promise<{
+    name: string
+    seats: number
+    credits: { used: number; limit: number; remaining: number }
+  } | null> {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) return null
+      const res = await fetch('/api/organizations/me', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) return null
+      const body = await res.json()
+      return body.organization ?? null
+    } catch {
+      return null
+    }
+  }
+
   async function fetchSubscription(userId: string) {
     try {
       const now = new Date()
@@ -139,14 +161,12 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
           .select('tokens_total, tokens_input')
           .eq('user_id', userId)
           .gte('started_at', startOfMonth),
-        // Membre d'une equipe : c'est le pot commun qui fait foi, comme cote
-        // serveur. Sans cette lecture, le proprietaire d'une equipe a 80 M de
-        // credits lisait « 0 % restants » sur son plan personnel.
-        supabase
-          .from('organization_members')
-          .select('organizations!inner(name, seats, credits_per_seat, status, contract_ends_at)')
-          .eq('user_id', userId)
-          .maybeSingle() as any,
+        // Le pot commun prime sur le plan personnel, comme cote serveur.
+        //
+        // Passe par /api/organizations/me et PAS par une lecture directe des
+        // tables : RLS est active dessus SANS politique permissive, par
+        // conception — le navigateur ne peut rien y lire.
+        fetchOrganization(),
       ])
 
       const data = subResult.data
@@ -154,26 +174,21 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
       const tokensUsed = sessions.reduce((s, r) => s + (r.tokens_total ?? r.tokens_input ?? 0), 0)
 
       // Une equipe active prime sur l'abonnement personnel : le proxy facture
-      // sur le pot commun, cet ecran doit dire la meme chose.
-      const orgRow = orgResult?.data?.organizations as
-        | { name: string; seats: number; credits_per_seat: number; status: string; contract_ends_at: string | null }
-        | undefined
-      const orgActive =
-        orgRow &&
-        orgRow.status === 'active' &&
-        (!orgRow.contract_ends_at || new Date(orgRow.contract_ends_at) > new Date())
+      // sur le pot commun, cet ecran doit dire la meme chose. La route ne rend
+      // une organisation que si elle est active — getUserOrg filtre deja par
+      // statut et echeance de contrat.
+      const org = orgResult as Awaited<ReturnType<typeof fetchOrganization>>
 
-      if (orgActive && orgRow) {
-        const plafond = orgRow.seats * orgRow.credits_per_seat
+      if (org) {
         setSub({
-          planName: `${orgRow.name} (team)`,
+          planName: `${org.name} (team)`,
           planSlug: 'team',
           price: 0,
-          tokensPerMonth: plafond,
-          tokensRemaining: Math.max(0, plafond - tokensUsed),
+          tokensPerMonth: org.credits.limit,
+          tokensRemaining: org.credits.remaining,
           renewalDate: null,
           status: 'active',
-          features: [`${orgRow.seats} seats`, 'Shared pool of credits'],
+          features: [`${org.seats} seats`, 'Shared pool of credits'],
           cancelAtPeriodEnd: false,
         })
       } else if (data?.subscription_plans) {

@@ -139,6 +139,14 @@ interface UsageContext {
    * fois le meme contexte dans une boucle d'agent.
    */
   upstream: UpstreamUsage
+  /**
+   * Horodatage du debut de l'appel. Sert a mesurer la duree reelle de la
+   * reponse : `maxDuration` vaut 60 s, et une reponse qui frole ce plafond
+   * est coupee en plein milieu chez l'utilisateur. Sans cette mesure, rien
+   * en base ne permet de voir venir le probleme — les colonnes duration_ms
+   * et ended_at existaient mais n'etaient jamais remplies.
+   */
+  startedAt: number
 }
 
 /** Enregistre la consommation finale (entrée + sortie, pondérée par le crédit du modèle). */
@@ -157,7 +165,12 @@ async function recordUsage(ctx: UsageContext, outputTokens: number): Promise<voi
       // started_at explicite : le dashboard ET le quota filtrent par started_at >=
       // début du mois. Sans valeur (si la colonne n'a pas de défaut DB), les lignes
       // seraient exclues → conso affichée à 0 et quota jamais décompté.
-      started_at: new Date().toISOString(),
+      started_at: new Date(ctx.startedAt).toISOString(),
+      ended_at: new Date().toISOString(),
+      // Duree reelle de l'appel, du debut de la requete a la fin du flux.
+      // C'est le seul moyen de voir si des reponses approchent les 60 s de
+      // maxDuration, au-dela desquelles Vercel coupe le flux en cours.
+      duration_ms: Date.now() - ctx.startedAt,
       session_type: 'chat_proxy',
       // PAS model_id : cette colonne est une UUID FK vers ai_models(id), pas
       // un slug texte. ctx.modelId vaut "deepseek-chat"/"claude-sonnet"/etc,
@@ -1209,6 +1222,7 @@ export async function POST(req: NextRequest) {
       complexity,
       downgraded,
       upstream: upstreamUsage,
+      startedAt: Date.now(),
     }
 
     const responseHeaders: Record<string, string> = {

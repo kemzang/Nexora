@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Users, CheckCircle2, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -29,6 +29,15 @@ export default function InviteClient({ token }: { token: string }) {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
+  /**
+   * Garde synchrone contre le double envoi. `disabled={joining}` ne suffit
+   * pas : setJoining est asynchrone, et deux clics rapides partent avant
+   * que React n'ait redessine le bouton. La premiere demande aboutissait,
+   * la seconde recevait « This invitation has already been used » — et
+   * l'utilisateur qui venait de rejoindre l'equipe lisait un message
+   * d'echec. Constate le 2 novembre 2026 au premier test reel.
+   */
+  const envoiEnCours = useRef(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
 
@@ -50,6 +59,8 @@ export default function InviteClient({ token }: { token: string }) {
   }, [token])
 
   const accept = useCallback(async () => {
+    if (envoiEnCours.current) return
+    envoiEnCours.current = true
     setJoining(true)
     setError(null)
     try {
@@ -81,6 +92,10 @@ export default function InviteClient({ token }: { token: string }) {
     } catch {
       setError('Could not accept this invitation')
     } finally {
+      // Le verrou ne retombe qu'en cas d'echec : apres un succes la page
+      // part vers le tableau de bord, et rouvrir l'envoi ne ferait que
+      // rejouer la course.
+      envoiEnCours.current = false
       setJoining(false)
     }
   }, [router, token])

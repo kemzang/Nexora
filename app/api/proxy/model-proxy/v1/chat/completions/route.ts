@@ -22,7 +22,16 @@ export const runtime = 'nodejs'
 // montee jusqu'a 300 pour les generations tres longues.
 // Streaming LLM : la generation depasse tres largement le defaut Vercel
 // (10-15 s selon le plan), qui coupait les reponses longues en plein milieu.
-export const maxDuration = 60
+// 300 s, le plafond du plan Hobby avec fluid compute — actif par defaut
+// pour tout projet cree apres le 23 avril 2025, ce qui est le cas ici
+// (mars 2026). Ce reglage etait a 60, une limite que nous nous imposions
+// nous-memes : des utilisateurs ont signale des reponses coupees en plein
+// milieu, parce que le temps d'envoi d'un flux SSE compte dans maxDuration
+// et qu'au-dela Vercel termine la fonction (504 FUNCTION_INVOCATION_TIMEOUT).
+//
+// Ne pas monter plus haut sans changer de plan : sur Hobby, 300 s est a la
+// fois le defaut ET le maximum configurable, il n'y a pas de marge au-dessus.
+export const maxDuration = 300
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -141,8 +150,8 @@ interface UsageContext {
   upstream: UpstreamUsage
   /**
    * Horodatage du debut de l'appel. Sert a mesurer la duree reelle de la
-   * reponse : `maxDuration` vaut 60 s, et une reponse qui frole ce plafond
-   * est coupee en plein milieu chez l'utilisateur. Sans cette mesure, rien
+   * reponse : une reponse qui frole `maxDuration` est coupee en plein
+   * milieu chez l'utilisateur. Sans cette mesure, rien
    * en base ne permet de voir venir le probleme — les colonnes duration_ms
    * et ended_at existaient mais n'etaient jamais remplies.
    */
@@ -168,8 +177,8 @@ async function recordUsage(ctx: UsageContext, outputTokens: number): Promise<voi
       started_at: new Date(ctx.startedAt).toISOString(),
       ended_at: new Date().toISOString(),
       // Duree reelle de l'appel, du debut de la requete a la fin du flux.
-      // C'est le seul moyen de voir si des reponses approchent les 60 s de
-      // maxDuration, au-dela desquelles Vercel coupe le flux en cours.
+      // C'est le seul moyen de voir si des reponses approchent maxDuration,
+      // au-dela duquel Vercel coupe le flux en cours.
       duration_ms: Date.now() - ctx.startedAt,
       session_type: 'chat_proxy',
       // PAS model_id : cette colonne est une UUID FK vers ai_models(id), pas

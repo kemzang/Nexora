@@ -176,7 +176,15 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
     {
       label: 'Usage this month',
       value: `${usagePercent}%`,
-      sub: `${stats.monthlyRequests} request${stats.monthlyRequests > 1 ? 's' : ''} · ${stats.monthlyTokens.toLocaleString('en-US')} tokens`,
+      // En equipe, les jetons sont ceux du pot (tous les membres) alors que
+      // le compte de requetes reste celui de l'utilisateur : les accoler
+      // laissait croire qu'une seule requete avait produit les jetons de
+      // toute l'equipe. On n'annonce donc le nombre de requetes que hors
+      // equipe, ou les deux chiffres parlent bien de la meme personne.
+      sub:
+        stats.planSlug === 'team'
+          ? `${stats.monthlyTokens.toLocaleString('en-US')} tokens used by the team`
+          : `${stats.monthlyRequests} request${stats.monthlyRequests > 1 ? 's' : ''} · ${stats.monthlyTokens.toLocaleString('en-US')} tokens`,
       icon: BarChart3,
       color: 'text-emerald-400',
       bg: 'from-emerald-500/20 to-emerald-500/5',

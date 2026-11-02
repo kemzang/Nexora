@@ -67,6 +67,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Le siege peut avoir ete pris entre l'envoi et l'acceptation.
+  //
+  // `>` ici, `>=` a la creation de l'invitation : ce n'est pas une faute de
+  // frappe. countSeatsInUse additionne les membres et les invitations encore
+  // valables. A l'acceptation, l'invitation qu'on traite est dans ce total —
+  // la personne qui accepte est donc deja comptee. Passer a `>=` refuserait
+  // le dernier siege legitime : trois sieges, deux membres, cette invitation
+  // en cours font un total de trois, et l'acceptation doit aboutir.
   if ((await countSeatsInUse(db, org.id)) > org.seats) {
     return bad('All seats are taken. Ask an administrator to add one.', 409)
   }

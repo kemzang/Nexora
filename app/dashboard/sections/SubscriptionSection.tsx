@@ -244,7 +244,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
     })
     const data = await res.json().catch(() => ({}))
     if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Erreur serveur')
+      throw new Error(data.error || 'Something went wrong on our side.')
     }
   }
 
@@ -256,7 +256,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
       setSub((s) => (s ? { ...s, cancelAtPeriodEnd: true } : s))
       setCancelConfirm(false)
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Erreur serveur')
+      setCancelError(err instanceof Error ? err.message : 'Something went wrong on our side.')
     } finally {
       setCancelling(false)
     }
@@ -269,7 +269,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
       await callSubscriptionAction('resume-subscription')
       setSub((s) => (s ? { ...s, cancelAtPeriodEnd: false } : s))
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Erreur serveur')
+      setCancelError(err instanceof Error ? err.message : 'Something went wrong on our side.')
     } finally {
       setCancelling(false)
     }
@@ -393,13 +393,13 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
                       disabled={cancelling}
                       className="shrink-0 px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 font-medium transition-colors disabled:opacity-50"
                     >
-                      {cancelling ? 'Confirmation...' : 'Yes, stop it'}
+                      {cancelling ? 'Stopping…' : 'Yes, stop it'}
                     </button>
                     <button
                       onClick={() => setCancelConfirm(false)}
                       className="shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.05] text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Garder
+                      Keep it
                     </button>
                   </div>
                 ) : (

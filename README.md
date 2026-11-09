@@ -35,6 +35,22 @@ npm run dev
 
 5. Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
+## 📚 Documentation
+
+Ces quatre documents n'étaient référencés nulle part : il fallait tomber
+dessus. Ils sont la source de vérité sur les sujets qu'une lecture du code
+ne suffit pas à reconstituer.
+
+| Document | Ce qu'il couvre |
+|---|---|
+| [docs/RAPPELS-ECHEANCE.md](docs/RAPPELS-ECHEANCE.md) | Les rappels avant prélèvement : mise en route (migration 016 + `CRON_SECRET`), vérification, pannes courantes. |
+| [docs/PADDLE.md](docs/PADDLE.md) | Mettre Paddle en service : webhook, signatures, annulation, reprise, factures. |
+| [docs/REQUETES-SQL.md](docs/REQUETES-SQL.md) | Les opérations qui ne passent par aucune interface : offrir un forfait, comprendre une facture, diagnostiquer un compte. |
+| [docs/PARRAINAGE.md](docs/PARRAINAGE.md) | Spécification du parrainage — **pas encore implémenté**, à repasser le jour où. |
+
+Et [`.env.example`](.env.example) pour les variables d'environnement : chaque
+ligne dit à quoi elle sert, où l'obtenir, et ce qui casse sans elle.
+
 ## 🏗️ Architecture du Projet
 
 ### Structure des Dossiers
@@ -123,10 +139,26 @@ Le projet utilise un design system moderne avec :
 
 ### Variables d'Environnement
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=votre_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_supabase_anon_key
+La référence complète et commentée est **`.env.example`** : chaque variable y
+dit à quoi elle sert, où l'obtenir, et ce qui casse sans elle. Ce README n'en
+listait que deux sur une trentaine, ce qui était pire que rien.
+
+```bash
+cp .env.example .env.local   # puis remplir
 ```
+
+Les indispensables : `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, au moins une
+clé de fournisseur d'IA, et `RESEND_API_KEY` pour les e-mails.
+
+### Tâches planifiées
+
+Une tâche quotidienne prévient les abonnés une semaine avant un prélèvement
+ou une fin d'accès. Elle demande deux choses au déploiement — la migration
+016 et la variable `CRON_SECRET` — sans lesquelles **aucun rappel ne part**.
+
+Procédure complète, vérification et pannes courantes :
+**[docs/RAPPELS-ECHEANCE.md](docs/RAPPELS-ECHEANCE.md)**.
 
 ### Build de Production
 

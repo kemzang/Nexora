@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { paddleApiBaseUrl, paddleSubscriptionIdFromReference } from '@/lib/paddle'
+import { messagePaddle, paddleApiBaseUrl, paddleSubscriptionIdFromReference } from '@/lib/paddle'
 import { captureServerError } from '@/lib/sentry'
 
 // ── Annule une résiliation programmée (cancel-subscription) ─────────────────
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (!upstreamResp.ok) {
       const detail = await upstreamResp.text().catch(() => '')
       console.error(`[paddle resume-subscription] upstream error ${upstreamResp.status}:`, detail)
-      return NextResponse.json({ error: `Erreur Paddle (${upstreamResp.status})` }, { status: 502 })
+      return NextResponse.json({ error: messagePaddle(upstreamResp.status, detail) }, { status: 502 })
     }
 
     const { error } = await admin

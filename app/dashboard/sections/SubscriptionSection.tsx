@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/components/ui/toast'
 import { PLANS } from '@/lib/models'
 import Link from 'next/link'
 
@@ -83,9 +84,9 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
   const { user, token } = useAuth()
   const [sub, setSub] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { showToast } = useToast()
   const [cancelConfirm, setCancelConfirm] = useState(false)
   const [cancelling, setCancelling] = useState(false)
-  const [cancelError, setCancelError] = useState<string | null>(null)
   // Plans actifs en base qui ne sont pas déjà dans la liste codée en dur
   // (ex. plans de test). Ils s'affichent automatiquement et se masquent dès
   // qu'on passe leur `is_active` à false en base — aucun redéploiement requis.
@@ -250,13 +251,16 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
 
   async function handleCancelRenewal() {
     setCancelling(true)
-    setCancelError(null)
     try {
       await callSubscriptionAction('cancel-subscription')
       setSub((s) => (s ? { ...s, cancelAtPeriodEnd: true } : s))
       setCancelConfirm(false)
+      showToast('Automatic renewal is off. You keep access until the date shown.', 'success')
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Something went wrong on our side.')
+      showToast(
+        err instanceof Error ? err.message : 'Something went wrong on our side.',
+        'error',
+      )
     } finally {
       setCancelling(false)
     }
@@ -264,12 +268,15 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
 
   async function handleResumeRenewal() {
     setCancelling(true)
-    setCancelError(null)
     try {
       await callSubscriptionAction('resume-subscription')
       setSub((s) => (s ? { ...s, cancelAtPeriodEnd: false } : s))
+      showToast('Automatic renewal is back on.', 'success')
     } catch (err) {
-      setCancelError(err instanceof Error ? err.message : 'Something went wrong on our side.')
+      showToast(
+        err instanceof Error ? err.message : 'Something went wrong on our side.',
+        'error',
+      )
     } finally {
       setCancelling(false)
     }
@@ -368,9 +375,6 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
 
             {sub.planSlug !== 'free' && sub.renewalDate && (
               <div className="mt-4 pt-4 border-t border-border/50">
-                {cancelError && (
-                  <p className="text-xs text-red-400 mb-2">{cancelError}</p>
-                )}
                 {sub.cancelAtPeriodEnd ? (
                   <div className="flex items-center justify-between gap-3 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
                     <span className="text-amber-300/90">

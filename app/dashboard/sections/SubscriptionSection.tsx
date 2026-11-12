@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Sparkles, Zap, Star, Check, ArrowRight, Crown, Loader2,
-  Calendar, RefreshCw, AlertCircle, XCircle
+  Calendar, RefreshCw, AlertCircle
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -24,6 +24,18 @@ interface SubscriptionData {
   status: string
   features: string[]
   cancelAtPeriodEnd: boolean
+}
+
+/**
+ * Une date de prelevement doit etre sans ambiguite : « 12/8/2026 » se lit
+ * 8 decembre ou 12 aout selon le pays du lecteur.
+ */
+function formatRenewal(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 const UPGRADE_PLANS = [
@@ -375,45 +387,86 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
 
             {sub.planSlug !== 'free' && sub.renewalDate && (
               <div className="mt-4 pt-4 border-t border-border/50">
+                {/*
+                  Les trois etats partagent le meme cadre.
+                  Avant, celui qui annonce une annulation etait un bloc
+                  encadre tandis que les deux autres etaient du texte nu
+                  flottant : l'action principale ressemblait a un oubli de
+                  mise en forme plutot qu'a un bouton.
+                */}
                 {sub.cancelAtPeriodEnd ? (
-                  <div className="flex items-center justify-between gap-3 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
-                    <span className="text-amber-300/90">
-                      Automatic renewal is off — your {sub.planName} access ends on{' '}
-                      {new Date(sub.renewalDate).toLocaleDateString('en-US')}.
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3.5 py-3">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-amber-200">
+                          Automatic renewal is off
+                        </p>
+                        <p className="text-xs text-amber-300/70 mt-0.5">
+                          Your {sub.planName} access ends on {formatRenewal(sub.renewalDate)}. You will not be charged.
+                        </p>
+                      </div>
+                    </div>
                     <button
                       onClick={handleResumeRenewal}
                       disabled={cancelling}
-                      className="shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.06] text-foreground hover:bg-white/[0.1] font-medium transition-colors disabled:opacity-50"
+                      className="shrink-0 rounded-lg bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-white/[0.14] disabled:opacity-50"
                     >
                       {cancelling ? 'Reactivating…' : 'Reactivate'}
                     </button>
                   </div>
                 ) : cancelConfirm ? (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">Stop automatic renewal? You will keep access until {new Date(sub.renewalDate).toLocaleDateString('en-US')}.</span>
-                    <button
-                      onClick={handleCancelRenewal}
-                      disabled={cancelling}
-                      className="shrink-0 px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 font-medium transition-colors disabled:opacity-50"
-                    >
-                      {cancelling ? 'Stopping…' : 'Yes, stop it'}
-                    </button>
-                    <button
-                      onClick={() => setCancelConfirm(false)}
-                      className="shrink-0 px-2.5 py-1 rounded-lg bg-white/[0.05] text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Keep it
-                    </button>
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/[0.07] px-3.5 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        Stop automatic renewal?
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        You keep full access until {formatRenewal(sub.renewalDate)}. Nothing is charged after that.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        onClick={() => setCancelConfirm(false)}
+                        disabled={cancelling}
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-50"
+                      >
+                        Keep it
+                      </button>
+                      <button
+                        onClick={handleCancelRenewal}
+                        disabled={cancelling}
+                        className="rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/25 disabled:opacity-50"
+                      >
+                        {cancelling ? 'Stopping…' : 'Yes, stop it'}
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setCancelConfirm(true)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />
-                    Cancel automatic renewal
-                  </button>
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-white/[0.02] px-3.5 py-3">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <RefreshCw className="w-4 h-4 shrink-0 text-muted-foreground mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          Renews automatically
+                        </p>
+                        {/*
+                          Le montant et la date dans la phrase : c'est ce qu'on
+                          vient verifier avant de decider, et le chercher
+                          ailleurs sur la page etait une raison d'hesiter.
+                        */}
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          ${sub.price} will be charged on {formatRenewal(sub.renewalDate)}.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCancelConfirm(true)}
+                      className="shrink-0 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-300"
+                    >
+                      Cancel renewal
+                    </button>
+                  </div>
                 )}
               </div>
             )}

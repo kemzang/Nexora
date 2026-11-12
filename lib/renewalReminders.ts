@@ -15,7 +15,7 @@
  * le lendemain.
  */
 import { APP_URL } from '@/lib/appUrl'
-import { FROM_EMAIL, resend } from '@/lib/resend'
+import { emailHeader, FROM_EMAIL, resend } from '@/lib/resend'
 
 /** Au moins une semaine, comme promis a l'utilisateur. */
 export const JOURS_AVANT = 7
@@ -94,12 +94,7 @@ function jour(iso: string): string {
 function coque(titre: string, corps: string): string {
   return `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #3b82f6); padding: 16px; border-radius: 16px;">
-          <span style="font-size: 28px;">🧠</span>
-        </div>
-        <h1 style="color: white; margin-top: 16px;">Nexora</h1>
-      </div>
+${emailHeader()}
       <h2 style="color: #a78bfa;">${titre}</h2>
       ${corps}
       <p style="color: #64748b; font-size: 12px; margin-top: 40px; text-align: center;">© ${new Date().getFullYear()} Nexora. All rights reserved.</p>

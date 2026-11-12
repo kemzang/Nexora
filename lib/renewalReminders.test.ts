@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('@/lib/resend', () => ({
   FROM_EMAIL: 'Nexora <noreply@test>',
   resend: { emails: { send: vi.fn() } },
+  // Le module compose son message autour de l'entete commune : sans elle
+  // dans le double, l'import echoue et les tests du message tombent.
+  emailHeader: () => '<img src="https://test/logo.png" alt="Nexora" />',
 }))
 
 import {

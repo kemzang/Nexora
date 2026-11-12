@@ -21,6 +21,27 @@ export const FROM_EMAIL = 'Nexora <noreply@nexoracoding.com>'
 const footer = () =>
   `<p style="color: #64748b; font-size: 12px; margin-top: 40px; text-align: center;">© ${new Date().getFullYear()} Nexora. All rights reserved.</p>`
 
+/**
+ * Entete commune a tous les messages.
+ *
+ * Elle affichait un emoji cerveau dans un carre degrade, pas le logo du
+ * produit : un client recevait donc une confirmation de paiement signee d'un
+ * dessin qui n'existe nulle part ailleurs dans Nexora.
+ *
+ * L'image est appelee par URL absolue, seule forme qu'un client de messagerie
+ * sache charger — ni chemin relatif ni fichier joint. Le `alt` compte autant
+ * que l'image : beaucoup de clients bloquent les images par defaut, et ce
+ * texte est alors tout ce que le lecteur voit.
+ */
+export function emailHeader(): string {
+  return `
+        <div style="text-align: center; margin-bottom: 32px;">
+          <img src="${APP_URL}/logo.png" width="64" height="64" alt="Nexora"
+               style="display: inline-block; border-radius: 16px; border: 0; outline: none; text-decoration: none;" />
+          <h1 style="color: white; margin-top: 16px;">Nexora</h1>
+        </div>`
+}
+
 export async function sendPaymentConfirmation({
   to,
   userName,
@@ -40,12 +61,7 @@ export async function sendPaymentConfirmation({
     subject: `✅ Payment confirmed — ${planName} plan`,
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
-        <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #3b82f6); padding: 16px; border-radius: 16px;">
-            <span style="font-size: 28px;">🧠</span>
-          </div>
-          <h1 style="color: white; margin-top: 16px;">Nexora</h1>
-        </div>
+${emailHeader()}
         <h2 style="color: #a78bfa;">Payment confirmed</h2>
         <p>Hi ${userName},</p>
         <p>Your payment went through.</p>
@@ -79,12 +95,7 @@ export async function sendPasswordResetEmail({
     subject: '🔑 Reset your Nexora password',
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
-        <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #3b82f6); padding: 16px; border-radius: 16px;">
-            <span style="font-size: 28px;">🧠</span>
-          </div>
-          <h1 style="color: white; margin-top: 16px;">Nexora</h1>
-        </div>
+${emailHeader()}
         <h2 style="color: #a78bfa;">Reset your password</h2>
         <p>Hi ${userName},</p>
         <p>You asked to reset your password. Use the button below to choose a new one:</p>
@@ -111,12 +122,7 @@ export async function sendWelcomeEmail({
     subject: '🚀 Welcome to Nexora',
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
-        <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #3b82f6); padding: 16px; border-radius: 16px;">
-            <span style="font-size: 28px;">🧠</span>
-          </div>
-          <h1 style="color: white; margin-top: 16px;">Nexora</h1>
-        </div>
+${emailHeader()}
         <h2 style="color: #a78bfa;">Welcome, ${userName}</h2>
         <p>Your Nexora account is ready.</p>
         <p>Here is where to start:</p>

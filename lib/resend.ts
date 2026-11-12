@@ -42,38 +42,104 @@ export function emailHeader(): string {
         </div>`
 }
 
+/**
+ * Message de bienvenue apres un paiement.
+ *
+ * Il annoncait le paiement — plan, montant, carte — alors que Paddle envoie
+ * deja son propre recu, avec l'identifiant de transaction et les mentions
+ * legales. Le client recevait donc deux fois la meme chose, et la version
+ * maison affichait en prime « Card: •••• •••• », l'appelant ne disposant
+ * d'aucun numero a y mettre.
+ *
+ * Paddle est Merchant of Record : le recu lui appartient, et il le fait mieux.
+ * Ce message ne garde donc que ce que Paddle ne peut pas dire, faute de
+ * connaitre le produit — ou installer Nexora, et ce que le palier donne.
+ *
+ * C'est le seul moment ou l'on a l'attention de quelqu'un qui vient de payer.
+ * Lui dire « tout est pret » sans lui dire ou aller, c'est preparer une
+ * demande de remboursement.
+ */
+
+/** Une voie d'installation, dans un tableau : les div flottantes cassent sous Outlook. */
+function installRow(title: string, subtitle: string, action: string): string {
+  return `
+      <tr>
+        <td style="padding:14px 16px;border:1px solid rgba(139,92,246,.22);border-radius:12px;background:rgba(139,92,246,.07);">
+          <div style="font-weight:600;color:#e9e4ff;font-size:14px;">${title}</div>
+          <div style="color:#a0aec0;font-size:12px;margin-top:3px;">${subtitle}</div>
+          <div style="margin-top:9px;">${action}</div>
+        </td>
+      </tr>
+      <tr><td style="height:10px;"></td></tr>`
+}
+
+const installLink = (href: string, label: string) =>
+  `<a href="${href}" style="color:#a78bfa;font-size:13px;font-weight:600;text-decoration:none;">${label} &rarr;</a>`
+
 export async function sendPaymentConfirmation({
   to,
   userName,
   planName,
-  amount,
-  cardLast4,
+  credits,
+  models,
 }: {
   to: string
   userName: string
   planName: string
-  amount: string
-  cardLast4: string
+  /** Credits mensuels du palier, deja formates (« 4,000,000 »). */
+  credits: string
+  /** Les modeles inclus, en clair. */
+  models: string
 }) {
   return resend.emails.send({
     from: FROM_EMAIL,
+    // Une reponse a noreply@ disparait sans bruit. Elle est redirigee ici vers
+    // une adresse lue, pour qu'un client bloque ait une porte de sortie.
+    replyTo: 'contact@nexoracoding.com',
     to,
-    subject: `✅ Payment confirmed — ${planName} plan`,
+    subject: `Welcome to Nexora ${planName} — here's how to start`,
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
 ${emailHeader()}
-        <h2 style="color: #a78bfa;">Payment confirmed</h2>
-        <p>Hi ${userName},</p>
-        <p>Your payment went through.</p>
-        <div style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 20px; margin: 24px 0;">
-          <p style="margin: 4px 0;"><strong>Plan:</strong> ${planName}</p>
-          <p style="margin: 4px 0;"><strong>Amount:</strong> ${amount}</p>
-          <p style="margin: 4px 0;"><strong>Card:</strong> •••• ${cardLast4}</p>
+        <h2 style="color:#a78bfa;margin-bottom:8px;">You're on ${planName}</h2>
+        <p style="margin-top:0;">Hi ${userName},</p>
+        <p>Your plan is active — <strong>${credits} credits a month</strong>, with ${models}.
+           Paddle has sent your receipt separately.</p>
+
+        <p style="margin-top:28px;margin-bottom:12px;font-weight:600;color:#e9e4ff;">Install Nexora</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+${installRow(
+  'VS Code, Cursor, Windsurf, VSCodium',
+  'One click from the marketplace',
+  installLink(
+    'https://marketplace.visualstudio.com/items?itemName=nexoracoding.nexora-ai',
+    'Install the extension',
+  ),
+)}
+${installRow(
+  'IntelliJ, PyCharm, WebStorm, and the rest',
+  'From the JetBrains plugin marketplace',
+  installLink('https://plugins.jetbrains.com/plugin/34609-nexora', 'Install the plugin'),
+)}
+${installRow(
+  'Terminal',
+  'If you would rather stay in the shell',
+  '<code style="background:rgba(255,255,255,.07);padding:5px 9px;border-radius:6px;font-size:12px;color:#e9e4ff;">npm i -g @nexoracoding/cli</code>',
+)}
+        </table>
+
+        <p style="font-size:13px;color:#a0aec0;">Sign in with <strong style="color:#e2e8f0;">this email address</strong>
+           and your credits are already there. There is no API key to set up.</p>
+
+        <div style="text-align:center;margin-top:32px;">
+          <a href="${APP_URL}/dashboard" style="background:linear-gradient(135deg,#7c3aed,#3b82f6);color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Open my dashboard</a>
         </div>
-        <p>Your subscription is now active. Everything in your plan is ready to use.</p>
-        <div style="text-align: center; margin-top: 32px;">
-          <a href="${APP_URL}/dashboard" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Open dashboard</a>
-        </div>
+
+        <p style="font-size:13px;color:#a0aec0;text-align:center;margin-top:24px;">
+          New here? The <a href="${APP_URL}/docs" style="color:#a78bfa;text-decoration:none;">docs</a>
+          walk through the first steps. Anything not working —
+          <a href="${APP_URL}/contact" style="color:#a78bfa;text-decoration:none;">get in touch</a>.
+        </p>
         ${footer()}
       </div>
     `,

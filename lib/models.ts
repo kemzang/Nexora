@@ -709,3 +709,29 @@ export function calculateCost(model: AIModel, inputTokens: number, outputTokens:
   const outputCost = (outputTokens / 1000) * model.outputCostPer1K
   return inputCost + outputCost
 }
+
+/**
+ * Ce qu'on annonce a quelqu'un qui vient de souscrire : son volume mensuel et
+ * les modeles qu'il a desormais.
+ *
+ * Derive du catalogue plutot que recopie dans les e-mails : les paliers
+ * changent, et un message qui promet des modeles retires est pire que pas de
+ * message.
+ */
+export function planHighlights(planId: string): { credits: string; models: string } {
+  const plan = PLANS[planId as PlanId]
+  if (!plan) return { credits: '', models: '' }
+
+  const noms = plan.models
+    .map((m) => MODELS[m as ModelId]?.name)
+    .filter((n): n is string => !!n)
+
+  // « A, B, C and D » plutot que « A, B, C, D » : c'est une phrase, pas une
+  // liste a puces.
+  const models =
+    noms.length > 1
+      ? `${noms.slice(0, -1).join(', ')} and ${noms[noms.length - 1]}`
+      : (noms[0] ?? '')
+
+  return { credits: plan.tokensPerMonth.toLocaleString('en-US'), models }
+}

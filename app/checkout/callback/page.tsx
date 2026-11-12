@@ -43,7 +43,7 @@ function CallbackContent() {
           const data = await res.json()
           if (data.plan && (!expectedPlan || data.plan === expectedPlan)) {
             setStatus('success')
-            showToast('Paiement confirmé !', 'success')
+            showToast('Payment confirmed.', 'success')
             setTimeout(() => router.push('/dashboard'), 2500)
             return
           }
@@ -54,7 +54,7 @@ function CallbackContent() {
           // ici) mais le webhook n'est pas encore arrivé — on ne montre pas
           // "échec", on renvoie vers le dashboard qui reflétera l'état dès
           // que le webhook aura été traité.
-          showToast('Paiement en cours de confirmation — ça va apparaître dans quelques instants.', 'info')
+          showToast('Payment is being confirmed — it will show up in a moment.', 'info')
           router.push('/dashboard')
           return
         }
@@ -76,20 +76,11 @@ function CallbackContent() {
 
         if (data.status === 'complete') {
           setStatus('success')
-          showToast('Paiement confirmé !', 'success')
-          if (user?.email) {
-            fetch('/api/email/payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: user.email,
-                userName: user.firstName || user.email.split('@')[0],
-                planName: data.transaction?.metadata?.plan || 'Pro',
-                amount: `${data.transaction?.amount} ${data.transaction?.currency}`,
-                cardLast4: '••••',
-              }),
-            }).catch(() => {})
-          }
+          showToast('Payment confirmed.', 'success')
+          // Le message de bienvenue part du webhook Paddle, pas d'ici.
+          // L'envoyer aussi depuis le navigateur le dedoublait, et la route
+          // qui le faisait n'etait pas authentifiee : n'importe qui pouvait
+          // la POSTer avec l'adresse de son choix.
           setTimeout(() => router.push('/dashboard'), 3000)
         } else if (data.status === 'failed') {
           setStatus('failed')

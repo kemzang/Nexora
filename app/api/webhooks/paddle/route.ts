@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { PLANS, type PlanId } from '@/lib/models'
 import { captureServerError } from '@/lib/sentry'
+import { planHighlights } from '@/lib/models'
 import { sendPaymentConfirmation } from '@/lib/resend'
 
 // ── Paddle webhook ───────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ async function recordInvoiceAndNotify(txn: PaddlePayload['data']): Promise<void>
 
   const { data: sub } = await admin
     .from('user_subscriptions')
-    .select('id, user_id, subscription_plans(name)')
+    .select('id, user_id, subscription_plans(name, slug)')
     .eq('stripe_subscription_id', subReference)
     .maybeSingle()
   if (!sub) {
@@ -232,13 +233,17 @@ async function recordInvoiceAndNotify(txn: PaddlePayload['data']): Promise<void>
         .select('display_name')
         .eq('id', sub.user_id)
         .maybeSingle()
-      const planName = (sub as any).subscription_plans?.name || 'Nexora'
+      const planRow = (sub as any).subscription_plans
+      const planName = planRow?.name || 'Nexora'
+      // Le montant et la carte ne sont plus repris : Paddle envoie son propre
+      // recu, qui les porte avec l'identifiant de transaction.
+      const { credits, models } = planHighlights(planRow?.slug || '')
       await sendPaymentConfirmation({
         to: email,
         userName: (profile as any)?.display_name || email.split('@')[0],
         planName,
-        amount: `${(totalCents / 100).toFixed(2)} ${txn.currency_code || 'USD'}`,
-        cardLast4: '••••',
+        credits,
+        models,
       })
     }
   } catch (err) {

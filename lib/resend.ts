@@ -12,6 +12,20 @@ export const resend = new Resend(process.env.RESEND_API_KEY)
  * la reinitialisation de son mot de passe recevait un message d'un domaine
  * inconnu, promis aux indesirables.
  */
+/**
+ * Echappe une valeur avant de l'inserer dans le HTML d'un message.
+ *
+ * Les noms viennent du profil, donc de l'utilisateur. orgEmails.ts le faisait
+ * deja ; ici les trois gabarits inseraient la valeur brute. Le risque n'est
+ * pas le navigateur du lecteur, c'est la reputation du domaine : du balisage
+ * injecte part signe noreply@nexoracoding.com.
+ */
+const esc = (v: unknown) =>
+  String(v ?? '').replace(
+    /[<>&]/g,
+    (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!,
+  )
+
 export const FROM_EMAIL = 'Nexora <noreply@nexoracoding.com>'
 
 /**
@@ -97,13 +111,13 @@ export async function sendPaymentConfirmation({
     // une adresse lue, pour qu'un client bloque ait une porte de sortie.
     replyTo: 'contact@nexoracoding.com',
     to,
-    subject: `Welcome to Nexora ${planName} — here's how to start`,
+    subject: `Welcome to Nexora ${esc(planName)} — here's how to start`,
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
 ${emailHeader()}
-        <h2 style="color:#a78bfa;margin-bottom:8px;">You're on ${planName}</h2>
-        <p style="margin-top:0;">Hi ${userName},</p>
-        <p>Your plan is active — <strong>${credits} credits a month</strong>, with ${models}.
+        <h2 style="color:#a78bfa;margin-bottom:8px;">You're on ${esc(planName)}</h2>
+        <p style="margin-top:0;">Hi ${esc(userName)},</p>
+        <p>Your plan is active — <strong>${esc(credits)} credits a month</strong>, with ${esc(models)}.
            Paddle has sent your receipt separately.</p>
 
         <p style="margin-top:28px;margin-bottom:12px;font-weight:600;color:#e9e4ff;">Install Nexora</p>
@@ -163,7 +177,7 @@ export async function sendPasswordResetEmail({
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
 ${emailHeader()}
         <h2 style="color: #a78bfa;">Reset your password</h2>
-        <p>Hi ${userName},</p>
+        <p>Hi ${esc(userName)},</p>
         <p>You asked to reset your password. Use the button below to choose a new one:</p>
         <div style="text-align: center; margin: 32px 0;">
           <a href="${resetLink}" style="background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset my password</a>
@@ -189,7 +203,7 @@ export async function sendWelcomeEmail({
     html: `
       <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0f0a1e; color: #e2e8f0; padding: 40px; border-radius: 16px;">
 ${emailHeader()}
-        <h2 style="color: #a78bfa;">Welcome, ${userName}</h2>
+        <h2 style="color: #a78bfa;">Welcome, ${esc(userName)}</h2>
         <p>Your Nexora account is ready.</p>
         <p>Here is where to start:</p>
         <ul style="color: #cbd5e1;">

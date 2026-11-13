@@ -72,6 +72,26 @@ describe('message de bienvenue', () => {
   })
 })
 
+describe('echappement', () => {
+  it('echappe un nom qui contient du balisage', async () => {
+    /*
+     * Le nom vient du profil, donc de l'utilisateur. Le risque n'est pas le
+     * navigateur du lecteur mais la reputation du domaine : du balisage
+     * injecte partirait signe noreply@nexoracoding.com.
+     */
+    const { credits, models } = planHighlights('starter')
+    await sendPaymentConfirmation({
+      to: 'client@example.test',
+      userName: '<script>alert(1)</script>',
+      planName: 'Starter',
+      credits,
+      models,
+    })
+    expect(envoye.dernier.html).not.toContain('<script>')
+    expect(envoye.dernier.html).toContain('&lt;script&gt;')
+  })
+})
+
 describe('donnees du palier', () => {
   it('enumere les modeles en une phrase', () => {
     const { models } = planHighlights('starter')

@@ -11,30 +11,30 @@ import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 
 export const metadata: Metadata = {
-  title: 'À propos — Nexora',
+  title: 'About — Nexora',
   description: 'Nexora\'s mission: put the best AI models within reach, right inside your code editor.',
 }
 
 const VALUES = [
   {
     icon: Brain,
-    title: 'Routage intelligent',
-    desc: "Chaque requête est analysée selon sa complexité pour être orientée vers le modèle le plus adapté — pas de sur-consommation d'un modèle coûteux pour une question simple.",
+    title: 'Smart routing',
+    desc: 'Every request is sized up before it is sent, and goes to the model that fits it. A simple question does not burn credits on an expensive model.',
   },
   {
     icon: ShieldCheck,
-    title: 'Sécurité par défaut',
-    desc: "Un gestionnaire de permissions détecte et bloque les commandes potentiellement dangereuses (suppression de fichiers, exfiltration...) avant leur exécution par le mode Agent.",
+    title: 'Safe by default',
+    desc: 'Agent mode asks before anything irreversible. A permission layer catches destructive commands — deleting files, sending data out — and stops them.',
   },
   {
     icon: Lock,
-    title: 'Confidentialité',
-    desc: "Aucun cookie publicitaire, aucun traceur tiers à des fins commerciales. Les échanges sont chiffrés en transit.",
+    title: 'Privacy',
+    desc: 'No advertising cookies, no third-party trackers sold on. Everything you send is encrypted in transit.',
   },
   {
     icon: Gauge,
-    title: 'Tarification flexible',
-    desc: "Un plan gratuit généreux pour démarrer, et la possibilité de changer de plan à tout moment selon vos besoins.",
+    title: 'Pricing that follows you',
+    desc: 'A free tier large enough to form a real opinion, and you can move up or down whenever your needs change.',
   },
 ]
 
@@ -48,15 +48,15 @@ export default function AboutPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <Badge variant="primary" className="mb-5">
             <Brain className="w-3 h-3" />
-            À propos
+            About
           </Badge>
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-4 text-balance">
-            L'IA, au bon endroit dans votre flux de travail
+            AI where you already work
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Nexora est né d'un constat simple : les meilleurs modèles d'IA sont dispersés entre plusieurs
-            fournisseurs, avec des abonnements et des interfaces différents. Nexora réunit l'accès à ces modèles
-            en un seul outil, directement dans votre éditeur.
+            Nexora started from a plain observation: the best AI models sit behind separate providers, each
+            with its own subscription and its own interface. Nexora brings them together in one tool, inside the
+            editor you already use.
           </p>
         </div>
       </section>
@@ -64,16 +64,16 @@ export default function AboutPage() {
       <SectionLayout background="default" className="pt-0 sm:pt-0">
         <div className="max-w-2xl mx-auto text-center mb-4">
           <p className="text-muted-foreground leading-relaxed">
-            Concrètement, Nexora est une extension pour VS Code et les IDE JetBrains, doublée d'une interface en
-            ligne de commande, qui donne accès à des modèles comme DeepSeek, Gemini et Claude au travers d'un
-            chat intégré, d'une autocomplétion en temps réel, d'un mode Agent capable d'exécuter des tâches de
-            développement, et d'une édition inline pilotée par des instructions en langage naturel.
+            In practice, Nexora is an extension for VS Code and the JetBrains IDEs, plus a command-line
+            interface. It gives you models like DeepSeek, Gemini and Claude through a built-in chat, real-time
+            autocomplete, an Agent mode that carries out development tasks, and inline editing driven by plain
+            instructions.
           </p>
         </div>
       </SectionLayout>
 
       <SectionLayout background="muted">
-        <PageHeader badge="Nos principes" title="Ce qui guide le produit" subtitle="Quatre principes concrets, visibles dans la façon dont Nexora fonctionne au quotidien." />
+        <PageHeader badge="What we hold to" title="How the product is built" subtitle="Four commitments you can see in how Nexora behaves day to day." />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
           {VALUES.map(v => (
             <FeatureCard key={v.title} icon={v.icon} title={v.title} description={v.desc} />
@@ -82,7 +82,7 @@ export default function AboutPage() {
       </SectionLayout>
 
       <SectionLayout background="default">
-        <PageHeader badge="Partout où vous codez" title="Disponible sur votre IDE préféré" />
+        <PageHeader badge="Wherever you code" title="Available in the editor you use" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-4">
           {[
             { icon: Code2, label: 'VS Code' },
@@ -96,7 +96,7 @@ export default function AboutPage() {
           ))}
         </div>
         <p className="text-center text-sm text-muted-foreground max-w-xl mx-auto">
-          Voir les instructions d'installation détaillées dans la <Link href="/docs" className="text-foreground/80 hover:text-foreground underline underline-offset-4">documentation</Link>.
+          Step-by-step install instructions are in the <Link href="/docs" className="text-foreground/80 hover:text-foreground underline underline-offset-4">documentation</Link>.
         </p>
       </SectionLayout>
 
@@ -110,13 +110,13 @@ export default function AboutPage() {
                   <Rocket className="w-7 h-7 text-primary-foreground relative z-10" />
                 </div>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-balance">Une question sur Nexora ?</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-balance">A question about Nexora?</h2>
               <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">
-                Notre équipe est joignable directement — pas de formulaire à rallonge, pas de standard téléphonique.
+                You reach a person directly — no endless form, no phone tree.
               </p>
               <Link href="/contact">
                 <Button size="lg" variant="outline" className="px-10 h-12 text-base group">
-                  Nous contacter
+                  Get in touch
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>

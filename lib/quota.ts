@@ -114,3 +114,63 @@ export async function recordCall(
     // tracking best-effort — never break the response
   }
 }
+
+/**
+ * Compteur mensuel TOUS UTILISATEURS CONFONDUS, pour un fournisseur externe.
+ *
+ * Les limites par utilisateur protegent contre un abus individuel, pas
+ * contre l'addition : trente-quatre comptes gratuits epuisant chacun leurs
+ * trente recherches suffisent a depasser le millier de credits offerts par
+ * Tavily. Au-dela, la consommation devient facturable sans aucun plafond —
+ * un robinet ouvert sur un compte personnel.
+ *
+ * La fenetre est le MOIS CALENDAIRE UTC, pas la fenetre d'abonnement de
+ * l'utilisateur : c'est celle du fournisseur qu'il faut suivre, pas la
+ * notre.
+ */
+export async function getGlobalMonthlyCallCount(
+  sessionType: string,
+): Promise<number> {
+  const now = new Date()
+  const debutDuMois = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  ).toISOString()
+
+  const cle = `global:${sessionType}:${debutDuMois}`
+  const enCache = globalCountCache.get(cle)
+  if (enCache && enCache.expiresAt > Date.now()) return enCache.count
+  const partage = await cacheGet<number>(`callcount:${cle}`)
+  if (typeof partage === 'number') {
+    globalCountCache.set(cle, { count: partage, expiresAt: Date.now() + 60_000 })
+    return partage
+  }
+
+  // `head: true` ne rapatrie aucune ligne : seul le total nous interesse, et
+  // il peut se compter en dizaines de milliers.
+  const { count } = await supabase
+    .from('usage_sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('session_type', sessionType)
+    .gte('started_at', debutDuMois)
+
+  const total = count ?? 0
+  globalCountCache.set(cle, { count: total, expiresAt: Date.now() + 60_000 })
+  void cacheSet(`callcount:${cle}`, total, 60)
+  return total
+}
+
+const globalCountCache = new Map<string, { count: number; expiresAt: number }>()
+
+/**
+ * Le service a-t-il atteint son plafond mensuel global ?
+ *
+ * `limit <= 0` signifie « pas de plafond » — a n'utiliser que si le compte
+ * fournisseur est lui-meme bride.
+ */
+export async function isGlobalCallLimitReached(
+  sessionType: string,
+  limit: number,
+): Promise<boolean> {
+  if (limit <= 0) return false
+  return (await getGlobalMonthlyCallCount(sessionType)) >= limit
+}

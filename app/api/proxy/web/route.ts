@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { PLANS } from '@/lib/models'
-import { getUserPlan, isMonthlyCallLimitReached, recordCall } from '@/lib/quota'
+import { getUserPlan, isMonthlyCallLimitReached, recordCall, isGlobalCallLimitReached } from '@/lib/quota'
 
 export const runtime = 'nodejs'
 
@@ -11,6 +11,18 @@ export const runtime = 'nodejs'
 // queries now go straight to our own Tavily account instead of leaking through
 // infrastructure we don't control.
 const TAVILY_SEARCH_URL = 'https://api.tavily.com/search'
+
+/**
+ * Plafond mensuel global, tous utilisateurs confondus.
+ *
+ * L'offre gratuite de Tavily tourne autour de 1 000 credits par mois, et une
+ * recherche en profondeur « basic » en coute un. On s'arrete sous ce seuil
+ * pour garder une marge : « Pay as you go » est actif cote Tavily, donc le
+ * depassement se facture au lieu de s'interrompre.
+ *
+ * TAVILY_MONTHLY_CAP permet de le remonter le jour ou le compte est paye.
+ */
+const TAVILY_MONTHLY_CAP = Number(process.env.TAVILY_MONTHLY_CAP) || 800
 const UPSTREAM_TIMEOUT_MS = 20_000
 const MAX_QUERY_LENGTH = 2000
 const DEFAULT_N = 6
@@ -93,6 +105,32 @@ export async function POST(req: NextRequest) {
     // tokens (see lib/quota.ts). Independent of the flat per-IP rate limit in
     // middleware.ts, which only guards against short bursts, not sustained
     // monthly cost from a single valid token.
+    /*
+     * Le plafond GLOBAL d'abord : il protege la facture, pas l'equite.
+     *
+     * Les limites par utilisateur ci-dessous empechent un compte d'abuser ;
+     * elles n'empechent pas la somme de tous les comptes de depasser le
+     * quota offert par Tavily, apres quoi la consommation devient
+     * facturable sans plafond. On s'arrete donc AVANT, et on le dit sans
+     * accuser l'utilisateur : ce n'est pas lui qui a depasse quoi que ce
+     * soit.
+     */
+    if (await isGlobalCallLimitReached('web_search', TAVILY_MONTHLY_CAP)) {
+      const now = new Date()
+      const retryAfter = Math.ceil(
+        (Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) - now.getTime()) / 1000,
+      )
+      return NextResponse.json(
+        {
+          error:
+            'Web search is temporarily unavailable. It will be back at the start of next month.',
+          code: 'WEB_SEARCH_SERVICE_LIMIT',
+          retry_after: retryAfter,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+      )
+    }
+
     const userPlan = await getUserPlan(userId)
     const searchLimit = PLANS[userPlan].webSearchesPerMonth
     if (await isMonthlyCallLimitReached(userId, 'web_search', searchLimit)) {

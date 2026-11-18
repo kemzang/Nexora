@@ -1,0 +1,138 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+import {
+  adminClient,
+  bad,
+  clientIp,
+  recordSubmission,
+  tooManyAttempts,
+  tooManySubmissions,
+} from '../../leads/route-helpers'
+import { notifySupportTicket, sendTicketConfirmation } from '@/lib/supportEmails'
+import { generateReference, validerTicket } from '@/lib/supportTickets'
+
+export const runtime = 'nodejs'
+
+/**
+ * Creation d'un ticket.
+ *
+ * Volontairement ouverte aux visiteurs non connectes : « je n'arrive pas a
+ * me connecter » est justement le cas ou exiger une session rendrait le
+ * support inatteignable. En contrepartie, la route est bornee — champ
+ * piege, limite par adresse IP, longueurs maximales, et seuls les champs
+ * declares par le type choisi sont conserves.
+ *
+ * L'ordre compte : la ligne est ECRITE d'abord, les courriels partent
+ * ensuite. Un envoi rate ne doit jamais faire perdre une demande.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => ({}))
+
+    const validation = validerTicket(body)
+    if (!validation.ok) {
+      // Le champ piege recoit la meme reponse qu'un succes : inutile
+      // d'apprendre au robot ce qui l'a trahi.
+      if (validation.error === 'Invalid submission') {
+        return NextResponse.json({ success: true, reference: generateReference() })
+      }
+      return bad(validation.error)
+    }
+    const ticket = validation.ticket
+
+    const cle = `support:${clientIp(req)}`
+    if ((await tooManyAttempts(cle)) || (await tooManySubmissions(cle, 5))) {
+      return bad('Too many requests. Please try again later.', 429)
+    }
+
+    const db = adminClient()
+
+    // Contexte joint sans que l'utilisateur ait a le taper : c'est ce qui
+    // evite deux allers-retours avant de comprendre le probleme.
+    const contexte: Record<string, unknown> = { ...ticket.fields }
+    let userId: string | null = null
+
+    const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+    if (token) {
+      const { data } = await db.auth.getUser(token)
+      if (data.user) {
+        userId = data.user.id
+        contexte.account_email = data.user.email
+        contexte.account_created = data.user.created_at
+        const { data: sub } = await db
+          .from('user_subscriptions')
+          .select('status, current_period_end, subscription_plans!inner(slug)')
+          .eq('user_id', data.user.id)
+          .eq('status', 'active')
+          .maybeSingle()
+        contexte.plan = (sub?.subscription_plans as any)?.slug ?? 'free'
+        contexte.subscription_status = sub?.status ?? 'none'
+        if (sub?.current_period_end) {
+          contexte.period_end = sub.current_period_end
+        }
+      }
+    }
+
+    // Collision de reference : improbable (32^5), pas impossible. On
+    // reessaie plutot que de rendre une erreur a l'utilisateur.
+    let reference = generateReference()
+    let inserted = null
+    for (let essai = 0; essai < 3 && !inserted; essai++) {
+      const { data, error } = await db
+        .from('support_tickets')
+        .insert({
+          reference,
+          user_id: userId,
+          email: ticket.email,
+          category: ticket.category,
+          subject: ticket.subject,
+          message: ticket.message,
+          context: contexte,
+        })
+        .select('id, reference')
+        .single()
+      if (!error) {
+        inserted = data
+        break
+      }
+      if (!String(error.message).includes('duplicate')) {
+        console.error('[support] insertion impossible:', error)
+        return bad('Could not record your request. Please try again.', 500)
+      }
+      reference = generateReference()
+    }
+    if (!inserted) {
+      return bad('Could not record your request. Please try again.', 500)
+    }
+
+    await recordSubmission(cle)
+
+    // Les courriels apres l'ecriture, et sans bloquer la reponse.
+    void sendTicketConfirmation({ ...ticket, reference })
+    void notifySupportTicket({ ...ticket, reference, context: contexte })
+
+    return NextResponse.json({ success: true, reference })
+  } catch (e) {
+    console.error('[support] erreur:', e)
+    return bad('Server error', 500)
+  }
+}
+
+/** Les tickets de l'utilisateur connecte, pour qu'il suive ses demandes. */
+export async function GET(req: NextRequest) {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  if (!token) return bad('Unauthorized', 401)
+
+  const db = adminClient()
+  const { data: auth } = await db.auth.getUser(token)
+  if (!auth.user) return bad('Unauthorized', 401)
+
+  const { data } = await db
+    .from('support_tickets')
+    .select('reference, category, subject, status, created_at')
+    .eq('user_id', auth.user.id)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  return NextResponse.json({ tickets: data ?? [] })
+}

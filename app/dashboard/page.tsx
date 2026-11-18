@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import {
   Settings, LogOut, LayoutDashboard, Key, FileText, HelpCircle, ChevronRight,
   Bell, Menu, X, Activity, Wallet, Users, History, Radio
-, Inbox, Building2} from 'lucide-react'
+, Inbox, Building2, LifeBuoy} from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
@@ -24,6 +24,7 @@ import HistorySection from '@/app/dashboard/sections/HistorySection'
 import ActivitySection from '@/app/dashboard/sections/ActivitySection'
 import SettingsSection from '@/app/dashboard/sections/SettingsSection'
 import LeadsSection from '@/app/dashboard/sections/LeadsSection'
+import SupportSection from '@/app/dashboard/sections/SupportSection'
 import { TeamSection } from '@/app/dashboard/sections/TeamSection'
 
 const sidebarLinks = [
@@ -48,7 +49,10 @@ const sidebarLinks = [
  * tout appelant absent d'ADMIN_EMAILS, et c'est cette verification-la qui garde
  * les donnees.
  */
-const adminLink = { icon: Inbox, label: 'Leads', section: 'leads' }
+const adminLinks = [
+  { icon: Inbox, label: 'Leads', section: 'leads' },
+  { icon: LifeBuoy, label: 'Support', section: 'support' },
+]
 
 const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => void }>> = {
   dashboard: ({ user, onNavigate }) => <OverviewSection user={user} onNavigate={onNavigate} />,
@@ -62,6 +66,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   aide: () => <HelpSection />,
   equipe: () => <TeamSection />,
   leads: () => <LeadsSection />,
+  support: () => <SupportSection />,
   parametres: () => <SettingsSection />,
 }
 
@@ -98,7 +103,7 @@ export default function DashboardPage() {
     return () => { cancelled = true }
   }, [user])
 
-  const links = isAdmin ? [...sidebarLinks, adminLink] : sidebarLinks
+  const links = isAdmin ? [...sidebarLinks, ...adminLinks] : sidebarLinks
 
   useEffect(() => {
     if (!loading && !user) {

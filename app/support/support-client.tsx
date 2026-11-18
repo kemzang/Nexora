@@ -1,0 +1,319 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import {
+  ArrowLeft,
+  CheckCircle,
+  CreditCard,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { GlassCard } from '@/components/ui/glass-card'
+import {
+  Honeypot,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/components/patterns/lead-form-fields'
+import { supabase } from '@/lib/supabase'
+import {
+  SUPPORT_CATEGORIES,
+  type SupportCategory,
+} from '@/lib/supportTickets'
+import { SUPPORT_SLA } from '@/lib/supportEmails'
+
+/**
+ * Le parcours tient en trois ecrans, comme la creation d'une issue GitHub :
+ * on choisit un type, on remplit ce qui concerne CE type, on repart avec une
+ * reference. A aucun moment on ne tombe sur un formulaire vide ou l'on
+ * redemande tout a tout le monde.
+ */
+type Etape = 'choix' | 'formulaire' | 'envoye'
+
+interface Diagnostic {
+  state: string
+  plan: string | null
+  message: string
+}
+
+export function SupportClient() {
+  const [etape, setEtape] = useState<Etape>('choix')
+  const [categorie, setCategorie] = useState<SupportCategory | null>(null)
+  const [valeurs, setValeurs] = useState<Record<string, string>>({})
+  const [email, setEmail] = useState('')
+  const [sujet, setSujet] = useState('')
+  const [message, setMessage] = useState('')
+  const [piege, setPiege] = useState('')
+  const [reference, setReference] = useState('')
+  const [erreur, setErreur] = useState<string | null>(null)
+  const [envoi, setEnvoi] = useState(false)
+  const [connecte, setConnecte] = useState(false)
+
+  // Diagnostic d'abonnement (type « billing » uniquement).
+  const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null)
+  const [verification, setVerification] = useState(false)
+
+  // L'adresse de l'utilisateur connecte, pre-remplie : il n'a pas a retaper
+  // ce que nous savons deja.
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) {
+        setEmail(data.user.email)
+        setConnecte(true)
+      }
+    })
+  }, [])
+
+  async function jeton(): Promise<string | null> {
+    const { data } = await supabase.auth.getSession()
+    return data.session?.access_token ?? null
+  }
+
+  function choisir(c: SupportCategory) {
+    setCategorie(c)
+    setValeurs({})
+    setSujet('')
+    setMessage('')
+    setErreur(null)
+    setDiagnostic(null)
+    setEtape('formulaire')
+    if (c.showsPaymentCheck && connecte) void verifierPaiement()
+  }
+
+  /**
+   * « J'ai paye et rien ne s'est active » se resout presque toujours sans
+   * nous : le paiement a eu lieu, seule la synchronisation a manque. On
+   * relit donc l'etat chez Paddle avant de proposer d'ecrire.
+   */
+  async function verifierPaiement() {
+    setVerification(true)
+    setDiagnostic(null)
+    try {
+      const token = await jeton()
+      if (!token) return
+      const res = await fetch('/api/support/subscription-check', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) setDiagnostic(await res.json())
+    } catch {
+      // Silencieux : le formulaire reste disponible, c'est l'essentiel.
+    } finally {
+      setVerification(false)
+    }
+  }
+
+  async function envoyer(e: React.FormEvent) {
+    e.preventDefault()
+    if (!categorie) return
+    setErreur(null)
+    setEnvoi(true)
+    try {
+      const token = await jeton()
+      const res = await fetch('/api/support/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          category: categorie.id,
+          email,
+          subject: sujet,
+          message,
+          fields: valeurs,
+          website: piege,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErreur(data.error ?? 'Could not send your request.')
+        return
+      }
+      setReference(data.reference)
+      setEtape('envoye')
+    } catch {
+      setErreur('Could not reach the server. Please try again.')
+    } finally {
+      setEnvoi(false)
+    }
+  }
+
+  if (etape === 'envoye') {
+    return (
+      <GlassCard className="p-8 text-center">
+        <CheckCircle className="mx-auto mb-4 h-10 w-10 text-emerald-400" />
+        <h2 className="mb-2 text-xl font-semibold">Your request is recorded</h2>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Keep this reference — quoting it lets us find your request straight
+          away.
+        </p>
+        <p className="mb-6 font-mono text-3xl font-bold tracking-wider">
+          {reference}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          We reply {SUPPORT_SLA}, at <strong>{email}</strong>. A confirmation
+          is on its way.
+        </p>
+      </GlassCard>
+    )
+  }
+
+  if (etape === 'choix') {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {SUPPORT_CATEGORIES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => choisir(c)}
+            className="border-border/60 hover:border-foreground/30 hover:bg-foreground/[0.03] rounded-xl border border-solid p-5 text-left transition-colors"
+          >
+            <span className="mb-1 block font-medium">{c.title}</span>
+            <span className="text-muted-foreground block text-sm leading-relaxed">
+              {c.description}
+            </span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  const c = categorie!
+  return (
+    <form onSubmit={envoyer} className="space-y-5">
+      <button
+        type="button"
+        onClick={() => setEtape('choix')}
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> All request types
+      </button>
+
+      <div>
+        <h2 className="text-lg font-semibold">{c.title}</h2>
+        <p className="text-muted-foreground text-sm">{c.description}</p>
+      </div>
+
+      {c.showsPaymentCheck && (
+        <GlassCard className="p-4">
+          <div className="flex items-start gap-3">
+            <CreditCard className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
+            <div className="flex-1">
+              <p className="mb-1 text-sm font-medium">Check your payment first</p>
+              {!connecte ? (
+                <p className="text-muted-foreground text-sm">
+                  Sign in and we can look your payment up automatically.
+                </p>
+              ) : verification ? (
+                <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Looking up
+                  your subscription…
+                </p>
+              ) : diagnostic ? (
+                <p
+                  className={`text-sm ${
+                    diagnostic.state === 'fixed' || diagnostic.state === 'ok'
+                      ? 'text-emerald-400'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {diagnostic.message}
+                </p>
+              ) : null}
+              {connecte && !verification && (
+                <button
+                  type="button"
+                  onClick={() => void verifierPaiement()}
+                  className="text-foreground/70 hover:text-foreground mt-2 flex items-center gap-1.5 text-xs"
+                >
+                  <RefreshCw className="h-3 w-3" /> Re-check my payment
+                </button>
+              )}
+            </div>
+          </div>
+        </GlassCard>
+      )}
+
+      <TextField
+        label="Your email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        type="email"
+        placeholder="you@example.com"
+      />
+
+      {c.fields
+        .filter((f) => f.name !== 'message')
+        .map((f) =>
+          f.type === 'select' ? (
+            <SelectField
+              key={f.name}
+              label={f.label}
+              value={valeurs[f.name] ?? ''}
+              onChange={(v: string) => setValeurs({ ...valeurs, [f.name]: v })}
+              required={f.required}
+              options={(f.options ?? []).map((o) => ({ value: o, label: o }))}
+            />
+          ) : f.type === 'textarea' ? (
+            <TextArea
+              key={f.name}
+              label={f.label}
+              value={valeurs[f.name] ?? ''}
+              onChange={(v: string) => setValeurs({ ...valeurs, [f.name]: v })}
+              required={f.required}
+              placeholder={f.placeholder}
+            />
+          ) : (
+            <TextField
+              key={f.name}
+              label={f.label}
+              value={valeurs[f.name] ?? ''}
+              onChange={(e) =>
+                setValeurs({ ...valeurs, [f.name]: e.target.value })
+              }
+              required={f.required}
+              placeholder={f.placeholder}
+            />
+          ),
+        )}
+
+      <TextField
+        label="Subject"
+        value={sujet}
+        onChange={(e) => setSujet(e.target.value)}
+        placeholder={c.title}
+      />
+
+      <TextArea
+        label={c.fields.find((f) => f.name === 'message')?.label ?? 'Message'}
+        value={message}
+        onChange={setMessage}
+        required
+        placeholder={c.fields.find((f) => f.name === 'message')?.placeholder}
+      />
+
+      <Honeypot value={piege} onChange={setPiege} />
+
+      {erreur && <p className="text-sm text-red-400">{erreur}</p>}
+
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={envoi}>
+          {envoi ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
+            </>
+          ) : (
+            'Send request'
+          )}
+        </Button>
+        <span className="text-muted-foreground text-xs">
+          We reply {SUPPORT_SLA}.
+        </span>
+      </div>
+    </form>
+  )
+}

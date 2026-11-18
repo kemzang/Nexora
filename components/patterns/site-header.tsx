@@ -29,6 +29,10 @@ export function SiteHeader() {
     ['/#features', t.nav.features],
     ['/pricing', t.nav.pricing],
     ['/docs', t.nav.docs],
+    // Visible pour TOUT LE MONDE, connecte ou non : « je n'arrive pas a me
+    // connecter » est precisement le cas ou exiger une session rendrait le
+    // support inatteignable.
+    ['/support', t.nav.support],
   ]
 
   return (

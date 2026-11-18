@@ -20,7 +20,7 @@ export const resend = new Resend(process.env.RESEND_API_KEY)
  * pas le navigateur du lecteur, c'est la reputation du domaine : du balisage
  * injecte part signe noreply@nexoracoding.com.
  */
-const esc = (v: unknown) =>
+export const esc = (v: unknown) =>
   String(v ?? '').replace(
     /[<>&]/g,
     (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!,

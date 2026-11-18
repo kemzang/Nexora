@@ -7,6 +7,7 @@ export type Translations = {
     features: string
     pricing: string
     docs: string
+    support: string
     login: string
     start: string
   }
@@ -110,6 +111,7 @@ const fr: Translations = {
     features: 'Fonctionnalités',
     pricing: 'Tarifs',
     docs: 'Documentation',
+    support: 'Support',
     login: 'Connexion',
     start: 'Commencer',
   },
@@ -288,6 +290,7 @@ const en: Translations = {
     features: 'Features',
     pricing: 'Pricing',
     docs: 'Documentation',
+    support: 'Support',
     login: 'Login',
     start: 'Get Started',
   },
@@ -466,6 +469,7 @@ const es: Translations = {
     features: 'Características',
     pricing: 'Precios',
     docs: 'Documentación',
+    support: 'Soporte',
     login: 'Iniciar sesión',
     start: 'Comenzar',
   },
@@ -644,6 +648,7 @@ const pt: Translations = {
     features: 'Funcionalidades',
     pricing: 'Preços',
     docs: 'Documentação',
+    support: 'Suporte',
     login: 'Entrar',
     start: 'Começar',
   },

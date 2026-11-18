@@ -1,5 +1,5 @@
 import { FROM_EMAIL, emailHeader, esc, resend } from './resend'
-import { categoryById } from './supportTickets'
+import { SUPPORT_SLA, categoryById } from './supportTickets'
 
 /**
  * Les deux courriels d'un ticket.
@@ -12,8 +12,7 @@ import { categoryById } from './supportTickets'
 
 const SUPPORT_INBOX = process.env.SUPPORT_INBOX_EMAIL || 'support@nexoracoding.com'
 
-/** Delai annonce. Tenable, donc tenu — une promesse ratee fait plus de degats qu'une absence de promesse. */
-export const SUPPORT_SLA = 'within 2 business days'
+export { SUPPORT_SLA }
 
 function ligne(label: string, valeur: string): string {
   return `

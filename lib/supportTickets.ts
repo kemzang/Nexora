@@ -10,6 +10,16 @@
  * aucune case choisit au hasard, et les tickets arrivent mal classes.
  */
 
+/**
+ * Delai de reponse annonce. Tenable, donc tenu.
+ *
+ * Il vit ICI et non dans supportEmails : ce module-la construit un client
+ * Resend des son chargement. Importe depuis un composant client, il
+ * s'executait dans le navigateur sans clef d'API et faisait tomber toute la
+ * page — le serveur rendait le titre, et plus rien en dessous.
+ */
+export const SUPPORT_SLA = 'within 2 business days'
+
 export type SupportCategoryId =
   | 'billing'
   | 'bug'

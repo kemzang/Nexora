@@ -20,9 +20,9 @@ import {
 import { supabase } from '@/lib/supabase'
 import {
   SUPPORT_CATEGORIES,
+  SUPPORT_SLA,
   type SupportCategory,
 } from '@/lib/supportTickets'
-import { SUPPORT_SLA } from '@/lib/supportEmails'
 
 /**
  * Le parcours tient en trois ecrans, comme la creation d'une issue GitHub :

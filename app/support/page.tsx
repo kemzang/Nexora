@@ -4,7 +4,7 @@ import { Mail } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { SiteFooter } from '@/components/patterns/site-footer'
 import { SiteHeader } from '@/components/patterns/site-header'
-import { SUPPORT_SLA } from '@/lib/supportEmails'
+import { SUPPORT_SLA } from '@/lib/supportTickets'
 import { SupportClient } from './support-client'
 
 export const metadata: Metadata = {

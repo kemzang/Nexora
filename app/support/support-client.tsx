@@ -143,7 +143,7 @@ export function SupportClient() {
 
   if (etape === 'envoye') {
     return (
-      <GlassCard className="p-8 text-center">
+      <GlassCard className="mx-auto max-w-2xl p-8 text-center">
         <CheckCircle className="mx-auto mb-4 h-10 w-10 text-emerald-400" />
         <h2 className="mb-2 text-xl font-semibold">Your request is recorded</h2>
         <p className="mb-6 text-sm text-muted-foreground">
@@ -163,16 +163,27 @@ export function SupportClient() {
 
   if (etape === 'choix') {
     return (
-      <div className="grid gap-3 sm:grid-cols-2">
+      /*
+       * Trois par ligne, bordures franches, texte lisible.
+       *
+       * Les cartes etaient bordees d'un trait a 60 % d'opacite et decrites
+       * en `text-muted-foreground` : sur fond sombre, on devinait les
+       * contours et on plissait les yeux pour lire. Quelqu'un qui arrive
+       * ici a deja un probleme — lui en ajouter un de lecture est le
+       * dernier moment pour faire des economies de contraste.
+       */
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SUPPORT_CATEGORIES.map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => choisir(c)}
-            className="border-border/60 hover:border-foreground/30 hover:bg-foreground/[0.03] rounded-xl border border-solid p-5 text-left transition-colors"
+            className="border-foreground/20 hover:border-foreground/60 hover:bg-foreground/[0.06] flex h-full flex-col rounded-xl border-2 border-solid p-5 text-left transition-colors"
           >
-            <span className="mb-1 block font-medium">{c.title}</span>
-            <span className="text-muted-foreground block text-sm leading-relaxed">
+            <span className="mb-2 block text-base font-semibold">
+              {c.title}
+            </span>
+            <span className="text-foreground/75 block text-sm leading-relaxed">
               {c.description}
             </span>
           </button>
@@ -183,7 +194,7 @@ export function SupportClient() {
 
   const c = categorie!
   return (
-    <form onSubmit={envoyer} className="space-y-5">
+    <form onSubmit={envoyer} className="mx-auto max-w-2xl space-y-5">
       <button
         type="button"
         onClick={() => setEtape('choix')}

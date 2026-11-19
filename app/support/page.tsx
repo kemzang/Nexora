@@ -36,7 +36,10 @@ export default function SupportPage() {
       </section>
 
       <section className="pb-24">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+        {/* Plus large que le reste du site : trois colonnes a l'etroit
+            redeviennent illisibles, ce qu'on cherche justement a corriger.
+            Le formulaire, lui, se recadre tout seul. */}
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <SupportClient />
 
           <p className="text-muted-foreground mt-10 flex items-center justify-center gap-2 text-sm">

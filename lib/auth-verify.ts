@@ -8,6 +8,45 @@ const supabase = createClient(
 // Cache en mémoire (valide pendant la durée de vie du serveur)
 const tokenCache = new Map<string, { userId: string; expiresAt: number }>()
 
+/**
+ * Faut-il une adresse confirmee pour utiliser l'API ?
+ *
+ * Deux comptes ont ete crees le 19 novembre depuis un domaine de boites
+ * jetables (niceground.shop, dont le courrier part chez duckmail.sbs), avec
+ * des adresses generees au hasard. Sans cette verification, fabriquer un
+ * compte ne coute rien : il suffit d'une adresse inventee pour consommer des
+ * jetons modeles, qui nous sont factures.
+ *
+ * Exiger la confirmation n'exclut aucun utilisateur legitime — il a de toute
+ * facon recu le courriel — et coupe net les comptes fabriques a la chaine.
+ *
+ * L'interrupteur existe pour une raison precise : si des comptes anterieurs
+ * n'ont jamais confirme leur adresse, ils seraient bloques du jour au
+ * lendemain. REQUIRE_CONFIRMED_EMAIL=false les laisse passer, le temps de
+ * regulariser.
+ */
+function confirmationExigee(): boolean {
+  return process.env.REQUIRE_CONFIRMED_EMAIL !== 'false'
+}
+
+/** Cache des confirmations : une requete par utilisateur toutes les 10 min. */
+const confirmCache = new Map<string, { ok: boolean; expiresAt: number }>()
+
+async function adresseConfirmee(userId: string): Promise<boolean> {
+  if (!confirmationExigee()) return true
+  const cached = confirmCache.get(userId)
+  if (cached && cached.expiresAt > Date.now()) return cached.ok
+
+  const { data } = await supabase.auth.admin.getUserById(userId)
+  // `confirmed_at` couvre aussi les comptes confirmes par un autre moyen
+  // (lien magique, fournisseur externe) : s'en tenir a `email_confirmed_at`
+  // bloquerait ceux qui se connectent par GitHub.
+  const u = data?.user as { email_confirmed_at?: string; confirmed_at?: string } | undefined
+  const ok = Boolean(u?.email_confirmed_at || u?.confirmed_at)
+  confirmCache.set(userId, { ok, expiresAt: Date.now() + 10 * 60 * 1000 })
+  return ok
+}
+
 async function sha256(text: string): Promise<string> {
   const encoder = new TextEncoder()
   const data = encoder.encode(text)
@@ -34,6 +73,9 @@ export async function verifyToken(token: string): Promise<string | null> {
 
     if (error || !data) return null
     if (data.expires_at && new Date(data.expires_at) < new Date()) return null
+    // Une clef `nxr_` survit a son porteur : on verifie le compte, pas
+    // seulement la clef.
+    if (!(await adresseConfirmee(data.user_id))) return null
 
     // Mettre en cache pour 5 minutes
     tokenCache.set(token, { userId: data.user_id, expiresAt: Date.now() + 5 * 60 * 1000 })
@@ -43,6 +85,12 @@ export async function verifyToken(token: string): Promise<string | null> {
   // Token Supabase natif (JWT)
   const { data: { user }, error } = await supabase.auth.getUser(token)
   if (error || !user) return null
+  // Supabase delivre une session meme sans confirmation quand l'option est
+  // desactivee cote projet : la verification se fait donc ici, ou elle ne
+  // depend pas d'un reglage qu'on peut changer par megarde.
+  if (confirmationExigee() && !(user.email_confirmed_at || user.confirmed_at)) {
+    return null
+  }
 
   // Mettre en cache pour 5 minutes
   tokenCache.set(token, { userId: user.id, expiresAt: Date.now() + 5 * 60 * 1000 })

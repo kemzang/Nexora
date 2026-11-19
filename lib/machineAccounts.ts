@@ -69,11 +69,17 @@ export async function linkAccountToMachine(
 }
 
 /** Le compte a-t-il perdu son quota gratuit ? Faux par defaut, y compris en cas d'erreur. */
+/**
+ * Le client est facultatif : plusieurs routes concernees n'en ouvrent pas
+ * (reclassement, embeddings). Leur en imposer un pour poser cette question
+ * aurait ete la raison parfaite de ne pas la poser du tout — et c'est
+ * exactement ce qui s'etait passe.
+ */
 export async function isFreeQuotaBlocked(
-  db: SupabaseClient,
+  db: SupabaseClient | null | undefined,
   userId: string,
 ): Promise<boolean> {
-  const { data, error } = await db
+  const { data, error } = await (db ?? service())
     .from('user_profiles')
     .select('free_quota_blocked')
     .eq('id', userId)

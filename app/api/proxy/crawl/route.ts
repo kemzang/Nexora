@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { PLANS } from '@/lib/models'
-import { getUserPlan, isMonthlyCallLimitReached, recordCall } from '@/lib/quota'
+import { getUserPlan, isMonthlyCallLimitReached, recordCall, isGlobalCallLimitReached } from '@/lib/quota'
+import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 
 export const runtime = 'nodejs'
 
@@ -10,6 +11,15 @@ export const runtime = 'nodejs'
 // used by the codebase-docs-awareness feature in the Nexora client. Replaces
 // Continue Dev Inc.'s third-party trial proxy with our own Tavily account.
 const TAVILY_CRAWL_URL = 'https://api.tavily.com/crawl'
+
+/**
+ * Plafond mensuel global, tous utilisateurs confondus.
+ *
+ * Un crawl consomme plusieurs credits Tavily, davantage qu'une recherche.
+ * Le compteur est distinct de celui de la recherche : deux robinets, deux
+ * vannes, pour pouvoir en fermer un sans fermer l'autre.
+ */
+const TAVILY_MONTHLY_CAP = Number(process.env.TAVILY_CRAWL_MONTHLY_CAP) || 200
 const UPSTREAM_TIMEOUT_MS = 45_000
 // Tavily's documented supported range for max_depth is 1-5.
 const MAX_DEPTH = 5
@@ -106,6 +116,44 @@ export async function POST(req: NextRequest) {
     // middleware.ts, which only guards against short bursts, not sustained
     // monthly cost from a single valid token.
     const userPlan = await getUserPlan(userId)
+
+    /*
+     * Deux garde-fous qui manquaient ici alors qu'ils existaient pour la
+     * recherche web — et le crawl coute PLUS de credits Tavily qu'une
+     * recherche.
+     *
+     * Le premier : au-dela de deux comptes gratuits par machine, plus de
+     * credits offerts. Le second : un plafond mensuel tous utilisateurs
+     * confondus, parce que les limites par compte n'empechent pas leur
+     * somme de depasser le quota du fournisseur, apres quoi « Pay as you
+     * go » facture au lieu d'arreter.
+     */
+    if (userPlan === 'free' && (await isFreeQuotaBlocked(null, userId))) {
+      return NextResponse.json(
+        {
+          error: 'Monthly free credits are not available on this account.',
+          code: 'FREE_QUOTA_BLOCKED',
+        },
+        { status: 429 },
+      )
+    }
+
+    if (await isGlobalCallLimitReached('web_crawl', TAVILY_MONTHLY_CAP)) {
+      const now = new Date()
+      const retryAfter = Math.ceil(
+        (Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) - now.getTime()) / 1000,
+      )
+      return NextResponse.json(
+        {
+          error:
+            'Documentation crawling is temporarily unavailable. It will be back at the start of next month.',
+          code: 'WEB_CRAWL_SERVICE_LIMIT',
+          retry_after: retryAfter,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+      )
+    }
+
     const crawlLimit = PLANS[userPlan].webCrawlsPerMonth
     if (await isMonthlyCallLimitReached(userId, 'web_crawl', crawlLimit)) {
       const now = new Date()

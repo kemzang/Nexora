@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { rerankDocuments } from '@/lib/rerank'
+import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
+import { getUserPlan } from '@/lib/quota'
 
 export const runtime = 'nodejs'
 
@@ -25,6 +27,25 @@ export async function POST(req: NextRequest) {
     const userId = await verifyToken(token)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    /*
+     * Le palier gratuit ne vaut que pour les deux premiers comptes d'une
+     * meme machine. La limite n'etait appliquee que dans chat/completions :
+     * un troisieme compte perdait le chat offert mais gardait le reclassement — facture
+     * a Nexora. Les plans payants ne sont jamais concernes.
+     */
+    if (
+      (await getUserPlan(userId)) === 'free' &&
+      (await isFreeQuotaBlocked(null, userId))
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Monthly free credits are not available on this account.',
+          code: 'FREE_QUOTA_BLOCKED',
+        },
+        { status: 429 },
+      )
     }
 
     const body = await req.json()

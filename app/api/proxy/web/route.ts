@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { PLANS } from '@/lib/models'
 import { getUserPlan, isMonthlyCallLimitReached, recordCall, isGlobalCallLimitReached } from '@/lib/quota'
+import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 
 export const runtime = 'nodejs'
 
@@ -132,6 +133,23 @@ export async function POST(req: NextRequest) {
     }
 
     const userPlan = await getUserPlan(userId)
+
+    /*
+     * Meme regle que pour les modeles : au-dela de deux comptes gratuits par
+     * machine, plus de credits offerts. Sans ce controle, un troisieme
+     * compte gardait la recherche web — celle dont les credits Tavily nous
+     * sont factures des que l'offre gratuite est depassee.
+     */
+    if (userPlan === 'free' && (await isFreeQuotaBlocked(null, userId))) {
+      return NextResponse.json(
+        {
+          error: 'Monthly free credits are not available on this account.',
+          code: 'FREE_QUOTA_BLOCKED',
+        },
+        { status: 429 },
+      )
+    }
+
     const searchLimit = PLANS[userPlan].webSearchesPerMonth
     if (await isMonthlyCallLimitReached(userId, 'web_search', searchLimit)) {
       const now = new Date()

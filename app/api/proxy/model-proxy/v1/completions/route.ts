@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getEffectiveTokenLimit, type PlanId } from '@/lib/models'
 import type { FimModelId } from '@/lib/modelRouter'
 import { quotaWindow, secondsUntilReset } from '@/lib/billingWindow'
+import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 
 export const runtime = 'nodejs'
 
@@ -64,6 +65,18 @@ async function getUserCreatedAt(userId: string): Promise<string | undefined> {
 }
 
 async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string | null> {
+  /*
+   * Le palier gratuit ne vaut que pour les deux premiers comptes d'une meme
+   * machine. Cette limite n'etait appliquee QUE dans chat/completions : un
+   * troisieme compte perdait le chat offert mais gardait l'autocompletion,
+   * les embeddings, le reclassement et la recherche web — tous factures a
+   * Nexora, et l'autocompletion est la plus gourmande puisqu'elle part a
+   * chaque pause de frappe. Les plans payants ne sont jamais concernes.
+   */
+  if (plan === 'free' && (await isFreeQuotaBlocked(supabase, userId))) {
+    return '0'
+  }
+
   const createdAt = await getUserCreatedAt(userId)
   const planLimit = getEffectiveTokenLimit(plan, createdAt)
   if (planLimit <= 0) return null

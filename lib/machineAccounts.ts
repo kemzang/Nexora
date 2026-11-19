@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
+import { cacheDel, cacheGet, cacheSet } from './upstash-cache'
+
 /**
  * Comptes gratuits par machine.
  *
@@ -65,6 +67,11 @@ export async function linkAccountToMachine(
     await db.from('user_profiles')
       .update({ free_quota_blocked: true })
       .eq('id', userId)
+    // Le drapeau vient de changer : sans cette invalidation, le compte
+    // garderait son quota gratuit pendant la duree du cache, c'est-a-dire
+    // au moment precis ou on vient de le lui retirer.
+    blocageCache.delete(userId)
+    await cacheDel(`freeblock:${userId}`)
   }
 }
 
@@ -79,11 +86,37 @@ export async function isFreeQuotaBlocked(
   db: SupabaseClient | null | undefined,
   userId: string,
 ): Promise<boolean> {
+  /*
+   * Mis en cache une minute.
+   *
+   * La reponse ne change qu'a l'activation d'un nouveau compte sur la meme
+   * machine — un evenement rare — alors que la question est posee a chaque
+   * appel, y compris par l'autocompletion qui part a chaque pause de
+   * frappe. Sans cache, c'etait un aller-retour de base supplementaire la
+   * ou la latence se voit le plus.
+   */
+  const enMemoire = blocageCache.get(userId)
+  if (enMemoire && enMemoire.expiresAt > Date.now()) return enMemoire.blocked
+
+  const partage = await cacheGet<boolean>(`freeblock:${userId}`)
+  if (typeof partage === 'boolean') {
+    blocageCache.set(userId, { blocked: partage, expiresAt: Date.now() + 60_000 })
+    return partage
+  }
+
   const { data, error } = await (db ?? service())
     .from('user_profiles')
     .select('free_quota_blocked')
     .eq('id', userId)
     .maybeSingle()
+  // Une erreur de lecture ne doit pas priver quelqu'un de son quota : on
+  // repond « non bloque » sans rien mettre en cache.
   if (error || !data) return false
-  return Boolean(data.free_quota_blocked)
+
+  const blocked = Boolean(data.free_quota_blocked)
+  blocageCache.set(userId, { blocked, expiresAt: Date.now() + 60_000 })
+  void cacheSet(`freeblock:${userId}`, blocked, 60)
+  return blocked
 }
+
+const blocageCache = new Map<string, { blocked: boolean; expiresAt: number }>()

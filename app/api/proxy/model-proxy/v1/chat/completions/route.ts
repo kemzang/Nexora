@@ -466,8 +466,8 @@ function buildAnthropicBody(body: any, modelApiId: string): any {
   const systemField = applyAnthropicCache(system, msgs)
   if (system) req.system = systemField
 
-  if (body.temperature != null) req.temperature = body.temperature
-  if (body.top_p != null) req.top_p = body.top_p
+  // Anthropic has deprecated sampling parameters for current Claude models.
+  // Do not forward OpenAI-compatible temperature/top_p values to Messages API.
 
   if (Array.isArray(body.tools) && body.tools.length > 0) {
     req.tools = body.tools.map((t: any) => ({

@@ -15,6 +15,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  * confirme, et les bloquer du jour au lendemain serait pire que le mal.
  */
 
+const panne = { actif: false }
+
 const utilisateur = {
   id: 'u1',
   email: 'bryan@example.com',
@@ -27,7 +29,10 @@ vi.mock('@supabase/supabase-js', () => ({
     auth: {
       getUser: async () => ({ data: { user: utilisateur }, error: null }),
       admin: {
-        getUserById: async () => ({ data: { user: utilisateur } }),
+        getUserById: async () => {
+          if (panne.actif) throw new Error('supabase injoignable')
+          return { data: { user: utilisateur }, error: null }
+        },
       },
     },
     from: () => ({
@@ -57,6 +62,7 @@ beforeEach(() => {
   utilisateur.email_confirmed_at = null
   utilisateur.confirmed_at = null
   delete process.env.REQUIRE_CONFIRMED_EMAIL
+  panne.actif = false
 })
 
 describe('adresse confirmee', () => {
@@ -80,6 +86,18 @@ describe('adresse confirmee', () => {
   it('refuse une clef nxr_ dont le compte n est pas confirme', async () => {
     // Une clef survit a son porteur : on verifie le compte, pas la clef.
     expect(await verifier('nxr_abcdef0123456789')).toBeNull()
+  })
+
+  it('laisse passer quand la verification elle-meme tombe en panne', async () => {
+    /*
+     * Traiter « Supabase n'a pas repondu » comme « non confirme » bloquerait
+     * l'utilisateur sur une coupure d'une seconde — et, le resultat etant
+     * mis en cache, pendant dix minutes. Le risque inverse est sans commune
+     * mesure : cette verification ne protege pas l'acces, le jeton a deja
+     * ete valide.
+     */
+    panne.actif = true
+    expect(await verifier('nxr_abcdef0123456789')).toBe('u1')
   })
 
   it('laisse tout passer quand l interrupteur est baisse', async () => {

@@ -37,12 +37,34 @@ async function adresseConfirmee(userId: string): Promise<boolean> {
   const cached = confirmCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) return cached.ok
 
-  const { data } = await supabase.auth.admin.getUserById(userId)
+  /*
+   * En cas de panne, on LAISSE PASSER.
+   *
+   * La version precedente traitait « Supabase n'a pas repondu » comme
+   * « compte non confirme » : une coupure d'une seconde bloquait
+   * l'utilisateur, et le resultat etant mis en cache, elle le bloquait
+   * pendant dix minutes. On aurait cherche la panne chez nous pendant des
+   * heures.
+   *
+   * Le risque inverse — laisser passer un compte non confirme pendant une
+   * panne — est sans commune mesure : cette verification ne protege que
+   * contre des comptes fabriques, pas contre un acces non autorise. Le
+   * jeton, lui, a deja ete valide.
+   */
+  let u: { email_confirmed_at?: string; confirmed_at?: string } | undefined
+  try {
+    const { data, error } = await supabase.auth.admin.getUserById(userId)
+    if (error || !data?.user) return true
+    u = data.user as typeof u
+  } catch {
+    return true
+  }
+
   // `confirmed_at` couvre aussi les comptes confirmes par un autre moyen
   // (lien magique, fournisseur externe) : s'en tenir a `email_confirmed_at`
   // bloquerait ceux qui se connectent par GitHub.
-  const u = data?.user as { email_confirmed_at?: string; confirmed_at?: string } | undefined
   const ok = Boolean(u?.email_confirmed_at || u?.confirmed_at)
+  // Seul un resultat SUR est mis en cache.
   confirmCache.set(userId, { ok, expiresAt: Date.now() + 10 * 60 * 1000 })
   return ok
 }

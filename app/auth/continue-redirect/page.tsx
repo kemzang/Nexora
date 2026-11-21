@@ -48,33 +48,57 @@ export default function Page() {
           return
         }
 
-        // Borne de temps : sans elle, une requete qui ne repond pas laisse
-        // l'utilisateur devant un spinner sans fin.
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 15000)
+        /*
+         * Borne de temps, puis un reessai.
+         *
+         * Sans borne, une requete qui ne repond pas laisse l'utilisateur
+         * devant un spinner sans fin. Mais quinze secondes etaient trop
+         * courtes : la fonction serverless demarre a froid, et la premiere
+         * requete apres une periode d'inactivite met couramment plusieurs
+         * secondes rien qu'a se reveiller. L'utilisateur voyait une erreur
+         * alors que le serveur travaillait encore.
+         *
+         * Le reessai regle justement ce cas : la seconde tentative tombe sur
+         * une fonction deja chaude et aboutit en une seconde. Emettre deux
+         * codes est sans consequence — ils expirent en dix minutes et le
+         * premier reste inutilise.
+         */
+        const appeler = async (): Promise<Response> => {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 30000)
+          try {
+            return await fetch('/api/auth/generate-auth-code', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                // L'identite est prouvee par le jeton ; le serveur ignore tout
+                // userId qu'on lui passerait.
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ state }),
+              signal: controller.signal,
+            })
+          } finally {
+            clearTimeout(timeout)
+          }
+        }
+
         let response: Response
         try {
-          response = await fetch('/api/auth/generate-auth-code', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              // L'identite est prouvee par le jeton ; le serveur ignore tout
-              // userId qu'on lui passerait.
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({ state }),
-            signal: controller.signal,
-          })
+          try {
+            response = await appeler()
+          } catch {
+            setMessage('Still working — retrying…')
+            response = await appeler()
+          }
         } catch (fetchError) {
           setStatus('error')
           setMessage(
             (fetchError as Error)?.name === 'AbortError'
-              ? "Le serveur n'a pas repondu a temps. Verifie ta connexion et reessaie."
-              : "Impossible de joindre le serveur d'authentification."
+              ? 'The server did not respond in time. Check your connection and try again.'
+              : 'Could not reach the authentication server.',
           )
           return
-        } finally {
-          clearTimeout(timeout)
         }
 
         if (response.status === 401) {
@@ -125,7 +149,27 @@ export default function Page() {
           return
         }
 
-        const ALLOWED_SCHEMES = ['vscode', 'vscode-insiders', 'vscodium', 'cursor', 'windsurf', 'code-oss', 'trae']
+        /*
+         * Les editeurs qui savent recevoir un lien profond.
+         *
+         * Un editeur absent de cette liste n'est pas refuse : il bascule sur
+         * la page qui affiche la clef a copier. Mais c'est un detour, et il
+         * suffit d'un nom manquant pour l'imposer a tout un editeur — `kiro`
+         * y etait, alors qu'il gere les liens `kiro://` comme les autres
+         * forks de VS Code.
+         */
+        const ALLOWED_SCHEMES = [
+          'vscode',
+          'vscode-insiders',
+          'vscodium',
+          'cursor',
+          'windsurf',
+          'code-oss',
+          'trae',
+          'kiro',
+          'positron',
+          'firebase-studio',
+        ]
         const rawScheme = urlParams.get('uriScheme') || 'vscode'
 
         if (!ALLOWED_SCHEMES.includes(rawScheme)) {
@@ -159,7 +203,7 @@ export default function Page() {
         console.error('Auth error:', err)
         setStatus('error')
         setMessage(
-          `Erreur inattendue : ${err instanceof Error ? err.message : String(err)}`
+          `Unexpected error: ${err instanceof Error ? err.message : String(err)}`
         )
       }
     }
@@ -192,7 +236,7 @@ export default function Page() {
               <div className="w-8 h-8 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
               <div className="absolute inset-0 w-8 h-8 border-2 border-foreground/20 border-b-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
             </div>
-            <p className="text-muted-foreground">Authentification en cours...</p>
+            <p className="text-muted-foreground">Authenticating…</p>
           </div>
         )}
 

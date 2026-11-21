@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     // l'echanger contre un jeton et prendre le controle du compte.
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Non authentifie' }, { status: 401 })
+      return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
     }
 
     const accessToken = authHeader.slice('Bearer '.length)
@@ -31,14 +31,20 @@ export async function POST(req: NextRequest) {
       await supabase.auth.getUser(accessToken)
     const userId = authData?.user?.id
     if (authError || !userId) {
-      return NextResponse.json({ error: 'Session invalide' }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
     const { state } = await req.json().catch(() => ({ state: undefined }))
 
-    // Clean up previously expired or unused auth codes for this user
-    // This prevents accumulation of stale codes in the api_keys table
-    await supabase
+    /*
+     * Menage sans attendre.
+     *
+     * Cette purge des codes expires est de l'entretien : elle ne conditionne
+     * rien de la reponse. L'attendre ajoutait un aller-retour a une page qui
+     * abandonne au bout de quelques secondes, et c'est precisement sur un
+     * demarrage a froid que les deux s'additionnent.
+     */
+    void supabase
       .from('api_keys')
       .update({ is_active: false })
       .eq('user_id', userId)
@@ -64,12 +70,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Erreur création auth code:', error)
-      return NextResponse.json({ error: 'Erreur création code' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not create the code' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, code, expiresAt: expiresAt.toISOString(), state })
   } catch (err) {
     console.error('Generate auth code error:', err)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

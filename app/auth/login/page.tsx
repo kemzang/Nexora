@@ -104,6 +104,7 @@ function LoginForm() {
     const redirectUrl = finalToken ? getRedirectUrl(finalToken) : null
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-foreground/[0.03] blur-[120px] rounded-full" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -160,6 +161,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid pointer-events-none" />
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-foreground/[0.02] blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-foreground/[0.02] blur-[120px] rounded-full" />
 
@@ -200,7 +202,8 @@ function LoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vous@exemple.com"
+                  placeholder="you@example.com"
+                  autoComplete="email"
                   {...register('email')}
                   className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all"
                 />

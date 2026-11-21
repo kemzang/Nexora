@@ -38,7 +38,7 @@ export function SiteHeader() {
   return (
     <nav className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/70 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-3 group">
             <BrandLogo size={36} className="rounded-xl shadow-none" />
             <span className="text-xl font-bold tracking-tight gradient-text-strong">Nexora</span>
@@ -57,18 +57,18 @@ export function SiteHeader() {
               {!authLoading && (
                 user ? (
                   <Link href="/dashboard">
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <LayoutDashboard className="w-3.5 h-3.5" />
+                    <Button variant="outline" className="gap-2 h-10 px-4 text-base">
+                      <LayoutDashboard className="w-4 h-4" />
                       Dashboard
                     </Button>
                   </Link>
                 ) : (
                   <>
                     <Link href="/auth/login">
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{t.nav.login}</Button>
+                      <Button variant="ghost" className="h-10 px-4 text-base text-foreground/75 hover:text-foreground">{t.nav.login}</Button>
                     </Link>
                     <Link href="/auth/register">
-                      <Button size="sm" variant="outline">
+                      <Button variant="outline" className="h-10 px-4 text-base">
                         {t.nav.start}
                       </Button>
                     </Link>

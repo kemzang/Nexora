@@ -202,13 +202,13 @@ function RegisterForm() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-sm ml-0.5">First name</Label>
-                    <Input id="firstName" placeholder="Jean" {...register('firstName')}
+                    <Input id="firstName" placeholder="Jane" autoComplete="given-name" {...register('firstName')}
                       className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                     {errors.firstName && <p className="text-red-400 text-xs ml-1">{errors.firstName.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-sm ml-0.5">Last name</Label>
-                    <Input id="lastName" placeholder="Dupont" {...register('lastName')}
+                    <Input id="lastName" placeholder="Doe" autoComplete="family-name" {...register('lastName')}
                       className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                     {errors.lastName && <p className="text-red-400 text-xs ml-1">{errors.lastName.message}</p>}
                   </div>
@@ -216,21 +216,21 @@ function RegisterForm() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm ml-0.5">Email</Label>
-                  <Input id="email" type="email" placeholder="vous@exemple.com" {...register('email')}
+                  <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...register('email')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   {errors.email && <p className="text-red-400 text-xs ml-1">{errors.email.message}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm ml-0.5">Password</Label>
-                  <PasswordInput id="password" {...register('password')}
+                  <PasswordInput id="password" autoComplete="new-password" {...register('password')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   <PasswordRequirements value={passwordValue} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm ml-0.5">Confirm password</Label>
-                  <PasswordInput id="confirmPassword" placeholder="Re-enter your password" {...register('confirmPassword')}
+                  <PasswordInput id="confirmPassword" placeholder="Re-enter your password" autoComplete="new-password" {...register('confirmPassword')}
                     className="bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 focus:border-foreground/30 h-11 rounded-xl transition-all" />
                   {errors.confirmPassword && <p className="text-red-400 text-xs ml-1">{errors.confirmPassword.message}</p>}
                 </div>

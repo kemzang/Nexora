@@ -236,6 +236,78 @@ export const MAX_FIELD = 500
 export const MAX_REPONSE = 10000
 
 /**
+ * Les etats dans lesquels une demande accepte encore un message.
+ *
+ * Un dossier ferme ne reprend pas vie tout seul : ecrire a propos d'un
+ * probleme regle il y a trois mois doit ouvrir une nouvelle demande, pas
+ * ressusciter l'ancienne.
+ */
+export const ETATS_VIVANTS = ['open', 'answered'] as const
+
+/**
+ * Ce dossier a-t-il une reponse que l'utilisateur n'a pas encore vue ?
+ *
+ * On compare la derniere reponse SORTANTE a la derniere consultation.
+ * Les messages entrants ne comptent pas : ce sont les siens, il les a
+ * forcement lus.
+ *
+ * Jamais consulte mais deja repondu : non lu. C'est le cas du dossier
+ * ouvert depuis un courriel, puis consulte pour la premiere fois alors
+ * que la reponse est deja la.
+ */
+export function reponseNonLue(
+  ticket: { user_seen_at?: string | null },
+  fil: { direction: string; created_at: string }[],
+): boolean {
+  const sorties = fil.filter((r) => r.direction === 'outbound')
+  if (sorties.length === 0) return false
+
+  const derniere = sorties.reduce((recente, r) =>
+    new Date(r.created_at) > new Date(recente.created_at) ? r : recente,
+  )
+  if (!ticket.user_seen_at) return true
+
+  return new Date(derniere.created_at) > new Date(ticket.user_seen_at)
+}
+
+export interface TicketExistant {
+  id: string
+  reference: string
+  category: string
+  status: string
+  created_at: string
+}
+
+/**
+ * Le dossier qui doit absorber une nouvelle demande, s'il y en a un.
+ *
+ * La regle : meme categorie, dossier encore vivant, et le PLUS ANCIEN
+ * l'emporte. Repondre deux fois au meme probleme, c'est se contredire ;
+ * et du point de vue de celui qui a ecrit cinq fois, un support qui
+ * repond sur un seul des cinq en ignore quatre.
+ *
+ * La categorie est la limite volontaire de cette regle. Quelqu'un peut
+ * tres bien avoir une question de facturation ET un bogue en meme
+ * temps : ce sont deux conversations, pas une. Fusionner au-dela de la
+ * categorie melangerait des sujets sans rapport dans un meme fil.
+ */
+export function dossierAbsorbant(
+  existants: TicketExistant[],
+  categorie: string,
+): TicketExistant | null {
+  const candidats = existants.filter(
+    (t) =>
+      t.category === categorie &&
+      (ETATS_VIVANTS as readonly string[]).includes(t.status),
+  )
+  if (candidats.length === 0) return null
+
+  return candidats.reduce((plusAncien, t) =>
+    new Date(t.created_at) < new Date(plusAncien.created_at) ? t : plusAncien,
+  )
+}
+
+/**
  * Une reponse d'administrateur avant enregistrement.
  *
  * Deux refus, pour deux degats differents. Vide : le ticket passerait a

@@ -7,14 +7,15 @@ boîte `support@` comme avant.
 
 ---
 
-## 1. Les deux migrations, dans Supabase
+## 1. Les migrations, dans Supabase
 
 SQL Editor → coller, exécuter, dans l'ordre :
 
 1. `supabase/migrations/018-reponses-support.sql` — la table du fil
 2. `supabase/migrations/019-reponses-entrantes.sql` — le sens entrant
+3. `supabase/migrations/020-fil-unique-par-demande.sql` — non-lus et fusion
 
-La 019 suppose la 018 : elle ajoute des colonnes à sa table.
+Chacune suppose la précédente : elles ajoutent des colonnes à ses tables.
 
 **Vérifier :**
 
@@ -26,6 +27,16 @@ select column_name from information_schema.columns
 
 Attendu : `id`, `ticket_id`, `author`, `body`, `email_sent`, `email_error`,
 `created_at`, `direction`, `raw_body`, `provider_message_id`.
+
+```sql
+select column_name from information_schema.columns
+ where table_name = 'support_tickets'
+   and column_name in ('user_seen_at', 'merged_into');
+```
+
+Attendu : les deux lignes. Sans elles, « My requests » signalera chaque
+réponse comme non lue indéfiniment, et chaque nouvelle demande créera un
+dossier de plus.
 
 À ce stade, **répondre depuis le panneau marche déjà**. Les points 2 à 4
 ne servent qu'à recevoir les réponses.

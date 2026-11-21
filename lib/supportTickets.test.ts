@@ -4,7 +4,9 @@ import {
   MAX_MESSAGE,
   MAX_REPONSE,
   SUPPORT_CATEGORIES,
+  dossierAbsorbant,
   generateReference,
+  reponseNonLue,
   validerReponse,
   validerTicket,
 } from './supportTickets'
@@ -168,5 +170,114 @@ describe('validerReponse', () => {
   it('ne compte pas les espaces de bord dans la limite', () => {
     const texte = `  ${'a'.repeat(MAX_REPONSE)}  `
     expect(validerReponse(texte).ok).toBe(true)
+  })
+})
+
+describe('dossierAbsorbant', () => {
+  const faire = (
+    reference: string,
+    category: string,
+    status: string,
+    created_at: string,
+  ) => ({ id: reference, reference, category, status, created_at })
+
+  it('rend le plus ancien dossier vivant de la meme categorie', () => {
+    const existants = [
+      faire('NX-RECENT', 'bug', 'open', '2026-11-20T10:00:00Z'),
+      faire('NX-ANCIEN', 'bug', 'open', '2026-11-02T08:00:00Z'),
+      faire('NX-MILIEU', 'bug', 'answered', '2026-11-10T09:00:00Z'),
+    ]
+    expect(dossierAbsorbant(existants, 'bug')?.reference).toBe('NX-ANCIEN')
+  })
+
+  it("ne melange pas deux categories", () => {
+    /*
+     * Quelqu'un peut avoir une question de facturation ET un bogue. Ce
+     * sont deux conversations : les fusionner enterrerait l'une sous
+     * l'autre.
+     */
+    const existants = [faire('NX-FACTURE', 'billing', 'open', '2026-11-02T08:00:00Z')]
+    expect(dossierAbsorbant(existants, 'bug')).toBeNull()
+  })
+
+  it('ignore un dossier ferme', () => {
+    // Ecrire a propos d'un probleme regle il y a trois mois doit ouvrir
+    // une nouvelle demande, pas ressusciter l'ancienne.
+    const existants = [faire('NX-FERME', 'bug', 'closed', '2026-08-01T08:00:00Z')]
+    expect(dossierAbsorbant(existants, 'bug')).toBeNull()
+  })
+
+  it('absorbe meme un dossier deja repondu', () => {
+    // « answered » veut dire que nous avons repondu, pas que l'echange
+    // est termine : la relance appartient au meme fil.
+    const existants = [faire('NX-REPONDU', 'bug', 'answered', '2026-11-02T08:00:00Z')]
+    expect(dossierAbsorbant(existants, 'bug')?.reference).toBe('NX-REPONDU')
+  })
+
+  it('rend null quand il n y a rien', () => {
+    expect(dossierAbsorbant([], 'bug')).toBeNull()
+  })
+
+  it('ne se fie pas a l ordre de la liste recue', () => {
+    // La requete trie deja, mais un tri qui change en base ne doit pas
+    // changer quel dossier gagne.
+    const a = faire('NX-ANCIEN', 'bug', 'open', '2026-11-02T08:00:00Z')
+    const b = faire('NX-RECENT', 'bug', 'open', '2026-11-20T10:00:00Z')
+    expect(dossierAbsorbant([b, a], 'bug')?.reference).toBe('NX-ANCIEN')
+    expect(dossierAbsorbant([a, b], 'bug')?.reference).toBe('NX-ANCIEN')
+  })
+})
+
+describe('reponseNonLue', () => {
+  const sortie = (created_at: string) => ({ direction: 'outbound', created_at })
+  const entree = (created_at: string) => ({ direction: 'inbound', created_at })
+
+  it('signale une reponse posterieure a la derniere consultation', () => {
+    expect(
+      reponseNonLue({ user_seen_at: '2026-11-10T00:00:00Z' }, [
+        sortie('2026-11-12T00:00:00Z'),
+      ]),
+    ).toBe(true)
+  })
+
+  it('ne signale rien quand la consultation est posterieure', () => {
+    expect(
+      reponseNonLue({ user_seen_at: '2026-11-15T00:00:00Z' }, [
+        sortie('2026-11-12T00:00:00Z'),
+      ]),
+    ).toBe(false)
+  })
+
+  it('signale quand le dossier n a jamais ete consulte', () => {
+    expect(reponseNonLue({ user_seen_at: null }, [sortie('2026-11-12T00:00:00Z')])).toBe(
+      true,
+    )
+  })
+
+  it('ne signale rien sur un dossier sans reponse, meme jamais consulte', () => {
+    // Sinon toute demande fraichement envoyee s'annoncerait comme ayant
+    // une reponse — et la pastille ne voudrait plus rien dire.
+    expect(reponseNonLue({ user_seen_at: null }, [])).toBe(false)
+    expect(reponseNonLue({ user_seen_at: null }, [entree('2026-11-12T00:00:00Z')])).toBe(
+      false,
+    )
+  })
+
+  it('ignore les messages entrants, qui sont les siens', () => {
+    expect(
+      reponseNonLue({ user_seen_at: '2026-11-15T00:00:00Z' }, [
+        sortie('2026-11-12T00:00:00Z'),
+        entree('2026-11-20T00:00:00Z'),
+      ]),
+    ).toBe(false)
+  })
+
+  it('regarde la DERNIERE sortie, pas la premiere du tableau', () => {
+    expect(
+      reponseNonLue({ user_seen_at: '2026-11-15T00:00:00Z' }, [
+        sortie('2026-11-20T00:00:00Z'),
+        sortie('2026-11-12T00:00:00Z'),
+      ]),
+    ).toBe(true)
   })
 })

@@ -8,8 +8,18 @@ import {
   tooManyAttempts,
   tooManySubmissions,
 } from '../../leads/route-helpers'
-import { notifySupportTicket, sendTicketConfirmation } from '@/lib/supportEmails'
-import { generateReference, validerTicket } from '@/lib/supportTickets'
+import {
+  notifySupportTicket,
+  notifyTicketAddition,
+  sendTicketAddition,
+  sendTicketConfirmation,
+} from '@/lib/supportEmails'
+import {
+  ETATS_VIVANTS,
+  dossierAbsorbant,
+  generateReference,
+  validerTicket,
+} from '@/lib/supportTickets'
 
 export const runtime = 'nodejs'
 
@@ -71,6 +81,80 @@ export async function POST(req: NextRequest) {
           contexte.period_end = sub.current_period_end
         }
       }
+    }
+
+    /*
+     * Une demande deja ouverte sur le meme sujet ?
+     *
+     * Alors on n'en cree pas une seconde : le message rejoint le fil de
+     * la plus ancienne. Cinq dossiers pour un meme probleme, c'est cinq
+     * endroits ou chercher la reponse — et quatre qui resteront sans
+     * reponse pendant qu'on repond sur le cinquieme.
+     *
+     * L'appariement se fait sur l'adresse plutot que sur le compte :
+     * quelqu'un peut ouvrir une demande sans etre connecte (« je
+     * n'arrive pas a me connecter ») puis revenir connecte. C'est la
+     * meme personne et le meme probleme.
+     */
+    const { data: ouverts } = await db
+      .from('support_tickets')
+      .select('id, reference, category, status, created_at')
+      .eq('email', ticket.email)
+      .in('status', ETATS_VIVANTS)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    const absorbant = dossierAbsorbant(ouverts ?? [], ticket.category)
+
+    if (absorbant) {
+      const { error: erreurAjout } = await db
+        .from('support_ticket_replies')
+        .insert({
+          ticket_id: absorbant.id,
+          direction: 'inbound',
+          author: ticket.email,
+          body: ticket.message,
+          email_sent: true,
+        })
+
+      if (erreurAjout) {
+        console.error('[support] ajout au dossier impossible:', erreurAjout)
+        return bad('Could not record your request. Please try again.', 500)
+      }
+
+      // Le dossier redevient a traiter : il avait peut-etre ete marque
+      // « answered », et quelqu'un vient de reprendre la parole.
+      await db
+        .from('support_tickets')
+        .update({ status: 'open' })
+        .eq('id', absorbant.id)
+        .neq('status', 'open')
+
+      await recordSubmission(cle)
+      await Promise.allSettled([
+        sendTicketAddition({
+          reference: absorbant.reference,
+          email: ticket.email,
+          subject: ticket.subject,
+          message: ticket.message,
+          openedAt: absorbant.created_at,
+        }),
+        notifyTicketAddition({
+          reference: absorbant.reference,
+          email: ticket.email,
+          subject: ticket.subject,
+          message: ticket.message,
+        }),
+      ])
+
+      return NextResponse.json({
+        success: true,
+        reference: absorbant.reference,
+        // L'ecran doit dire pourquoi la reference n'est pas neuve, sinon
+        // l'utilisateur croit avoir mal rempli le formulaire.
+        merged: true,
+        mergedOpenedAt: absorbant.created_at,
+      })
     }
 
     // Collision de reference : improbable (32^5), pas impossible. On
@@ -155,7 +239,7 @@ export async function GET(req: NextRequest) {
 
   const { data } = await db
     .from('support_tickets')
-    .select('id, reference, category, subject, message, status, created_at')
+    .select('id, reference, category, subject, message, status, created_at, user_seen_at')
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -182,4 +266,40 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ tickets, replies: reponses })
+}
+
+/**
+ * « J'ai lu ce dossier. »
+ *
+ * L'etat « answered » dit que NOUS avons repondu, pas que l'utilisateur
+ * l'a vu. Sans cette date, un dossier deja lu continuerait d'etre
+ * signale comme neuf, et au troisieme le signal ne voudrait plus rien
+ * dire.
+ */
+export async function PATCH(req: NextRequest) {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  if (!token) return bad('Unauthorized', 401)
+
+  const db = adminClient()
+  const { data: auth } = await db.auth.getUser(token)
+  if (!auth.user) return bad('Unauthorized', 401)
+
+  const body = await req.json().catch(() => ({}))
+  const id = String(body.id ?? '')
+  if (!id) return bad('Missing id', 400)
+
+  // Le filtre sur user_id n'est pas decoratif : on passe par la clef de
+  // service, donc rien d'autre n'empeche de marquer le dossier d'autrui.
+  const { error } = await db
+    .from('support_tickets')
+    .update({ user_seen_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', auth.user.id)
+
+  if (error) {
+    console.error('[support] marquage lu impossible:', error)
+    return bad('Server error', 500)
+  }
+
+  return NextResponse.json({ success: true })
 }

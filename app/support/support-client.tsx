@@ -47,6 +47,9 @@ export function SupportClient() {
   const [message, setMessage] = useState('')
   const [piege, setPiege] = useState('')
   const [reference, setReference] = useState('')
+  // Le message a rejoint une demande deja ouverte : la reference
+  // affichee n'est pas neuve, et il faut le dire.
+  const [fusionne, setFusionne] = useState<string | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [envoi, setEnvoi] = useState(false)
   const [connecte, setConnecte] = useState(false)
@@ -133,6 +136,7 @@ export function SupportClient() {
         return
       }
       setReference(data.reference)
+      setFusionne(data.merged ? (data.mergedOpenedAt ?? '') : null)
       setEtape('envoye')
     } catch {
       setErreur('Could not reach the server. Please try again.')
@@ -145,15 +149,37 @@ export function SupportClient() {
     return (
       <GlassCard className="mx-auto max-w-2xl p-8 text-center">
         <CheckCircle className="mx-auto mb-4 h-10 w-10 text-emerald-400" />
-        <h2 className="mb-2 text-xl font-semibold">Your request is recorded</h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Keep this reference — quoting it lets us find your request straight
-          away.
+        <h2 className="mb-2 text-xl font-semibold">
+          {fusionne === null
+            ? 'Your request is recorded'
+            : 'Added to your open request'}
+        </h2>
+        <p className="mb-6 text-base text-muted-foreground">
+          {fusionne === null
+            ? 'Keep this reference — quoting it lets us find your request straight away.'
+            : 'You already had a request open about this, so we put your message in the same thread.'}
         </p>
         <p className="mb-6 font-mono text-3xl font-bold tracking-wider">
           {reference}
         </p>
-        <p className="text-sm text-muted-foreground">
+        {fusionne !== null && (
+          /*
+           * Dire POURQUOI la reference n'est pas neuve. Sans cette phrase,
+           * quelqu'un qui attend un nouveau numero croit s'etre trompe et
+           * renvoie le formulaire — ce qui produit exactement l'empilement
+           * qu'on cherche a eviter.
+           */
+          <p className="mx-auto mb-6 max-w-md rounded-lg border border-solid border-border bg-muted/30 p-4 text-base text-muted-foreground">
+            Opened{' '}
+            {fusionne
+              ? `on ${new Date(fusionne).toLocaleDateString('en-GB')}`
+              : 'earlier'}
+            . Keeping everything in one thread means nothing is answered
+            twice, and nothing is forgotten. If this is about something else
+            entirely, say so in your reply and we will split it out.
+          </p>
+        )}
+        <p className="text-base text-muted-foreground">
           We reply {SUPPORT_SLA}, at <strong>{email}</strong>. A confirmation
           is on its way.
         </p>

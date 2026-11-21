@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
 import { supabase } from '@/lib/supabase'
-import { categoryById } from '@/lib/supportTickets'
+import { categoryById, reponseNonLue } from '@/lib/supportTickets'
 
 /**
  * Les demandes de l'utilisateur, vues de son cote.
@@ -30,6 +30,7 @@ interface Ticket {
   message: string
   status: 'open' | 'answered' | 'closed'
   created_at: string
+  user_seen_at: string | null
 }
 
 interface Reponse {
@@ -85,6 +86,43 @@ export default function MyRequestsSection() {
     void charger()
   }, [charger])
 
+  async function ouvrir(t: Ticket) {
+    const deplie = ouvert === t.id
+    setOuvert(deplie ? null : t.id)
+    if (deplie) return
+
+    /*
+     * Le marquage est optimiste : la pastille disparait tout de suite,
+     * meme si l'appel echoue. Au pire elle revient au prochain
+     * chargement — contre l'alternative, une pastille qui reste alors
+     * qu'on vient de lire, et qui finit par etre ignoree.
+     */
+    const vu = new Date().toISOString()
+    setTickets((liste) =>
+      liste.map((x) => (x.id === t.id ? { ...x, user_seen_at: vu } : x)),
+    )
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      await fetch('/api/support/tickets', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ id: t.id }),
+      })
+    } catch {
+      // Sans consequence : la date sera posee a la prochaine ouverture.
+    }
+  }
+
+  const nonLus = tickets.filter((t) =>
+    reponseNonLue(t, reponses[t.id] ?? []),
+  ).length
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -93,7 +131,9 @@ export default function MyRequestsSection() {
             <LifeBuoy className="h-5 w-5 opacity-70" /> My requests
           </h1>
           <p className="text-muted-foreground mt-1 text-base">
-            Everything you have sent us, and everything we have replied.
+            {nonLus > 0
+              ? `${nonLus} request${nonLus > 1 ? 's have' : ' has'} a reply you have not read yet.`
+              : 'Everything you have sent us, and everything we have replied.'}
           </p>
         </div>
         <Link href="/support">
@@ -133,15 +173,23 @@ export default function MyRequestsSection() {
             const deplie = ouvert === t.id
             const etat = ETATS[t.status] ?? ETATS.open
             const fil = reponses[t.id] ?? []
+            const nouveau = reponseNonLue(t, fil)
             return (
               <GlassCard key={t.id} className="p-4">
                 <button
                   type="button"
-                  onClick={() => setOuvert(deplie ? null : t.id)}
+                  onClick={() => void ouvrir(t)}
                   className="w-full text-left"
                 >
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span className="font-mono text-base">{t.reference}</span>
+                    {/* « New reply » passe AVANT l'etat : c'est la seule
+                        chose qui demande une action de sa part. */}
+                    {nouveau && (
+                      <span className="rounded-md bg-sky-400/15 px-2 py-0.5 text-sm font-medium text-sky-300">
+                        New reply
+                      </span>
+                    )}
                     <span
                       className={`rounded-md border border-solid px-2 py-0.5 text-sm ${etat.classe}`}
                     >

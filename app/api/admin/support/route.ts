@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
   if (tickets.length > 0) {
     const { data: lignes, error: erreurReponses } = await db
       .from('support_ticket_replies')
-      .select('id, ticket_id, author, body, email_sent, email_error, created_at')
+      .select('id, ticket_id, direction, author, body, email_sent, email_error, created_at')
       .in('ticket_id', tickets.map((t) => t.id))
       .order('created_at', { ascending: true })
     if (erreurReponses) {

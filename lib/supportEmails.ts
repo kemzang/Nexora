@@ -1,4 +1,5 @@
 import { FROM_EMAIL, emailHeader, esc, resend } from './resend'
+import { adresseDeReponse } from './supportInbound'
 import { SUPPORT_SLA, categoryById } from './supportTickets'
 
 /**
@@ -11,6 +12,19 @@ import { SUPPORT_SLA, categoryById } from './supportTickets'
  */
 
 const SUPPORT_INBOX = process.env.SUPPORT_INBOX_EMAIL || 'support@nexoracoding.com'
+
+/**
+ * Ou renvoyer la reponse du client.
+ *
+ * Une adresse par ticket quand le domaine de reception est configure :
+ * `nx-7f3k2@reply.nexoracoding.com` fait revenir le message dans le fil
+ * du bon dossier, sans dependre d'un sujet que les clients de messagerie
+ * reecrivent. Sinon, la boite generique — ou il faudra rattacher a la
+ * main, mais rien n'est perdu.
+ */
+function retourVers(reference: string): string {
+  return adresseDeReponse(reference) ?? SUPPORT_INBOX
+}
 
 export { SUPPORT_SLA }
 
@@ -63,7 +77,7 @@ export async function sendTicketConfirmation(ticket: {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: ticket.email,
-      replyTo: SUPPORT_INBOX,
+      replyTo: retourVers(ticket.reference),
       subject: `[${ticket.reference}] We received your request`,
       html,
     })
@@ -160,7 +174,7 @@ export async function sendTicketReply(reponse: {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: reponse.email,
-      replyTo: SUPPORT_INBOX,
+      replyTo: retourVers(reponse.reference),
       subject: `Re: [${reponse.reference}] ${reponse.subject}`,
       html,
     })

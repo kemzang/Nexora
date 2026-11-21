@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  AlertTriangle, CheckCircle, Loader2, LifeBuoy, RefreshCw, Send,
+  AlertTriangle, CheckCircle, CornerDownLeft, Loader2, LifeBuoy, RefreshCw,
+  Send,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -36,6 +37,7 @@ interface Ticket {
 interface Reponse {
   id: string
   ticket_id: string
+  direction: 'outbound' | 'inbound'
   author: string
   body: string
   email_sent: boolean
@@ -254,24 +256,39 @@ export default function SupportSection() {
                     {/* Le fil des reponses deja envoyees. Voir ce qu'on a
                         repondu evite de repondre deux fois, et de se
                         contredire. */}
-                    {(reponses[t.id] ?? []).map((r) => (
-                      <div
-                        key={r.id}
-                        className="border-border/60 rounded-lg border border-solid border-l-2 border-l-emerald-400/60 p-3"
-                      >
-                        <p className="text-muted-foreground mb-1.5 text-xs">
-                          {r.author} — {new Date(r.created_at).toLocaleString()}
-                        </p>
-                        <p className="whitespace-pre-wrap text-sm">{r.body}</p>
-                        {!r.email_sent && (
-                          <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-400">
-                            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                            Not delivered
-                            {r.email_error ? `: ${r.email_error}` : ''}
+                    {(reponses[t.id] ?? []).map((r) => {
+                      const entrant = r.direction === 'inbound'
+                      return (
+                        <div
+                          key={r.id}
+                          className={`border-border/60 rounded-lg border border-solid border-l-2 p-3 ${
+                            entrant
+                              ? 'border-l-sky-400/70 bg-sky-400/[0.04]'
+                              : 'border-l-emerald-400/60'
+                          }`}
+                        >
+                          <p className="text-muted-foreground mb-1.5 flex items-center gap-1.5 text-xs">
+                            {entrant ? (
+                              <CornerDownLeft className="h-3 w-3 text-sky-400" />
+                            ) : (
+                              <Send className="h-3 w-3 text-emerald-400" />
+                            )}
+                            {entrant ? 'From' : 'Sent by'} {r.author} —{' '}
+                            {new Date(r.created_at).toLocaleString()}
                           </p>
-                        )}
-                      </div>
-                    ))}
+                          <p className="whitespace-pre-wrap text-sm">{r.body}</p>
+                          {/* `email_sent` ne veut rien dire pour un message
+                              entrant : il est arrive, par definition. */}
+                          {!entrant && !r.email_sent && (
+                            <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-400">
+                              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                              Not delivered
+                              {r.email_error ? `: ${r.email_error}` : ''}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
 
                     {/* Repondre depuis le panneau plutot que par `mailto:` :
                         le message part de l'adresse du service, et il reste

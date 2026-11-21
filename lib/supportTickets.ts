@@ -233,6 +233,28 @@ export function generateReference(
 export const MAX_SUBJECT = 150
 export const MAX_MESSAGE = 5000
 export const MAX_FIELD = 500
+export const MAX_REPONSE = 10000
+
+/**
+ * Une reponse d'administrateur avant enregistrement.
+ *
+ * Deux refus, pour deux degats differents. Vide : le ticket passerait a
+ * « answered » sans que rien n'ait ete dit, et on cesserait de le voir dans
+ * la file. Trop longue : la colonne accepterait tout, mais le courriel
+ * serait tronque chez le destinataire sans que l'ecran l'annonce.
+ */
+export function validerReponse(brut: unknown):
+  | { ok: true; body: string }
+  | { ok: false; error: string } {
+  const body = typeof brut === 'string' ? brut.trim() : ''
+  if (body.length === 0) {
+    return { ok: false, error: 'The reply is empty' }
+  }
+  if (body.length > MAX_REPONSE) {
+    return { ok: false, error: 'The reply is too long' }
+  }
+  return { ok: true, body }
+}
 
 export interface TicketInput {
   category?: unknown

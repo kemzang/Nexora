@@ -1,12 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCircle, Loader2, LifeBuoy, RefreshCw, Reply } from 'lucide-react'
+import {
+  AlertTriangle, CheckCircle, Loader2, LifeBuoy, RefreshCw, Send,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
 import { supabase } from '@/lib/supabase'
-import { categoryById } from '@/lib/supportTickets'
+import { MAX_REPONSE, categoryById } from '@/lib/supportTickets'
 
 /**
  * Revue des tickets de support.
@@ -31,6 +33,16 @@ interface Ticket {
   created_at: string
 }
 
+interface Reponse {
+  id: string
+  ticket_id: string
+  author: string
+  body: string
+  email_sent: boolean
+  email_error: string | null
+  created_at: string
+}
+
 const VUES = [
   { id: 'open', label: 'Open' },
   { id: 'answered', label: 'Answered' },
@@ -41,8 +53,14 @@ export default function SupportSection() {
   const [vue, setVue] = useState<(typeof VUES)[number]['id']>('open')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [compteurs, setCompteurs] = useState<Record<string, number>>({})
+  const [reponses, setReponses] = useState<Record<string, Reponse[]>>({})
   const [chargement, setChargement] = useState(true)
   const [ouvert, setOuvert] = useState<string | null>(null)
+  // Un brouillon par ticket : replier une carte ne doit pas jeter ce qui
+  // vient d'etre ecrit.
+  const [brouillons, setBrouillons] = useState<Record<string, string>>({})
+  const [envoiEnCours, setEnvoiEnCours] = useState<string | null>(null)
+  const [erreurEnvoi, setErreurEnvoi] = useState<Record<string, string>>({})
 
   const charger = useCallback(async () => {
     setChargement(true)
@@ -58,6 +76,7 @@ export default function SupportSection() {
       const data = await res.json()
       setTickets(data.tickets ?? [])
       setCompteurs(data.counts ?? {})
+      setReponses(data.replies ?? {})
     } finally {
       setChargement(false)
     }
@@ -81,6 +100,58 @@ export default function SupportSection() {
       body: JSON.stringify({ id, status }),
     })
     await charger()
+  }
+
+  async function repondre(ticket: Ticket) {
+    const texte = (brouillons[ticket.id] ?? '').trim()
+    if (!texte || envoiEnCours) return
+
+    setEnvoiEnCours(ticket.id)
+    setErreurEnvoi((e) => ({ ...e, [ticket.id]: '' }))
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ id: ticket.id, body: texte }),
+      })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setErreurEnvoi((e) => ({
+          ...e,
+          [ticket.id]: data.error || 'The reply could not be saved.',
+        }))
+        return
+      }
+
+      // Le brouillon n'est vide que si la reponse est enregistree : un
+      // echec ne doit pas faire disparaitre ce qui a ete ecrit.
+      setBrouillons((b) => ({ ...b, [ticket.id]: '' }))
+      if (!data.emailSent) {
+        setErreurEnvoi((e) => ({
+          ...e,
+          [ticket.id]:
+            `Reply saved, but the email did not go out: ${data.emailError ?? 'unknown error'}. ` +
+            'The ticket stays open.',
+        }))
+      }
+      await charger()
+    } catch {
+      setErreurEnvoi((e) => ({
+        ...e,
+        [ticket.id]: 'Network error. Nothing was sent.',
+      }))
+    } finally {
+      setEnvoiEnCours(null)
+    }
   }
 
   return (
@@ -180,16 +251,71 @@ export default function SupportSection() {
                       </p>
                     )}
 
-                    <div className="flex flex-wrap gap-2">
-                      <a
-                        href={`mailto:${t.email}?subject=${encodeURIComponent(
-                          `[${t.reference}] ${t.subject}`,
-                        )}`}
+                    {/* Le fil des reponses deja envoyees. Voir ce qu'on a
+                        repondu evite de repondre deux fois, et de se
+                        contredire. */}
+                    {(reponses[t.id] ?? []).map((r) => (
+                      <div
+                        key={r.id}
+                        className="border-border/60 rounded-lg border border-solid border-l-2 border-l-emerald-400/60 p-3"
                       >
-                        <Button size="sm" variant="ghost">
-                          <Reply className="mr-2 h-3.5 w-3.5" /> Reply by email
+                        <p className="text-muted-foreground mb-1.5 text-xs">
+                          {r.author} — {new Date(r.created_at).toLocaleString()}
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm">{r.body}</p>
+                        {!r.email_sent && (
+                          <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-400">
+                            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                            Not delivered
+                            {r.email_error ? `: ${r.email_error}` : ''}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Repondre depuis le panneau plutot que par `mailto:` :
+                        le message part de l'adresse du service, et il reste
+                        a cote du ticket. */}
+                    <div className="space-y-2">
+                      <textarea
+                        value={brouillons[t.id] ?? ''}
+                        onChange={(e) =>
+                          setBrouillons((b) => ({ ...b, [t.id]: e.target.value }))
+                        }
+                        maxLength={MAX_REPONSE}
+                        rows={5}
+                        placeholder={`Reply to ${t.email}…`}
+                        className="border-border/60 placeholder:text-muted-foreground/60 focus:border-foreground/30 w-full resize-y rounded-lg border border-solid bg-transparent p-3 text-sm outline-none"
+                      />
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          size="sm"
+                          onClick={() => void repondre(t)}
+                          disabled={
+                            envoiEnCours === t.id ||
+                            (brouillons[t.id] ?? '').trim() === ''
+                          }
+                        >
+                          {envoiEnCours === t.id ? (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Send className="mr-2 h-3.5 w-3.5" />
+                          )}
+                          Send reply
                         </Button>
-                      </a>
+                        <span className="text-muted-foreground text-xs">
+                          Sent to {t.email}. Marks the ticket as answered.
+                        </span>
+                      </div>
+                      {erreurEnvoi[t.id] && (
+                        <p className="flex items-start gap-1.5 text-xs text-amber-400">
+                          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                          {erreurEnvoi[t.id]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
                       {t.status !== 'answered' && (
                         <Button
                           size="sm"

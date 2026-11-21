@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   MAX_MESSAGE,
+  MAX_REPONSE,
   SUPPORT_CATEGORIES,
   generateReference,
+  validerReponse,
   validerTicket,
 } from './supportTickets'
 
@@ -127,5 +129,44 @@ describe('catalogue des types', () => {
         }
       }
     }
+  })
+})
+
+describe('validerReponse', () => {
+  it('accepte une reponse normale et la debarrasse de ses bords', () => {
+    const r = validerReponse('  Bonjour, le probleme vient de la 1.0.21.  ')
+    expect(r).toEqual({
+      ok: true,
+      body: 'Bonjour, le probleme vient de la 1.0.21.',
+    })
+  })
+
+  it('refuse une reponse vide ou faite d espaces', () => {
+    /*
+     * Le degat n'est pas l'enregistrement d'une ligne inutile : c'est que
+     * le ticket passerait a « answered » et sortirait de la file sans que
+     * rien n'ait ete dit au client.
+     */
+    for (const brut of ['', '   ', '\n\t ', null, undefined, 42]) {
+      expect(validerReponse(brut as unknown)).toEqual({
+        ok: false,
+        error: 'The reply is empty',
+      })
+    }
+  })
+
+  it('refuse au-dela de la limite, pas en-deca', () => {
+    // La colonne accepterait tout, mais le courriel serait tronque chez le
+    // destinataire sans que l'ecran l'annonce.
+    expect(validerReponse('a'.repeat(MAX_REPONSE)).ok).toBe(true)
+    expect(validerReponse('a'.repeat(MAX_REPONSE + 1))).toEqual({
+      ok: false,
+      error: 'The reply is too long',
+    })
+  })
+
+  it('ne compte pas les espaces de bord dans la limite', () => {
+    const texte = `  ${'a'.repeat(MAX_REPONSE)}  `
+    expect(validerReponse(texte).ok).toBe(true)
   })
 })

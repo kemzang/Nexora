@@ -118,3 +118,61 @@ export async function notifySupportTicket(ticket: {
     console.error('[support] notification non envoyee:', e)
   }
 }
+
+/**
+ * La reponse d'un administrateur, envoyee a l'utilisateur.
+ *
+ * Contrairement aux deux fonctions ci-dessus, celle-ci NE MASQUE PAS son
+ * echec. Une confirmation perdue est un desagrement ; une reponse qu'on
+ * croit partie alors qu'elle ne l'est pas laisse un client sans nouvelles
+ * pendant que le ticket, lui, est marque « answered » et sort de la file.
+ * L'appelant doit pouvoir le dire a l'ecran.
+ */
+export async function sendTicketReply(reponse: {
+  reference: string
+  email: string
+  subject: string
+  body: string
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;padding:32px">
+      <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">
+        ${emailHeader()}
+        <div style="padding:28px">
+          <p style="margin:0 0 6px;color:#64748b;font-size:13px">
+            About your request ${esc(reponse.reference)}
+          </p>
+          <h2 style="margin:0 0 20px;font-size:17px;color:#0f172a">${esc(
+            reponse.subject,
+          )}</h2>
+          <div style="color:#0f172a;font-size:14px;line-height:1.7;white-space:pre-wrap">${esc(
+            reponse.body,
+          )}</div>
+          <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid #e2e8f0;color:#64748b;font-size:13px;line-height:1.6">
+            Just reply to this email if you need anything else — it reaches
+            the same request, so you do not have to repeat yourself.
+          </p>
+        </div>
+      </div>
+    </div>`
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: reponse.email,
+      replyTo: SUPPORT_INBOX,
+      subject: `Re: [${reponse.reference}] ${reponse.subject}`,
+      html,
+    })
+    // Resend signale une partie de ses refus dans la reponse plutot qu'en
+    // levant : sans cette lecture, un rejet passerait pour un succes.
+    if (error) {
+      console.error('[support] reponse refusee par Resend:', error)
+      return { ok: false, error: error.message || 'Email provider refused the message' }
+    }
+    return { ok: true }
+  } catch (e) {
+    console.error('[support] reponse non envoyee:', e)
+    return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' }
+  }
+}

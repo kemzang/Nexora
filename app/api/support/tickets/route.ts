@@ -107,9 +107,25 @@ export async function POST(req: NextRequest) {
 
     await recordSubmission(cle)
 
-    // Les courriels apres l'ecriture, et sans bloquer la reponse.
-    void sendTicketConfirmation({ ...ticket, reference })
-    void notifySupportTicket({ ...ticket, reference, context: contexte })
+    /*
+     * Les courriels partent APRES l'ecriture, et on les ATTEND.
+     *
+     * Ils etaient lances sans attendre, pour ne pas ralentir la reponse.
+     * L'intention etait bonne, la plateforme ne la permet pas : Vercel gele
+     * la fonction des que la reponse part, et tout envoi encore en vol est
+     * tue. Les deux couraient donc contre l'horloge — le premier passait,
+     * le second non. Resultat observe le 21 novembre 2026 : le client
+     * recevait sa confirmation, et personne n'etait prevenu du ticket.
+     *
+     * allSettled : les deux partent en parallele, et l'echec de l'un
+     * n'empeche pas l'autre. Aucune des deux fonctions ne rejette de toute
+     * facon, mais le ticket est deja enregistre — rien ici ne doit pouvoir
+     * faire echouer la reponse.
+     */
+    await Promise.allSettled([
+      sendTicketConfirmation({ ...ticket, reference }),
+      notifySupportTicket({ ...ticket, reference, context: contexte }),
+    ])
 
     return NextResponse.json({ success: true, reference })
   } catch (e) {
@@ -118,7 +134,17 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Les tickets de l'utilisateur connecte, pour qu'il suive ses demandes. */
+/**
+ * Les tickets de l'utilisateur connecte, avec leur fil.
+ *
+ * Jusqu'ici il n'y avait rien a l'ecran : apres l'envoi, l'utilisateur
+ * repartait avec une reference affichee une fois. Onglet ferme, courriel
+ * de confirmation egare, et sa demande devenait introuvable pour lui.
+ *
+ * Le filtre sur `user_id` est la seule chose qui separe les dossiers : on
+ * passe par la clef de service, donc RLS ne protege pas ici. Toute
+ * modification de cette requete doit le garder en tete.
+ */
 export async function GET(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return bad('Unauthorized', 401)
@@ -129,10 +155,31 @@ export async function GET(req: NextRequest) {
 
   const { data } = await db
     .from('support_tickets')
-    .select('reference, category, subject, status, created_at')
+    .select('id, reference, category, subject, message, status, created_at')
     .eq('user_id', auth.user.id)
     .order('created_at', { ascending: false })
     .limit(50)
 
-  return NextResponse.json({ tickets: data ?? [] })
+  const tickets = data ?? []
+  let reponses: Record<string, unknown[]> = {}
+
+  if (tickets.length > 0) {
+    const { data: lignes } = await db
+      .from('support_ticket_replies')
+      // Ni `author` ni `raw_body` : l'adresse de l'administrateur qui a
+      // repondu ne regarde pas le client, et le brut contient la citation.
+      .select('id, ticket_id, direction, body, created_at')
+      .in(
+        'ticket_id',
+        tickets.map((t) => t.id),
+      )
+      .order('created_at', { ascending: true })
+
+    reponses = (lignes ?? []).reduce<Record<string, unknown[]>>((acc, r) => {
+      ;(acc[r.ticket_id] ||= []).push(r)
+      return acc
+    }, {})
+  }
+
+  return NextResponse.json({ tickets, replies: reponses })
 }

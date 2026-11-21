@@ -26,6 +26,7 @@ import SettingsSection from '@/app/dashboard/sections/SettingsSection'
 import LeadsSection from '@/app/dashboard/sections/LeadsSection'
 import SupportSection from '@/app/dashboard/sections/SupportSection'
 import { TeamSection } from '@/app/dashboard/sections/TeamSection'
+import MyRequestsSection from '@/app/dashboard/sections/MyRequestsSection'
 
 const sidebarLinks = [
   { icon: LayoutDashboard, label: 'Overview', section: 'dashboard' },
@@ -37,6 +38,7 @@ const sidebarLinks = [
   { icon: Activity, label: 'Usage', section: 'utilisation' },
   { icon: Wallet, label: 'Subscription', section: 'abonnement' },
   { icon: FileText, label: 'Invoices', section: 'factures' },
+  { icon: LifeBuoy, label: 'My requests', section: 'mes-demandes' },
   { icon: HelpCircle, label: 'Help', section: 'aide' },
 ]
 
@@ -63,6 +65,7 @@ const sections: Record<string, React.FC<{ user: any; onNavigate: (s: string) => 
   utilisation: () => <UsageSection />,
   abonnement: ({ onNavigate }) => <SubscriptionSection onNavigate={onNavigate} />,
   factures: () => <InvoicesSection />,
+  'mes-demandes': () => <MyRequestsSection />,
   aide: () => <HelpSection />,
   equipe: () => <TeamSection />,
   leads: () => <LeadsSection />,

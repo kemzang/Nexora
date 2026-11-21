@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
+import { EmailAddress } from '@/components/patterns/email-address'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Nexora',
@@ -150,7 +151,7 @@ export default function PrivacyPage() {
                 Whatever your country of residence, you can contact us to request access to, correction of or deletion
                 of your personal data, or to obtain an export of your account data. To exercise these rights,
                 write to us at{' '}
-                <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>.
+                <EmailAddress address="contact@nexoracoding.com" />.
               </p>
             </section>
 
@@ -174,7 +175,7 @@ export default function PrivacyPage() {
               <h2 className="text-lg font-bold mb-3">11. Contact</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 For any question about this policy or your personal data, contact us at{' '}
-                <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>{' '}
+                <EmailAddress address="contact@nexoracoding.com" />{' '}
                 or visit our <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link>.
               </p>
             </section>

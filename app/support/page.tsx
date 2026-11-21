@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/patterns/site-footer'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SUPPORT_SLA } from '@/lib/supportTickets'
 import { SupportClient } from './support-client'
+import { EmailAddress } from '@/components/patterns/email-address'
 
 export const metadata: Metadata = {
   title: 'Support — Nexora',
@@ -47,12 +48,7 @@ export default function SupportPage() {
             {/* Le courriel reste propose : certains preferent ecrire depuis
                 leur boite, et une seule voie d'acces est une voie de panne. */}
             Prefer email?{' '}
-            <a
-              href="mailto:support@nexoracoding.com"
-              className="text-foreground underline underline-offset-4"
-            >
-              support@nexoracoding.com
-            </a>
+            <EmailAddress address="support@nexoracoding.com" />
           </p>
         </div>
       </section>

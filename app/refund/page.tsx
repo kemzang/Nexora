@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
+import { EmailAddress } from '@/components/patterns/email-address'
 
 export const metadata: Metadata = {
   title: 'Refund Policy — Nexora',
@@ -89,12 +90,7 @@ export default function RefundPage() {
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Write to{' '}
-              <a
-                href="mailto:support@nexoracoding.com"
-                className="underline hover:text-foreground"
-              >
-                support@nexoracoding.com
-              </a>{' '}
+              <EmailAddress address="support@nexoracoding.com" />{' '}
               from your account email address, quoting the transaction
               reference. We reply within 24 business hours and process the
               request without discussion if it falls within the 14-day window.

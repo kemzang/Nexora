@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
+import { EmailAddress } from '@/components/patterns/email-address'
 
 export const metadata: Metadata = {
   title: 'Terms of Use — Nexora',
@@ -69,7 +70,7 @@ export default function TermsPage() {
                 <li>Proprietor: Kemzang Teumena Stephane Bryan</li>
                 <li>
                   Contact:{' '}
-                  <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>
+                  <EmailAddress address="contact@nexoracoding.com" />
                 </li>
               </ul>
             </section>
@@ -201,7 +202,7 @@ export default function TermsPage() {
               <h2 className="text-lg font-bold mb-3">12. Contact</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 For any question about these Terms, contact us at{' '}
-                <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>{' '}
+                <EmailAddress address="contact@nexoracoding.com" />{' '}
                 or visit our <Link href="/contact" className="text-foreground/80 hover:text-foreground underline underline-offset-4">Contact</Link> page.
               </p>
             </section>

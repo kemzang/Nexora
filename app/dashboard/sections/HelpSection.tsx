@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  Book, MessageCircle, Mail, Sparkles, ChevronDown, Terminal,
-  Code, Zap, Key, ExternalLink, GitBranch, MessagesSquare
+  Book, Mail, Sparkles, ChevronDown, Terminal,
+  Code, Zap, Key, GitBranch, MessagesSquare
 } from 'lucide-react'
+import { EmailAddress } from '@/components/patterns/email-address'
 
 const FAQ = [
   {
@@ -184,21 +185,21 @@ export default function HelpSection() {
           <p className="text-muted-foreground text-sm mb-5 max-w-sm mx-auto">
             Our team is here to help. We reply within 24 hours on weekdays.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
+          {/* Le second bouton promettait un « Chat en direct » (en francais,
+              sur une interface anglaise) et pointait sur `#` : il ne faisait
+              rien. Ouvrir un ticket, lui, existe et laisse une trace. */}
+          <div className="flex flex-wrap justify-center items-center gap-3">
             <a
-              href="mailto:contact@nexoracoding.com"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium transition-colors"
+              href="/support"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-base font-medium transition-colors"
             >
-              <Mail className="w-3.5 h-3.5" />
-              Send an email
+              <MessagesSquare className="w-4 h-4" />
+              Open a ticket
             </a>
-            <a
-              href="#"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.05] border border-border/50 hover:bg-white/[0.08] text-foreground text-sm font-medium transition-colors"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              Chat en direct
-            </a>
+            <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.05] border border-border/50 text-foreground text-base">
+              <Mail className="w-4 h-4 shrink-0" />
+              <EmailAddress address="contact@nexoracoding.com" />
+            </span>
           </div>
         </CardContent>
       </Card>

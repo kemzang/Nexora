@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildAnthropicMessages } from './anthropicMessages'
+import { buildAnthropicBody, buildAnthropicMessages } from './anthropicMessages'
 
 /**
  * La traduction OpenAI -> Anthropic, et ce qu'Anthropic refuse.
@@ -105,5 +105,69 @@ describe('buildAnthropicMessages', () => {
         { role: 'tool', tool_call_id: 'toolu_A', content: 'x' },
       ]),
     ).not.toThrow()
+  })
+})
+
+describe('buildAnthropicBody — parametres d echantillonnage', () => {
+  /*
+   * Observe en production le 19 novembre, depuis le CLI 0.1.8 :
+   *
+   *   400 invalid_request_error: `temperature` is deprecated for this model.
+   *
+   * Anthropic a retire ces parametres de ses modeles recents. Or la
+   * configuration livree pose `temperature: 0` sur chaque modele, et le
+   * proxy la transmettait telle quelle : toute conversation avec Claude
+   * echouait, sur les trois clients a la fois.
+   *
+   * La correction est d'une ligne et se defait d'une ligne — d'ou ces
+   * tests. Ils fixent aussi la frontiere : ce qu'on retire pour Anthropic
+   * ne doit pas l'etre partout, Gemini acceptant toujours `temperature`.
+   */
+  const requeteClient = {
+    messages: [{ role: 'user', content: 'bonjour' }],
+    temperature: 0,
+    top_p: 0.9,
+    max_tokens: 2048,
+  }
+
+  it('ne transmet jamais temperature ni top_p', () => {
+    const corps = buildAnthropicBody(requeteClient, 'claude-sonnet-5-5')
+
+    expect(corps.temperature).toBeUndefined()
+    expect(corps.top_p).toBeUndefined()
+  })
+
+  it('transmet bien le reste', () => {
+    // La protection ne doit pas devenir une amputation.
+    const corps = buildAnthropicBody(requeteClient, 'claude-sonnet-5-5')
+
+    expect(corps.model).toBe('claude-sonnet-5-5')
+    expect(corps.max_tokens).toBe(2048)
+    expect(corps.messages).toHaveLength(1)
+  })
+
+  it('traduit les outils au format Anthropic', () => {
+    const corps = buildAnthropicBody(
+      {
+        ...requeteClient,
+        tools: [
+          {
+            function: {
+              name: 'readFile',
+              description: 'Lit un fichier',
+              parameters: { type: 'object', properties: { path: { type: 'string' } } },
+            },
+          },
+        ],
+        tool_choice: 'auto',
+      },
+      'claude-sonnet-5-5',
+    )
+
+    expect(corps.tools[0].name).toBe('readFile')
+    expect(corps.tools[0].input_schema.properties.path.type).toBe('string')
+    expect(corps.tool_choice).toEqual({ type: 'auto' })
+    // Et toujours pas de temperature, meme avec des outils.
+    expect(corps.temperature).toBeUndefined()
   })
 })

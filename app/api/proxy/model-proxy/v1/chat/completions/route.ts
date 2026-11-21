@@ -14,7 +14,7 @@ import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 import { captureServerError } from '@/lib/sentry'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 import { quotaWindow } from '@/lib/billingWindow'
-import { buildAnthropicMessages } from '@/lib/anthropicMessages'
+import { buildAnthropicBody, buildAnthropicMessages } from '@/lib/anthropicMessages'
 
 export const runtime = 'nodejs'
 
@@ -445,48 +445,6 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
 // ── Anthropic ─────────────────────────────────────────────────────────────────
 
 
-function buildAnthropicBody(body: any, modelApiId: string): any {
-  const system = body.messages
-    .filter((m: any) => m.role === 'system')
-    .map((m: any) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))
-    .join('\n')
-
-  const msgs = buildAnthropicMessages(body.messages)
-
-  const req: any = {
-    model: modelApiId,
-    max_tokens: body.max_tokens ?? 4096,
-    messages: msgs,
-    stream: body.stream ?? true,
-  }
-
-  // Pose les points de cache et renvoie le `system` a envoyer (chaine nue si
-  // la conversation est trop courte pour etre mise en cache). Modifie `msgs`
-  // sur place — voir lib/promptCache.ts.
-  const systemField = applyAnthropicCache(system, msgs)
-  if (system) req.system = systemField
-
-  // Anthropic has deprecated sampling parameters for current Claude models.
-  // Do not forward OpenAI-compatible temperature/top_p values to Messages API.
-
-  if (Array.isArray(body.tools) && body.tools.length > 0) {
-    req.tools = body.tools.map((t: any) => ({
-      name: t.function?.name ?? t.name,
-      description: t.function?.description ?? t.description ?? '',
-      input_schema: t.function?.parameters ?? t.input_schema ?? { type: 'object', properties: {} },
-    }))
-  }
-
-  if (body.tool_choice) {
-    const tc = body.tool_choice
-    if (tc === 'auto' || tc?.type === 'auto') req.tool_choice = { type: 'auto' }
-    else if (tc === 'required' || tc?.type === 'required') req.tool_choice = { type: 'any' }
-    else if (tc === 'none' || tc?.type === 'none') req.tool_choice = { type: 'none' }
-    else if (tc?.function?.name) req.tool_choice = { type: 'tool', name: tc.function.name }
-  }
-
-  return req
-}
 
 function anthropicNonStreamingToOpenAI(json: any, modelId: string): any {
   const content: any[] = json.content ?? []

@@ -60,6 +60,8 @@ const DICT: Record<Lang, {
   vscodeCta: string
   jetbrainsDesc: string
   jetbrainsCta: string
+  jetbrainsSub: string
+  cliSub: string
   comingSoon: string
   cliDesc: string
   cliHint: string
@@ -73,6 +75,8 @@ const DICT: Record<Lang, {
     vscodeCta: 'Installer sur VS Code',
     jetbrainsDesc: 'Un seul plugin pour IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion et plus.',
     jetbrainsCta: 'JetBrains Marketplace',
+    jetbrainsSub: 'Toute la suite',
+    cliSub: 'Ligne de commande',
     comingSoon: 'Bientôt disponible',
     cliDesc: 'L\'agent Nexora directement dans ton terminal — idéal pour les scripts, le CI/CD et les serveurs distants.',
     cliHint: 'Installe en une commande',
@@ -86,6 +90,8 @@ const DICT: Record<Lang, {
     vscodeCta: 'Install on VS Code',
     jetbrainsDesc: 'One plugin for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion and more.',
     jetbrainsCta: 'JetBrains Marketplace',
+    jetbrainsSub: 'The whole suite',
+    cliSub: 'Command line',
     comingSoon: 'Coming soon',
     cliDesc: 'The Nexora agent right in your terminal — perfect for scripts, CI/CD and remote servers.',
     cliHint: 'Install in one command',
@@ -99,6 +105,8 @@ const DICT: Record<Lang, {
     vscodeCta: 'Instalar en VS Code',
     jetbrainsDesc: 'Un solo plugin para IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion y más.',
     jetbrainsCta: 'JetBrains Marketplace',
+    jetbrainsSub: 'Toda la suite',
+    cliSub: 'Línea de comandos',
     comingSoon: 'Próximamente',
     cliDesc: 'El agente Nexora en tu terminal — ideal para scripts, CI/CD y servidores remotos.',
     cliHint: 'Instala con un comando',
@@ -112,6 +120,8 @@ const DICT: Record<Lang, {
     vscodeCta: 'Instalar no VS Code',
     jetbrainsDesc: 'Um único plugin para IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, GoLand, Rider, CLion e mais.',
     jetbrainsCta: 'JetBrains Marketplace',
+    jetbrainsSub: 'Toda a suíte',
+    cliSub: 'Linha de comandos',
     comingSoon: 'Em breve',
     cliDesc: 'O agente Nexora no seu terminal — ideal para scripts, CI/CD e servidores remotos.',
     cliHint: 'Instale com um comando',
@@ -152,7 +162,7 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
   return (
     <SectionLayout id="platforms">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 1, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.5 }}
@@ -171,7 +181,7 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
           {...(VSCODE_PUBLISHED
             ? { href: VSCODE_URL, target: '_blank', rel: 'noopener noreferrer' }
             : {})}
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 1, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.5 }}
@@ -180,12 +190,12 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
           <div className="flex items-center gap-3 mb-5">
             <VSCodeLogo className="w-11 h-11" />
             <div>
-              <h3 className="font-semibold text-foreground text-lg leading-tight">VS Code</h3>
-              <p className="text-xs text-muted-foreground">Visual Studio Code</p>
+              <h3 className="font-semibold text-foreground text-xl leading-tight">VS Code</h3>
+              <p className="text-sm text-muted-foreground">Visual Studio Code</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{t.vscodeDesc}</p>
-          <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
+          <p className="text-base text-muted-foreground leading-relaxed flex-1">{t.vscodeDesc}</p>
+          <div className="mt-6 inline-flex items-center gap-1.5 text-base font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
             {VSCODE_PUBLISHED ? (
               <>
                 {t.vscodeCta}
@@ -201,7 +211,7 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
           {...(JETBRAINS_PUBLISHED
             ? { href: JETBRAINS_URL, target: '_blank', rel: 'noopener noreferrer' }
             : {})}
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 1, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ delay: 0.08, duration: 0.5 }}
@@ -210,22 +220,22 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
           <div className="flex items-center gap-3 mb-5">
             <JetBrainsLogo className="w-11 h-11" />
             <div>
-              <h3 className="font-semibold text-foreground text-lg leading-tight">JetBrains</h3>
-              <p className="text-xs text-muted-foreground">Toute la suite</p>
+              <h3 className="font-semibold text-foreground text-xl leading-tight">JetBrains</h3>
+              <p className="text-sm text-muted-foreground">{t.jetbrainsSub}</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{t.jetbrainsDesc}</p>
+          <p className="text-base text-muted-foreground leading-relaxed">{t.jetbrainsDesc}</p>
           <div className="flex flex-wrap gap-1.5 mt-4 flex-1 content-start">
             {JETBRAINS_IDES.map((ide) => (
               <span
                 key={ide}
-                className="px-2 py-0.5 rounded-md bg-muted border border-border text-xs text-muted-foreground"
+                className="px-2.5 py-0.5 rounded-md bg-muted border border-border text-sm text-muted-foreground"
               >
                 {ide}
               </span>
             ))}
           </div>
-          <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
+          <div className="mt-6 inline-flex items-center gap-1.5 text-base font-medium text-foreground/70 group-hover:gap-2.5 transition-all">
             {JETBRAINS_PUBLISHED ? (
               <>
                 {t.jetbrainsCta}
@@ -238,7 +248,7 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
         </motion.a>
 
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 1, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ delay: 0.16, duration: 0.5 }}
@@ -249,15 +259,15 @@ export function PlatformsSection({ lang }: { lang: Lang }) {
               <Terminal className="w-6 h-6 text-foreground/70" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground text-lg leading-tight">CLI</h3>
-              <p className="text-xs text-muted-foreground">Ligne de commande</p>
+              <h3 className="font-semibold text-foreground text-xl leading-tight">CLI</h3>
+              <p className="text-sm text-muted-foreground">{t.cliSub}</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{t.cliDesc}</p>
-          <p className="text-xs text-muted-foreground/70 mt-5 mb-1.5">{t.cliHint}</p>
+          <p className="text-base text-muted-foreground leading-relaxed flex-1">{t.cliDesc}</p>
+          <p className="text-sm text-muted-foreground/70 mt-5 mb-1.5">{t.cliHint}</p>
           <button
             onClick={copyCli}
-            className="flex items-center justify-between gap-2 w-full rounded-lg bg-muted border border-border px-3 py-2.5 font-mono text-xs text-foreground/70 hover:border-foreground/20 transition-colors"
+            className="flex items-center justify-between gap-2 w-full rounded-lg bg-muted border border-border px-3 py-2.5 font-mono text-sm text-foreground/70 hover:border-foreground/20 transition-colors"
           >
             <span className="flex items-center gap-2 min-w-0">
               <span className="text-foreground/40">$</span>

@@ -41,12 +41,12 @@ export function SiteHeader() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-3 group">
             <BrandLogo size={36} className="rounded-xl shadow-none" />
-            <span className="text-lg font-bold tracking-tight gradient-text-strong">Nexora</span>
+            <span className="text-xl font-bold tracking-tight gradient-text-strong">Nexora</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map(([href, label]) => (
-              <Link key={href} href={href} className="text-sm text-muted-foreground hover:text-foreground transition-colors relative group">
+              <Link key={href} href={href} className="text-base text-foreground/75 hover:text-foreground transition-colors relative group">
                 {label}
                 <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-foreground transition-all group-hover:w-full" />
               </Link>
@@ -94,7 +94,7 @@ export function SiteHeader() {
             className="md:hidden py-4 border-t border-border space-y-2"
           >
             {navLinks.map(([href, label]) => (
-              <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">{label}</Link>
+              <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="block px-2 py-2 text-base text-foreground/75 hover:text-foreground transition-colors">{label}</Link>
             ))}
             <div className="flex gap-2 pt-2">
               {user ? (

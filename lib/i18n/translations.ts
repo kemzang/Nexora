@@ -15,10 +15,12 @@ export type Translations = {
     badge: string
     title1: string
     title2: string
+    title3: string
     desc: string
     cta: string
     demo: string
-    stats: [string, string, string, string]
+    note: string
+    facts: { value: string; label: string }[]
   }
   features: {
     badge: string
@@ -116,13 +118,20 @@ const fr: Translations = {
     start: 'Commencer',
   },
   hero: {
-    badge: 'IA de nouvelle génération pour VS Code',
-    title1: "L'IA qui transforme",
-    title2: 'votre façon de coder',
-    desc: "Nexora s'intègre directement dans VS Code pour vous donner accès aux modèles d'IA les plus puissants. Codez plus vite, mieux, et avec plus de confiance.",
-    cta: 'Essayer gratuitement',
-    demo: 'Voir la démo',
-    stats: ['Claude & Gemini', 'DeepSeek V3', '10x plus rapide', 'Code sécurisé'],
+    badge: 'Modèles inclus',
+    title1: 'Un seul abonnement.',
+    title2: 'Tous les modèles.',
+    title3: 'Trois éditeurs.',
+    desc: "Claude, Gemini et DeepSeek dans VS Code, JetBrains et votre terminal. Aucune clé d'API à coller, aucune facture de fournisseur à surveiller.",
+    cta: 'Commencer gratuitement',
+    demo: 'Voir les tarifs',
+    note: 'Plan gratuit, sans carte. Fonctionne aussi dans Cursor, Windsurf et VSCodium.',
+    facts: [
+      { value: '6', label: 'modèles inclus' },
+      { value: '3', label: 'éditeurs' },
+      { value: '0', label: "clé d'API à coller" },
+      { value: 'Gratuit', label: 'plan sans carte' },
+    ],
   },
   features: {
     badge: 'Fonctionnalités',
@@ -211,11 +220,11 @@ const fr: Translations = {
   },
   cta: {
     title: 'Prêt à transformer votre code ?',
-    subtitle: 'Rejoignez des milliers de développeurs qui codent plus intelligemment avec Nexora.',
+    subtitle: 'Installez Nexora, connectez-vous, codez. Aucune clé d\'API, aucune carte bancaire.',
     button: 'Commencer gratuitement',
   },
   footer: {
-    desc: "L'extension VS Code qui transforme votre code avec l'intelligence artificielle.",
+    desc: "L'assistant IA pour VS Code, JetBrains et votre terminal. Les modèles sont inclus.",
     cols: [
       { title: 'Produit', links: [
         { label: 'Fonctionnalités', href: '/#features' },
@@ -295,13 +304,20 @@ const en: Translations = {
     start: 'Get Started',
   },
   hero: {
-    badge: 'Next-generation AI for VS Code',
-    title1: 'The AI that transforms',
-    title2: 'the way you code',
-    desc: 'Nexora integrates directly into VS Code to give you access to the most powerful AI models. Code faster, better, and with more confidence.',
-    cta: 'Try for free',
-    demo: 'Watch demo',
-    stats: ['Claude & Gemini', 'DeepSeek V3', '10x faster', 'Secure code'],
+    badge: 'Models included',
+    title1: 'One subscription.',
+    title2: 'Every model.',
+    title3: 'Three editors.',
+    desc: 'Claude, Gemini and DeepSeek inside VS Code, JetBrains and your terminal. No API key to paste, no provider bill to watch.',
+    cta: 'Start free',
+    demo: 'See pricing',
+    note: 'Free plan, no card. Works in Cursor, Windsurf and VSCodium too.',
+    facts: [
+      { value: '6', label: 'models included' },
+      { value: '3', label: 'editors' },
+      { value: '0', label: 'API keys to paste' },
+      { value: 'Free', label: 'plan, no card' },
+    ],
   },
   features: {
     badge: 'Features',
@@ -390,11 +406,11 @@ const en: Translations = {
   },
   cta: {
     title: 'Ready to transform your code?',
-    subtitle: 'Join thousands of developers who code smarter with Nexora.',
+    subtitle: 'Install Nexora, sign in, start coding. No API key, no credit card.',
     button: 'Start for free',
   },
   footer: {
-    desc: 'The VS Code extension that transforms your code with artificial intelligence.',
+    desc: 'The AI assistant for VS Code, JetBrains and your terminal. Models included.',
     cols: [
       { title: 'Product', links: [
         { label: 'Features', href: '/#features' },
@@ -474,13 +490,20 @@ const es: Translations = {
     start: 'Comenzar',
   },
   hero: {
-    badge: 'IA de nueva generación para VS Code',
-    title1: 'La IA que transforma',
-    title2: 'tu forma de programar',
-    desc: 'Nexora se integra directamente en VS Code para darte acceso a los modelos de IA más potentes. Programa más rápido, mejor y con más confianza.',
-    cta: 'Probar gratis',
-    demo: 'Ver demo',
-    stats: ['Claude & Gemini', 'DeepSeek V3', '10x más rápido', 'Código seguro'],
+    badge: 'Modelos incluidos',
+    title1: 'Una suscripción.',
+    title2: 'Todos los modelos.',
+    title3: 'Tres editores.',
+    desc: 'Claude, Gemini y DeepSeek dentro de VS Code, JetBrains y tu terminal. Sin clave de API que pegar, sin factura de proveedor que vigilar.',
+    cta: 'Empezar gratis',
+    demo: 'Ver precios',
+    note: 'Plan gratuito, sin tarjeta. También funciona en Cursor, Windsurf y VSCodium.',
+    facts: [
+      { value: '6', label: 'modelos incluidos' },
+      { value: '3', label: 'editores' },
+      { value: '0', label: 'claves de API' },
+      { value: 'Gratis', label: 'plan sin tarjeta' },
+    ],
   },
   features: {
     badge: 'Características',
@@ -569,11 +592,11 @@ const es: Translations = {
   },
   cta: {
     title: '¿Listo para transformar tu código?',
-    subtitle: 'Únete a miles de desarrolladores que programan de forma más inteligente con Nexora.',
+    subtitle: 'Instala Nexora, inicia sesión y programa. Sin clave de API, sin tarjeta.',
     button: 'Comenzar gratis',
   },
   footer: {
-    desc: 'La extensión de VS Code que transforma tu código con inteligencia artificial.',
+    desc: 'El asistente de IA para VS Code, JetBrains y tu terminal. Modelos incluidos.',
     cols: [
       { title: 'Producto', links: [
         { label: 'Características', href: '/#features' },
@@ -653,13 +676,20 @@ const pt: Translations = {
     start: 'Começar',
   },
   hero: {
-    badge: 'IA de nova geração para VS Code',
-    title1: 'A IA que transforma',
-    title2: 'a sua forma de programar',
-    desc: 'Nexora integra-se diretamente no VS Code para lhe dar acesso aos modelos de IA mais poderosos. Programe mais rápido, melhor e com mais confiança.',
-    cta: 'Experimentar grátis',
-    demo: 'Ver demo',
-    stats: ['Claude & Gemini', 'DeepSeek V3', '10x mais rápido', 'Código seguro'],
+    badge: 'Modelos incluídos',
+    title1: 'Uma subscrição.',
+    title2: 'Todos os modelos.',
+    title3: 'Três editores.',
+    desc: 'Claude, Gemini e DeepSeek dentro do VS Code, JetBrains e do seu terminal. Sem chave de API para colar, sem fatura de fornecedor para vigiar.',
+    cta: 'Começar grátis',
+    demo: 'Ver preços',
+    note: 'Plano gratuito, sem cartão. Funciona também no Cursor, Windsurf e VSCodium.',
+    facts: [
+      { value: '6', label: 'modelos incluídos' },
+      { value: '3', label: 'editores' },
+      { value: '0', label: 'chaves de API' },
+      { value: 'Grátis', label: 'plano sem cartão' },
+    ],
   },
   features: {
     badge: 'Funcionalidades',
@@ -748,11 +778,11 @@ const pt: Translations = {
   },
   cta: {
     title: 'Pronto para transformar o seu código?',
-    subtitle: 'Junte-se a milhares de programadores que programam de forma mais inteligente com Nexora.',
+    subtitle: 'Instale o Nexora, inicie sessão e programe. Sem chave de API, sem cartão.',
     button: 'Começar gratuitamente',
   },
   footer: {
-    desc: 'A extensão VS Code que transforma o seu código com inteligência artificial.',
+    desc: 'O assistente de IA para VS Code, JetBrains e o seu terminal. Modelos incluídos.',
     cols: [
       { title: 'Produto', links: [
         { label: 'Funcionalidades', href: '/#features' },

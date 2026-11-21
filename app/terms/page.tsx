@@ -57,16 +57,16 @@ export default function TermsPage() {
             <section id="identity" className="mb-9 scroll-mt-24">
               <h2 className="text-lg font-bold mb-3">1. Who we are</h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                The Service is operated by <strong className="text-foreground/90">Kemzang Teumena Stephane Bryan</strong>, trading
-                as <strong className="text-foreground/90">Nexora</strong>, a sole trader established in Cameroon.
-                Kemzang Teumena Stephane Bryan is the contracting party under these Terms and the seller of the subscriptions
-                described below.
+                The Service is operated by <strong className="text-foreground/90">Nexora</strong>, the trading name of a
+                sole trader established in Cameroon. Nexora is the contracting party under these Terms and the seller
+                of the subscriptions described below. Its full identification is set out here, as required for
+                distance selling:
               </p>
               <ul className="text-sm text-muted-foreground leading-relaxed space-y-1.5 list-disc list-inside">
-                <li>Legal name: Kemzang Teumena Stephane Bryan</li>
                 <li>Trading name: Nexora</li>
                 <li>Legal form: sole trader (entreprise individuelle)</li>
                 <li>Country of establishment: Cameroon</li>
+                <li>Proprietor: Kemzang Teumena Stephane Bryan</li>
                 <li>
                   Contact:{' '}
                   <a href="mailto:contact@nexoracoding.com" className="text-foreground/80 hover:text-foreground underline underline-offset-4">contact@nexoracoding.com</a>

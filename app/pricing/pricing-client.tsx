@@ -113,7 +113,7 @@ export default function PricingPageClient() {
       <section className="relative pt-40 pb-16 overflow-hidden">
         <div className="orb orb-float-1 w-[600px] h-[600px] bg-foreground/[0.03] top-[-10%] left-[-10%]" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div initial={{ opacity: 1, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Badge variant="primary" className="mb-5">
               <Sparkles className="w-3 h-3" />
               Pricing
@@ -135,7 +135,7 @@ export default function PricingPageClient() {
             return (
               <motion.div
                 key={key}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 1, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.06, duration: 0.5 }}
@@ -205,7 +205,7 @@ export default function PricingPageClient() {
         <PageHeader badge="FAQ" title="Frequently asked questions" subtitle="What our users ask us most often." />
         <div className="max-w-2xl mx-auto space-y-2.5">
           {FAQ.map((item, i) => (
-            <motion.div key={item.q} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
+            <motion.div key={item.q} initial={{ opacity: 1, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
               <FaqItem item={item} />
             </motion.div>
           ))}
@@ -217,7 +217,7 @@ export default function PricingPageClient() {
 
       {/* CTA */}
       <SectionLayout background="default">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 1, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="max-w-3xl mx-auto">
           <GlassCard variant="default" className="border-animated overflow-hidden">
             <div className="h-px bg-gradient-to-r from-transparent via-foreground/30 to-transparent" />
             <div className="py-16 px-8 sm:px-16 text-center">

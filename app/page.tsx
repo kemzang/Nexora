@@ -30,58 +30,52 @@ const plans = [
   { key: 'enterprise', name: PLANS.enterprise.name, price: PLANS.enterprise.priceLabel, href: '/enterprise', popular: false },
 ]
 
+/**
+ * La fenetre d'editeur du heros.
+ *
+ * Plus aucune animation : chaque ligne apparaissait l'une apres l'autre,
+ * ce qui donnait l'impression d'une page lente alors qu'elle etait deja
+ * chargee.
+ */
 function TerminalMockup() {
   const lines = [
-    { type: 'comment', text: '// Nexora AI — auto-completing your code...' },
-    { type: 'code', text: 'async function fetchUserData(userId: string) {' },
-    { type: 'code', text: '  const response = await fetch(`/api/users/${userId}`)' },
-    { type: 'ai', text: '  // ✨ AI suggestion: add error handling' },
-    { type: 'ai', text: '  if (!response.ok) throw new Error(response.statusText)' },
-    { type: 'code', text: '  return response.json()' },
+    { type: 'code', text: 'export async function verifyToken(token) {' },
+    { type: 'ai', text: "  if (!token.startsWith('nxr_')) return null;" },
+    { type: 'code', text: '  return decode(token);' },
     { type: 'code', text: '}' },
+    { type: 'comment', text: '// Nexora applied your rule « validate the prefix »' },
   ]
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: 0.5 }}
-      className="relative max-w-lg mx-auto mt-16"
-    >
+    <div className="relative w-full max-w-xl mx-auto lg:mx-0">
       <div className="absolute -inset-4 bg-foreground/5 rounded-3xl blur-2xl" />
       <div className="relative glass-strong rounded-2xl overflow-hidden shadow-2xl">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
           <div className="w-3 h-3 rounded-full bg-red-400/70" />
           <div className="w-3 h-3 rounded-full bg-amber-400/70" />
           <div className="w-3 h-3 rounded-full bg-emerald-400/70" />
-          <span className="ml-3 text-xs text-muted-foreground font-mono">userService.ts — VS Code</span>
-          <div className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-md badge-primary">
-            <Sparkles className="w-2.5 h-2.5" />
-            <span className="text-xs font-medium">Nexora</span>
+          <span className="ml-3 text-sm text-muted-foreground font-mono">authService.ts</span>
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-md badge-primary">
+            <Sparkles className="w-3 h-3" />
+            <span className="text-xs font-medium">Agent · 2 files</span>
           </div>
         </div>
         <div className="p-5 font-mono text-sm space-y-1">
           {lines.map((line, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 + i * 0.12, duration: 0.3 }}
               className={`leading-relaxed ${
                 line.type === 'comment' ? 'text-muted-foreground/60' :
-                line.type === 'ai' ? 'text-foreground/70 bg-muted/50 -mx-5 px-5 py-0.5' :
+                line.type === 'ai' ? 'text-foreground/90 bg-emerald-400/10 border-l-2 border-emerald-400/60 -mx-5 px-5 py-0.5' :
                 'text-foreground/80'
               }`}
             >
               <span className="text-muted-foreground/30 mr-4 select-none text-xs">{i + 1}</span>
               {line.text}
-              {i === lines.length - 1 && (
-                <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-1 animate-pulse align-middle" />
-              )}
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -93,11 +87,11 @@ function FaqItem({ item }: { item: { q: string; a: string } }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-white/[0.03] transition-colors"
       >
-        <span className="text-sm font-medium text-foreground">{item.q}</span>
+        <span className="text-base font-medium text-foreground">{item.q}</span>
         <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <p className="px-5 pb-4 text-sm text-muted-foreground leading-relaxed border-t border-border/50 pt-3">{item.a}</p>
+        <p className="px-5 pb-4 text-base text-muted-foreground leading-relaxed border-t border-border/50 pt-3">{item.a}</p>
       )}
     </div>
   )
@@ -107,7 +101,7 @@ function ComparisonCell({ value }: { value: string }) {
   const positive = /^(oui|yes|sí|sim)$/i.test(value)
   const negative = /^(non|no|não)\b/i.test(value)
   return (
-    <span className={`inline-flex items-center gap-1.5 text-sm ${positive ? 'text-emerald-400' : negative ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-base ${positive ? 'text-emerald-400' : negative ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>
       {positive ? <Check className="w-3.5 h-3.5 shrink-0" /> : negative ? <Minus className="w-3.5 h-3.5 shrink-0" /> : null}
       {value}
     </span>
@@ -122,104 +116,73 @@ export default function HomePage() {
 
       <SiteHeader />
 
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+      {/* Heros : une promesse a gauche, le produit en action a droite.
+          Rien n'attend une animation au defilement : le contenu est la
+          des le premier rendu. */}
+      <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20">
         <div className="orb orb-float-1 w-[700px] h-[700px] bg-foreground/[0.03] top-[5%] left-[-15%]" />
         <div className="orb orb-float-2 w-[500px] h-[500px] bg-foreground/[0.02] bottom-[10%] right-[-10%]" />
 
-        <div className="absolute top-[30%] left-0 right-0 h-px overflow-hidden pointer-events-none">
-          <div className="beam" style={{ '--beam-delay': '0s' } as React.CSSProperties} />
-        </div>
-        <div className="absolute top-[60%] left-0 right-0 h-px overflow-hidden pointer-events-none">
-          <div className="beam" style={{ '--beam-delay': '3s' } as React.CSSProperties} />
-        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-[1.02fr_0.98fr] gap-12 lg:gap-14 items-center">
+            <div>
+              <Badge variant="primary" className="gap-2">
+                <Brain className="w-4 h-4" />
+                {t.hero.badge}
+              </Badge>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-24">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex justify-center mb-8"
-          >
-            <Badge variant="primary" className="gap-2">
-              <div className="relative">
-                <div className="pulse-ring w-2 h-2" />
-                <div className="w-2 h-2 rounded-full bg-foreground/60" />
+              <h1 className="mt-5 text-[2.75rem] sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.07]">
+                {t.hero.title1}
+                <br />
+                {t.hero.title2}
+                <br />
+                <GradientText variant="strong">{t.hero.title3}</GradientText>
+              </h1>
+
+              <p className="mt-6 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl">
+                {t.hero.desc}
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-3">
+                <Link href="/auth/register">
+                  <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base">
+                    <Rocket className="mr-2 h-4 w-4" />
+                    {t.hero.cta}
+                  </Button>
+                </Link>
+                <Link href="#pricing">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 text-base">
+                    <Terminal className="mr-2 h-4 w-4" />
+                    {t.hero.demo}
+                  </Button>
+                </Link>
               </div>
-              <Brain className="w-3.5 h-3.5" />
-              {t.hero.badge}
-            </Badge>
-          </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-8xl font-bold tracking-tight mb-6 text-balance leading-[1.05]"
-          >
-            {t.hero.title1}
-            <br />
-            <GradientText variant="strong">{t.hero.title2}</GradientText>
-          </motion.h1>
+              <p className="mt-4 text-base text-muted-foreground/70">{t.hero.note}</p>
+            </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            {t.hero.desc}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Link href="/auth/register">
-              <Button size="lg" variant="outline" className="px-8 h-12 text-base group">
-                <Rocket className="mr-2 h-4 w-4" />
-                {t.hero.cta}
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-              <Terminal className="mr-2 h-4 w-4" />
-              {t.hero.demo}
-            </Button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-3"
-          >
-            {([
-              [Star, t.hero.stats[0]],
-              [Cpu, t.hero.stats[1]],
-              [Zap, t.hero.stats[2]],
-              [Shield, t.hero.stats[3]],
-            ] as [React.FC<{ className?: string }>, string][]).map(([Icon, label], i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 + i * 0.08 }}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full glass border-border text-sm text-muted-foreground hover:text-foreground transition-all cursor-default"
-              >
-                <Icon className="w-3.5 h-3.5 text-foreground/60" />
-                <span>{label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <TerminalMockup />
+            <TerminalMockup />
+          </div>
         </div>
       </section>
 
+      {/* Des faits verifiables, pas un compteur d'installations. */}
+      <div className="border-y border-border bg-muted/20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            {t.hero.facts.map(fait => (
+              <div key={fait.label}>
+                <div className="text-3xl font-bold tracking-tight">{fait.value}</div>
+                <div className="mt-1 text-base text-muted-foreground">{fait.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <SectionLayout id="features" background="default">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
@@ -232,7 +195,7 @@ export default function HomePage() {
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 text-balance">
             {t.features.title}
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.features.subtitle}</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">{t.features.subtitle}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -241,7 +204,7 @@ export default function HomePage() {
             return (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 1, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.08, duration: 0.5 }}
@@ -257,12 +220,12 @@ export default function HomePage() {
 
       <section className="relative py-16 border-y border-border overflow-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-6">{t.statsSection.poweredBy}</p>
+          <p className="text-sm uppercase tracking-widest text-muted-foreground mb-6">{t.statsSection.poweredBy}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {['Anthropic Claude', 'Google Gemini', 'DeepSeek'].map(name => (
               <span
                 key={name}
-                className="px-4 py-2 rounded-full border border-border bg-card/60 text-sm font-medium text-foreground/80"
+                className="px-4 py-2 rounded-full border border-border bg-card/60 text-base font-medium text-foreground/80"
               >
                 {name}
               </span>
@@ -273,7 +236,7 @@ export default function HomePage() {
 
       <SectionLayout id="pricing" background="default">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
@@ -284,14 +247,14 @@ export default function HomePage() {
             {t.pricing.badge}
           </Badge>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">{t.pricing.title}</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.pricing.subtitle}</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">{t.pricing.subtitle}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto items-start">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.key}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 1, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
@@ -316,7 +279,7 @@ export default function HomePage() {
       {/* Comparison vs competitors */}
       <SectionLayout background="muted">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
@@ -327,13 +290,13 @@ export default function HomePage() {
             {t.comparison.badge}
           </Badge>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">{t.comparison.title}</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.comparison.subtitle}</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">{t.comparison.subtitle}</p>
         </motion.div>
         <div className="max-w-4xl mx-auto overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-0">
+          <table className="w-full text-base border-separate border-spacing-0">
             <thead>
               <tr>
-                <th className="text-left px-4 py-3 text-muted-foreground font-medium text-xs uppercase tracking-wide">{t.comparison.feature}</th>
+                <th className="text-left px-4 py-3 text-muted-foreground font-medium text-sm uppercase tracking-wide">{t.comparison.feature}</th>
                 <th className="text-left px-4 py-3 font-semibold">Nexora</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">GitHub Copilot</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Cursor</th>
@@ -356,7 +319,7 @@ export default function HomePage() {
       {/* FAQ */}
       <SectionLayout background="default">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.5 }}
@@ -367,11 +330,11 @@ export default function HomePage() {
             {t.faq.badge}
           </Badge>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">{t.faq.title}</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t.faq.subtitle}</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">{t.faq.subtitle}</p>
         </motion.div>
         <div className="max-w-2xl mx-auto space-y-2.5">
           {t.faq.items.map((item, i) => (
-            <motion.div key={item.q} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
+            <motion.div key={item.q} initial={{ opacity: 1, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ delay: i * 0.04 }}>
               <FaqItem item={item} />
             </motion.div>
           ))}
@@ -380,7 +343,7 @@ export default function HomePage() {
 
       <SectionLayout background="default">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 1, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
@@ -397,7 +360,7 @@ export default function HomePage() {
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-balance">
                 {t.cta.title}
               </h2>
-              <p className="text-muted-foreground text-lg mb-10 max-w-xl mx-auto">{t.cta.subtitle}</p>
+              <p className="text-muted-foreground text-xl mb-10 max-w-xl mx-auto">{t.cta.subtitle}</p>
               <Link href="/auth/register">
                 <Button size="lg" variant="outline" className="px-10 h-12 text-base group">
                   {t.cta.button}

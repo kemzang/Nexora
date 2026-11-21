@@ -37,7 +37,7 @@ export function PricingCard({
     <div className="relative h-full">
       {popular && popularLabel && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
-          <span className="relative inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold px-3.5 py-1 rounded-full shadow-lg whitespace-nowrap">
+          <span className="relative inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3.5 py-1 rounded-full shadow-lg whitespace-nowrap">
             <Star className="w-2.5 h-2.5" />
             {popularLabel}
           </span>
@@ -56,11 +56,11 @@ export function PricingCard({
         <div className="mt-3">
           <span className="text-4xl font-bold tracking-tight">{price}</span>
           {period && (
-            <span className="text-muted-foreground text-sm ml-1">{period}</span>
+            <span className="text-muted-foreground text-base ml-1">{period}</span>
           )}
         </div>
         {models && (
-          <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
+          <p className="text-sm text-muted-foreground/70 mt-1 leading-relaxed">
             {models}
           </p>
         )}
@@ -70,7 +70,7 @@ export function PricingCard({
           {features.map((feature) => (
             <div key={feature} className="flex items-start gap-2.5">
               <CheckCircle className="w-4 h-4 text-foreground/60 shrink-0 mt-0.5" />
-              <span className="text-sm text-muted-foreground">{feature}</span>
+              <span className="text-base text-muted-foreground">{feature}</span>
             </div>
           ))}
         </div>

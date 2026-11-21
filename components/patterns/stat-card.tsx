@@ -38,7 +38,7 @@ export function StatCard({ value, suffix = "", label, className }: StatCardProps
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 1, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className={cn("text-center", className)}

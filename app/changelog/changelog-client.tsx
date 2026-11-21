@@ -40,7 +40,7 @@ export default function ChangelogPageClient() {
       <section className="relative pt-40 pb-16 overflow-hidden">
         <div className="orb orb-float-2 w-[600px] h-[600px] bg-foreground/[0.03] top-[-10%] right-[-10%]" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div initial={{ opacity: 1, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Badge variant="primary" className="mb-5">
               <Sparkles className="w-3 h-3" />
               Changelog
@@ -67,7 +67,7 @@ export default function ChangelogPageClient() {
             {CURRENT_ENTRIES.map((entry, i) => (
               <motion.div
                 key={entry.title}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 1, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.08, duration: 0.4 }}

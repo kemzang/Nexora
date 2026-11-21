@@ -19,8 +19,8 @@ export function FeatureCard({ icon: Icon, title, description, className }: Featu
       <div className="relative w-12 h-12 bg-muted rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
         <Icon className="w-5.5 h-5.5 text-foreground/70" />
       </div>
-      <h3 className="text-foreground font-semibold text-base mb-2">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed text-sm">
+      <h3 className="text-foreground font-semibold text-lg mb-2">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed text-base">
         {description}
       </p>
     </GlassCard>

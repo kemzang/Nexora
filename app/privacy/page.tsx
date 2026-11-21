@@ -56,8 +56,10 @@ export default function PrivacyPage() {
             <p className="text-sm text-muted-foreground leading-relaxed mb-8">
               This policy explains what data Nexora collects when you use our IDE extension, our CLI, our website and
               our dashboard (together, the &laquo;&nbsp;Service&nbsp;&raquo;), why we collect it, and the choices
-              available to you. The Service is operated by Kemzang Teumena Stephane Bryan, trading as Nexora, a sole trader
-              established in Cameroon.
+              available to you. The Service is operated by Nexora, the trading name of a sole trader established in
+              Cameroon, which is the controller of the data described below. Nexora&rsquo;s full legal identification
+              and contact details are set out in{' '}
+              <Link href="/terms#identity" className="text-foreground/80 hover:text-foreground underline underline-offset-4">section&nbsp;1 of the Terms</Link>.
             </p>
 
             <section id="data" className="mb-9 scroll-mt-24">

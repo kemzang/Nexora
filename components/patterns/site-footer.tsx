@@ -24,16 +24,16 @@ export function SiteFooter() {
               </div>
               <span className="font-bold gradient-text-strong">Nexora</span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-4">{t.footer.desc}</p>
+            <p className="text-base text-muted-foreground leading-relaxed max-w-xs mb-4">{t.footer.desc}</p>
             <LanguageSwitcher />
           </div>
           {t.footer.cols.map(col => (
             <div key={col.title}>
-              <h3 className="text-sm font-semibold mb-4">{col.title}</h3>
+              <h3 className="text-base font-semibold mb-4">{col.title}</h3>
               <ul className="space-y-2.5">
                 {col.links.map(link => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors relative group">
+                    <Link href={link.href} className="text-base text-muted-foreground hover:text-foreground transition-colors relative group">
                       {link.label}
                       <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-foreground/30 transition-all group-hover:w-full" />
                     </Link>
@@ -44,14 +44,14 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="border-t border-border mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Identite du vendeur. Un examinateur de prestataire de paiement
-              cherche QUI vend : sans nom ni pays, le dossier tombe en
-              « commercant non identifiable ». */}
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Nexora — Kemzang Teumena Stephane Bryan, Cameroon.{" "}
-            {t.footer.rights}
+          {/* L'identite complete du vendeur reste obligatoire, mais elle a sa
+              place dans les Conditions, la Confidentialite et les
+              Remboursements — tous trois lies dans la colonne « Legal »
+              ci-dessus. La repeter sur chaque page n'est exige par rien. */}
+          <p className="text-base text-muted-foreground">
+            © {new Date().getFullYear()} Nexora. {t.footer.rights}
           </p>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground/60">
             <Shield className="w-3 h-3" />
             <span>Secured by TLS 1.3</span>
           </div>

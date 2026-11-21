@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const sectionVariants = cva(
-  "relative py-28 sm:py-36 overflow-hidden",
+  "relative py-20 sm:py-24 overflow-hidden",
   {
     variants: {
       background: {

@@ -1,6 +1,6 @@
 import { FROM_EMAIL, emailHeader, esc, resend } from './resend'
 import { adresseDeReponse } from './supportInbound'
-import { SUPPORT_SLA, categoryById } from './supportTickets'
+import { SUPPORT_SLA, categoryById, objetNotification } from './supportTickets'
 
 /**
  * Les deux courriels d'un ticket.
@@ -125,7 +125,7 @@ export async function notifySupportTicket(ticket: {
       from: FROM_EMAIL,
       to: SUPPORT_INBOX,
       replyTo: ticket.email,
-      subject: `[${ticket.reference}] ${categorie} — ${ticket.subject}`,
+      subject: objetNotification(ticket.reference, categorie, ticket.subject),
       html,
     })
   } catch (e) {

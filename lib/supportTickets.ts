@@ -245,6 +245,23 @@ export const MAX_REPONSE = 10000
 export const ETATS_VIVANTS = ['open', 'answered'] as const
 
 /**
+ * L'objet du courriel envoye a l'equipe.
+ *
+ * Quand l'utilisateur ne saisit pas d'objet, validerTicket retombe sur
+ * le nom de la categorie. L'objet affichait alors deux fois la meme
+ * chose : « [NX-NFTAN] Billing & subscription — Billing & subscription ».
+ */
+export function objetNotification(
+  reference: string,
+  categorie: string,
+  sujet: string,
+): string {
+  return sujet.trim() === categorie.trim()
+    ? `[${reference}] ${categorie}`
+    : `[${reference}] ${categorie} — ${sujet}`
+}
+
+/**
  * Ce dossier a-t-il une reponse que l'utilisateur n'a pas encore vue ?
  *
  * On compare la derniere reponse SORTANTE a la derniere consultation.

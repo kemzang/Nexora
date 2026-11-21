@@ -6,6 +6,7 @@ import {
   SUPPORT_CATEGORIES,
   dossierAbsorbant,
   generateReference,
+  objetNotification,
   reponseNonLue,
   validerReponse,
   validerTicket,
@@ -279,5 +280,25 @@ describe('reponseNonLue', () => {
         sortie('2026-11-12T00:00:00Z'),
       ]),
     ).toBe(true)
+  })
+})
+
+describe('objetNotification', () => {
+  it('ne repete pas la categorie quand aucun objet n a ete saisi', () => {
+    // validerTicket retombe sur le nom de la categorie : l'objet
+    // affichait « [NX-NFTAN] Billing & subscription — Billing &
+    // subscription ».
+    expect(objetNotification('NX-NFTAN', 'Billing & subscription', 'Billing & subscription'))
+      .toBe('[NX-NFTAN] Billing & subscription')
+  })
+
+  it('garde les deux quand l objet est different', () => {
+    expect(objetNotification('NX-NFTAN', 'Bug report', 'Autocomplete is silent'))
+      .toBe('[NX-NFTAN] Bug report — Autocomplete is silent')
+  })
+
+  it('ne se laisse pas avoir par un espace de bord', () => {
+    expect(objetNotification('NX-NFTAN', 'Bug report', '  Bug report  '))
+      .toBe('[NX-NFTAN] Bug report')
   })
 })

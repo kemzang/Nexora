@@ -56,7 +56,7 @@ export default function ChatQuickStartPage() {
 
       <h1 className="text-3xl font-bold tracking-tight mb-3">AI chat — Quick start</h1>
       <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-        Nexora's chat lets you talk to the best AI models (DeepSeek, Gemini, Claude) straight from VS Code, without leaving your editor.
+        Nexora&apos;s chat lets you talk to the best AI models (DeepSeek, Gemini, Claude) straight from VS Code, without leaving your editor.
       </p>
 
       <div className="h-px bg-border/50 mb-8" />
@@ -133,7 +133,7 @@ export default function ChatQuickStartPage() {
 
       <h2 className="text-xl font-bold mb-4">Automatic model selection</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        The model you pick at the top of the chat is always the one used, as long as your plan includes it — Nexora never swaps it on its own. Automatic complexity analysis only kicks in when you haven't made an explicit choice, or when the selected model is no longer part of your plan (it then falls back to the best model available to you).
+        The model you pick at the top of the chat is always the one used, as long as your plan includes it — Nexora never swaps it on its own. Automatic complexity analysis only kicks in when you haven&apos;t made an explicit choice, or when the selected model is no longer part of your plan (it then falls back to the best model available to you).
       </p>
 
       <Callout type="info">

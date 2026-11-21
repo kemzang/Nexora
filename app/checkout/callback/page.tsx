@@ -127,7 +127,7 @@ function CallbackContent() {
               <XCircle className="w-8 h-8 text-red-400" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight mb-3">Paiement échoué</h1>
-            <p className="text-muted-foreground mb-8">Le paiement n'a pas pu être traité.</p>
+            <p className="text-muted-foreground mb-8">The payment could not be processed.</p>
             <Link href="/#pricing">
               <Button variant="outline">Réessayer</Button>
             </Link>

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { PLANS, type PlanId } from '@/lib/models'
+import { enArrierePlan } from '@/lib/arrierePlan'
 
 export const runtime = 'nodejs'
 
@@ -113,13 +114,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(errorData, { status: aiResponse.status })
     }
 
-    // Fire-and-forget usage tracking
-    void supabase.from('usage_sessions').insert({
-      user_id: userId,
-      session_type: 'chat_proxy_legacy',
-      model_id: null,
-      metadata: { model: selectedModel, provider, messages_count: messages.length, plan: userPlan },
-    })
+    // Comptage d'usage : hors du chemin de la reponse, mais il doit
+    // aboutir — `void` seul le faisait tuer par le gel de la fonction.
+    enArrierePlan(
+      supabase.from('usage_sessions').insert({
+        user_id: userId,
+        session_type: 'chat_proxy_legacy',
+        model_id: null,
+        metadata: { model: selectedModel, provider, messages_count: messages.length, plan: userPlan },
+      }),
+      'usage_sessions',
+    )
 
     return new NextResponse(aiResponse.body, {
       headers: {

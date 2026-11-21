@@ -194,7 +194,7 @@ export default function DocsIndexPage() {
       {/* Models */}
       <h2 className="text-xl font-bold mb-1">Available AI models</h2>
       <p className="text-sm text-muted-foreground mb-5">
-        Nexora routes each request to the model that best fits the task's complexity and your plan.
+        Nexora routes each request to the model that best fits the task&apos;s complexity and your plan.
         See <Link href="/pricing" className="text-foreground/70 hover:underline">which models each plan includes</Link>.
       </p>
       <div className="rounded-xl border border-border/50 overflow-hidden mb-10">

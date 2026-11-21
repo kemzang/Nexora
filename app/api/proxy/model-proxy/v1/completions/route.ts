@@ -5,6 +5,7 @@ import { getEffectiveTokenLimit, type PlanId } from '@/lib/models'
 import type { FimModelId } from '@/lib/modelRouter'
 import { quotaWindow, secondsUntilReset } from '@/lib/billingWindow'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
+import { enArrierePlan } from '@/lib/arrierePlan'
 
 export const runtime = 'nodejs'
 
@@ -204,17 +205,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: errorText }, { status: upstream.status })
     }
 
-    void supabase.from('usage_sessions').insert({
-      user_id: userId,
-      started_at: new Date().toISOString(), // requis pour le filtre mensuel (dashboard + quota)
-      session_type: 'fim',
-      model_id: model,
-      tokens_input: Math.ceil(prompt.length / 4),
-      // Plans payants : autocomplétion gratuite → tokens_total: 0 (n'entame pas le quota).
-      // Free : on laisse tokens_total absent → le quota compte via tokens_input.
-      ...(autocompleteIsFree ? { tokens_total: 0 } : {}),
-      metadata: { model, max_tokens, autocompleteFree: autocompleteIsFree },
-    })
+    // Facturation : un insert tue est du quota consomme et jamais
+    // compte. `enArrierePlan` garde la fonction vivante le temps de
+    // l'ecriture, sans faire attendre la reponse.
+    enArrierePlan(
+      supabase.from('usage_sessions').insert({
+        user_id: userId,
+        started_at: new Date().toISOString(), // requis pour le filtre mensuel (dashboard + quota)
+        session_type: 'fim',
+        model_id: model,
+        tokens_input: Math.ceil(prompt.length / 4),
+        // Plans payants : autocomplétion gratuite → tokens_total: 0 (n'entame pas le quota).
+        // Free : on laisse tokens_total absent → le quota compte via tokens_input.
+        ...(autocompleteIsFree ? { tokens_total: 0 } : {}),
+        metadata: { model, max_tokens, autocompleteFree: autocompleteIsFree },
+      }),
+      'usage_sessions',
+    )
 
     if (stream) {
       return new NextResponse(upstream.body, {

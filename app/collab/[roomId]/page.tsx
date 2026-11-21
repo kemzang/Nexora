@@ -135,7 +135,7 @@ function MessageBubble({
               </div>
             ))}
             {annotations.length === 0 && (
-              <p className="text-xs text-slate-400">Aucun commentaire pour l'instant.</p>
+              <p className="text-xs text-slate-400">No comments yet.</p>
             )}
             {roomActive && (
               <div className="flex gap-1.5 pt-1">
@@ -144,7 +144,7 @@ function MessageBubble({
                   value={draft}
                   onChange={e => setDraft(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && void handlePost()}
-                  placeholder="Ajouter un commentaire…"
+                  placeholder="Add a comment…"
                   className="flex-1 px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-foreground/20"
                 />
                 <button
@@ -420,16 +420,16 @@ export default function CollabRoomPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-muted flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 p-8 w-full max-w-md text-center">
           <NexoraLogo />
-          <h1 className="font-bold text-slate-900 text-lg mt-4 mb-2">Connexion requise</h1>
+          <h1 className="font-bold text-slate-900 text-lg mt-4 mb-2">Sign in required</h1>
           <p className="text-slate-500 text-sm mb-6">
-            Tu dois être connecté à Nexora pour rejoindre cette session de collaboration.
+            You need a Nexora account to join this collaboration session.
           </p>
           <button
             onClick={() => router.push(`/auth/login?return=${returnUrl}`)}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition flex items-center justify-center gap-2"
           >
             <LogIn className="w-4 h-4" />
-            Se connecter
+            Sign in
           </button>
           <p className="text-xs text-slate-400 mt-4">
             Pas encore de compte ?{' '}
@@ -460,7 +460,7 @@ export default function CollabRoomPage() {
             <NexoraLogo />
             <div>
               <h1 className="font-bold text-slate-900 text-lg">Nexora Collaboration</h1>
-              <p className="text-slate-400 text-sm">Session partagée en temps réel</p>
+              <p className="text-slate-400 text-sm">Shared session, in real time</p>
             </div>
           </div>
 
@@ -472,7 +472,7 @@ export default function CollabRoomPage() {
               <div className="space-y-3">
                 <input
                   type="text"
-                  placeholder="Ton prénom ou pseudo"
+                  placeholder="Your name or nickname"
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && void handleJoin()}
@@ -485,22 +485,22 @@ export default function CollabRoomPage() {
                   disabled={!displayName.trim() || joining}
                   className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {joining ? 'Connexion…' : 'Rejoindre la session'}
+                  {joining ? 'Joining…' : 'Join the session'}
                 </button>
               </div>
               <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                <p className="text-xs text-slate-400 mb-2">Tu préfères utiliser VS Code ?</p>
+                <p className="text-xs text-slate-400 mb-2">Prefer to use VS Code?</p>
                 <a
                   href={`vscode://nexoracoding.nexora-ai/collab?room=${roomId}&token=${inviteToken}`}
                   className="inline-flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground font-medium"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  Ouvrir dans VS Code + Nexora
+                  Open in VS Code with Nexora
                 </a>
               </div>
             </>
           ) : (
-            <p className="text-slate-500 text-sm text-center py-4">Lien d'invitation invalide ou expiré.</p>
+            <p className="text-slate-500 text-sm text-center py-4">This invite link is invalid or has expired.</p>
           )}
         </div>
       </div>
@@ -528,7 +528,7 @@ export default function CollabRoomPage() {
                 </span>
               </>
             ) : (
-              <span className="text-xs text-slate-400">Session fermée · lecture seule</span>
+              <span className="text-xs text-slate-400">Session closed · read only</span>
             )}
           </div>
         </div>
@@ -538,7 +538,7 @@ export default function CollabRoomPage() {
         </div>
         <button
           onClick={copyLink}
-          title="Copier le lien d'invitation"
+          title="Copy the invite link"
           className="p-2 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition"
         >
           {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -549,7 +549,7 @@ export default function CollabRoomPage() {
         {/* Members sidebar */}
         <aside className="hidden md:flex flex-col w-44 border-r border-slate-100 bg-white overflow-y-auto">
           <div className="px-3 py-2.5 border-b border-slate-50">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">En ligne</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Online</p>
           </div>
           {members.map(m => (
             <div key={m.user_id} className="flex items-center gap-2 px-3 py-2">
@@ -560,7 +560,7 @@ export default function CollabRoomPage() {
             </div>
           ))}
           {members.length === 0 && (
-            <p className="text-xs text-slate-400 px-3 py-3">Aucun membre en ligne</p>
+            <p className="text-xs text-slate-400 px-3 py-3">Nobody online</p>
           )}
           <div className="mt-auto border-t border-slate-100 p-3">
             <a href={vscodeLink} className="flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground font-medium">
@@ -577,8 +577,8 @@ export default function CollabRoomPage() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <BrandLogo size={48} className="rounded-2xl mx-auto mb-3 opacity-30 shadow-none" />
-                  <p className="text-slate-400 text-sm">Aucun message pour l'instant.</p>
-                  <p className="text-slate-300 text-xs mt-1">Les messages de la session VS Code apparaîtront ici.</p>
+                  <p className="text-slate-400 text-sm">No messages yet.</p>
+                  <p className="text-slate-300 text-xs mt-1">Messages from the VS Code session will appear here.</p>
                 </div>
               </div>
             )}
@@ -608,7 +608,7 @@ export default function CollabRoomPage() {
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend() }
                   }}
-                  placeholder="Message… (Entrée pour envoyer)"
+                  placeholder="Message… (Enter to send)"
                   rows={1}
                   className="flex-1 resize-none px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-foreground/30 max-h-32 leading-relaxed"
                 />
@@ -621,7 +621,7 @@ export default function CollabRoomPage() {
                 </button>
               </div>
               <p className="text-xs text-slate-400 mt-1.5 px-1">
-                Les réponses IA s'affichent en temps réel depuis VS Code
+                AI responses stream in live from VS Code
               </p>
             </div>
           ) : (

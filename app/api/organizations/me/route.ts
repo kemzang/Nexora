@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]))
 
   // Consommation individuelle, responsables uniquement.
-  let perMember: Record<string, number> = {}
+  const perMember: Record<string, number> = {}
   if (canManageMembers(org.role)) {
     const { data: rows } = await db.rpc('organization_usage_by_member', {
       p_org_id: org.orgId,

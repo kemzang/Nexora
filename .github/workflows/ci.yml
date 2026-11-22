@@ -1,4 +1,4 @@
-name: CI / Deploy
+name: CI
 
 on:
   push:
@@ -132,22 +132,15 @@ jobs:
           TEST_TOKEN: ${{ secrets.NEXORA_TEST_TOKEN }}
 
   # ── Deploy to Vercel (main branch only) ───────────────────────────
-  deploy:
-    name: Deploy to Vercel
-    runs-on: ubuntu-latest
-    needs: [typecheck, build, unit]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./
+  # Il n'y a PAS de travail de deploiement ici, et c'est voulu.
+  #
+  # Il y en avait un : amondnet/vercel-action, qui echouait a chaque push
+  # sur « Input required and not supplied: vercel-token ». Aucun secret
+  # n'a jamais ete pose sur ce depot — il n'a donc jamais rien deploye.
+  #
+  # Et il n'avait pas lieu d'etre : Vercel deploie par sa propre
+  # integration GitHub des que main bouge. Le remettre ferait courir deux
+  # deploiements en parallele pour un seul commit.
 
   # ── Security audit ────────────────────────────────────────────────
   security:

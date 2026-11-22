@@ -7,6 +7,7 @@ import type {
   PasswordResetRequest,
   PasswordResetConfirm
 } from '@/types'
+import { lireNoms } from '@/lib/nomUtilisateur'
 
 export class AuthService {
   static async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -176,11 +177,15 @@ export class AuthService {
 
   
   private static mapAuthUser(user: any): AuthUser {
+    // Un compte cree par Google ou GitHub n'a ni `first_name` ni
+    // `last_name` : ces noms-la sont les notres. Sans reconciliation,
+    // l'ecran affichait « ? » en initiales et « Bonjour,  » sans nom.
+    const noms = lireNoms(user.user_metadata, user.email)
     return {
       id: user.id,
       email: user.email || '',
-      firstName: user.user_metadata?.first_name || null,
-      lastName: user.user_metadata?.last_name || null,
+      firstName: noms.firstName,
+      lastName: noms.lastName,
       avatarUrl: user.user_metadata?.avatar_url || null,
       emailVerified: user.email_confirmed_at !== null,
       isActive: true,

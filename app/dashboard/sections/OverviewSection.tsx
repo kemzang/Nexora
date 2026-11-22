@@ -213,7 +213,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1.5">
           Bonjour,{' '}
-          <span className="gradient-text-strong">{user.firstName || 'Utilisateur'}</span> 👋
+          <span className="gradient-text-strong">{user.firstName || 'there'}</span> 👋
         </h1>
         <p className="text-muted-foreground text-sm">
           Here is a summary of your activity on Nexora.

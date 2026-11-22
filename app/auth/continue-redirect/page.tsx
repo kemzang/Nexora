@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { VSCODE_EXTENSION_ID } from '@/lib/editorDeepLink'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 export const dynamic = 'force-dynamic'
 
@@ -213,9 +214,7 @@ export default function Page() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <LoadingScreen message="Taking you back to your editor…" />
     )
   }
 

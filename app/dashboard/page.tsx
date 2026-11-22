@@ -11,6 +11,7 @@ import {
   Bell, Menu, X, Activity, Wallet, Users, History, Radio
 , Inbox, Building2, LifeBuoy} from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 import Link from 'next/link'
 import { Modal } from '@/components/ui/modal'
 import OverviewSection from '@/app/dashboard/sections/OverviewSection'
@@ -131,36 +132,7 @@ export default function DashboardPage() {
   const ActiveComponent = sections[activeSection] || sections.dashboard
 
   if (loading || !user) {
-    /*
-     * Le logo au-dessus, le nom en bas.
-     *
-     * Il n'y avait qu'un anneau qui tourne sur fond noir : rien ne disait
-     * ce qu'on attendait, ni meme sur quel site on se trouvait. Un
-     * chargement qui dure devient alors une page cassee. Avec la marque,
-     * l'attente reste une attente.
-     */
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-10 px-6">
-        <div className="flex flex-col items-center gap-7">
-          <BrandLogo size={72} />
-          <div className="relative h-10 w-10">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-foreground/70 border-t-transparent" />
-            <div
-              className="absolute inset-0 h-10 w-10 animate-spin rounded-full border-2 border-foreground/70 border-b-transparent"
-              style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
-            />
-          </div>
-        </div>
-
-        {/* En bas de l'ecran, comme la signature d'un editeur. */}
-        <div className="absolute bottom-12 flex flex-col items-center gap-1.5">
-          <span className="text-xl font-bold tracking-tight gradient-text-strong">
-            Nexora
-          </span>
-          <span className="text-sm text-muted-foreground">Loading your dashboard…</span>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading your dashboard…" size={72} plein />
   }
 
   const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || '?'

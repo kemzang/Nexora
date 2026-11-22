@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertCircle, Loader2, ExternalLink, Sparkles, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 type Status = 'loading' | 'success' | 'error'
 
@@ -192,9 +193,7 @@ function OnboardingCallbackContent() {
 export default function OnboardingCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-foreground/70 animate-spin" />
-      </div>
+      <LoadingScreen message="Setting up your editor…" />
     }>
       <OnboardingCallbackContent />
     </Suspense>

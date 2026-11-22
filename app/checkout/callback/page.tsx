@@ -3,12 +3,13 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { CheckCircle, XCircle, Loader2, Sparkles } from 'lucide-react'
+import { CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 function CallbackContent() {
   const searchParams = useSearchParams()
@@ -141,9 +142,7 @@ function CallbackContent() {
 export default function CallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <LoadingScreen message="Confirming your payment…" plein />
     }>
       <CallbackContent />
     </Suspense>

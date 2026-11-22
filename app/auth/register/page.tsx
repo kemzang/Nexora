@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Code, Rocket, ArrowRight } from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 const registerSchema = z.object({
   email: emailSchema(),
@@ -266,9 +267,7 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-foreground/60 animate-spin" />
-      </div>
+      <LoadingScreen message="Loading…" />
     }>
       <RegisterForm />
     </Suspense>

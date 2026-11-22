@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CreditCard, Lock, ArrowLeft, Loader2, Shield, Wifi } from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 import { useAuth } from '@/hooks/use-auth'
 import { useTranslation } from '@/lib/i18n/context'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -339,15 +340,11 @@ export default function CheckoutPage() {
     <Suspense fallback={
       /*
        * Un anneau nu sur fond noir, sur la page ou l'on s'apprete a
-       * payer : rien ne dit chez qui l'on est, ni si quelque chose se
+       * payer : rien ne disait chez qui l'on est, ni si quelque chose se
        * passe. C'est le plus mauvais endroit du site pour laisser ce
-       * doute. Le logo et le nom suffisent a le lever.
+       * doute.
        */
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
-        <BrandLogo size={56} />
-        <div className="w-8 h-8 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
-        <p className="text-base text-muted-foreground">Preparing your checkout…</p>
-      </div>
+      <LoadingScreen message="Preparing your checkout…" plein />
     }>
       <CheckoutForm />
     </Suspense>

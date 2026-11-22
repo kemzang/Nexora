@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Code, ArrowRight } from 'lucide-react'
 import { BrandLogo } from '@/components/patterns/brand-logo'
 import { useToast } from '@/components/ui/toast'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 const loginSchema = z.object({
   email: emailSchema(),
@@ -287,9 +288,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-foreground/60 animate-spin" />
-      </div>
+      <LoadingScreen message="Loading…" />
     }>
       <LoginForm />
     </Suspense>

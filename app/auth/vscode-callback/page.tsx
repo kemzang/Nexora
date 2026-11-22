@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/components/ui/toast'
+import { LoadingScreen } from '@/components/patterns/loading-screen'
 
 const IDE_LABELS: Record<string, { name: string; deepLink?: (token: string) => string }> = {
   vscode: {
@@ -147,9 +148,7 @@ export default function VSCodeCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="w-10 h-10 border-2 border-foreground/30 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <LoadingScreen message="Connecting VS Code…" />
       }
     >
       <VSCodeCallbackInner />

@@ -38,23 +38,40 @@ function formatRenewal(iso: string): string {
   })
 }
 
-const UPGRADE_PLANS = [
+/**
+ * L'APPARENCE des cartes d'abonnement, et rien d'autre.
+ *
+ * Le nom, le prix et les avantages viennent de PLANS — la source unique,
+ * celle que lisent la page d'accueil et /pricing. Ils etaient recopies
+ * ici, et avaient derive : l'ecran annoncait un Enterprise a 80 $ pour
+ * 100M de credits, quand l'offre reelle est « a partir de 30 $ » pour
+ * 40M par siege. Deux prix pour la meme chose sur le meme site, et
+ * celui-ci vendait precisement le volume qu'un commentaire de
+ * lib/models.ts dit mettre le plan en perte de 27 $.
+ *
+ * Dupliquer une donnee de prix, c'est accepter qu'elle devienne fausse.
+ */
+const PLAN_STYLES: Record<
+  string,
   {
-    slug: 'starter',
-    name: 'Starter',
-    price: '$5',
+    icon: typeof Sparkles
+    color: string
+    bg: string
+    border: string
+    activeBorder: string
+    badgeColor: string
+    popular?: boolean
+  }
+> = {
+  starter: {
     icon: Sparkles,
     color: 'text-sky-400',
     bg: 'from-sky-500/20 to-sky-500/5',
     border: 'hover:border-sky-500/40',
     activeBorder: 'border-sky-500/40',
     badgeColor: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
-    features: ['4M credits/month', '500 requests/day', 'DeepSeek Flash, Gemini Flash', 'Claude Sonnet 5.5, Gemini 3.1 Pro', 'Unlimited autocomplete'],
   },
-  {
-    slug: 'pro',
-    name: 'Pro',
-    price: '$12',
+  pro: {
     icon: Zap,
     color: 'text-amber-400',
     bg: 'from-amber-500/20 to-amber-500/5',
@@ -62,33 +79,34 @@ const UPGRADE_PLANS = [
     activeBorder: 'border-amber-500/40',
     badgeColor: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     popular: true,
-    features: ['15M credits/month', '2,000 requests/day', '+ Claude Opus 5.5', 'AI Agent mode', 'Priority support'],
   },
-  {
-    slug: 'business',
-    name: 'Business',
-    price: '$30',
+  business: {
     icon: Star,
     color: 'text-emerald-400',
     bg: 'from-emerald-500/20 to-emerald-500/5',
     border: 'hover:border-emerald-500/40',
     activeBorder: 'border-emerald-500/40',
     badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-    features: ['40M credits/month', '5,000 requests/day', 'All models, no limits', 'Direct API access', 'Dedicated support'],
   },
-  {
-    slug: 'enterprise',
-    name: 'Enterprise',
-    price: '$80',
+  enterprise: {
     icon: Crown,
     color: 'text-foreground/70',
     bg: 'from-muted to-muted/50',
     border: 'hover:border-border',
     activeBorder: 'border-border',
     badgeColor: 'bg-muted text-foreground/70 border-border',
-    features: ['100M credits/month', 'Unlimited requests', 'All models', 'Support 24/7 + SSO + SLA'],
   },
-]
+}
+
+const UPGRADE_PLANS = (['starter', 'pro', 'business', 'enterprise'] as const).map(
+  (slug) => ({
+    slug,
+    name: PLANS[slug].name,
+    price: PLANS[slug].priceLabel,
+    features: PLANS[slug].features,
+    ...PLAN_STYLES[slug],
+  }),
+)
 
 const PLAN_ORDER = ['free', 'starter', 'pro', 'business', 'enterprise']
 
@@ -493,7 +511,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold shadow-lg">
-                    ⭐ Populaire
+                    ⭐ Popular
                   </div>
                 )}
                 <Card className={`border-border/50 ${plan.border} transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${plan.popular ? `${plan.activeBorder} shadow-amber-500/10` : ''}`}>
@@ -514,13 +532,24 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
                         </li>
                       ))}
                     </ul>
-                    <Link href={`/checkout?plan=${plan.slug}`}>
+                    {/* Enterprise se facture au siege, dix minimum : il
+                        passe par le formulaire, pas par la caisse. La page
+                        d'accueil le faisait deja, cet ecran non. */}
+                    <Link
+                      href={
+                        plan.slug === 'enterprise'
+                          ? '/enterprise'
+                          : `/checkout?plan=${plan.slug}`
+                      }
+                    >
                       <Button className={`w-full text-sm ${
                         plan.popular
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-md shadow-amber-500/20'
                           : 'bg-primary text-primary-foreground'
                       }`}>
-                        Passer au {plan.name}
+                        {plan.slug === 'enterprise'
+                          ? 'Contact us'
+                          : `Upgrade to ${plan.name}`}
                         <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                       </Button>
                     </Link>

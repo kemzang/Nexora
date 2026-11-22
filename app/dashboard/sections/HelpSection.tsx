@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Book, Mail, Sparkles, ChevronDown, Terminal,
-  Code, Zap, Key, GitBranch, MessagesSquare
+  Code, Zap, Key, MessagesSquare
 } from 'lucide-react'
 import { EmailAddress } from '@/components/patterns/email-address'
 
@@ -82,7 +83,7 @@ export default function HelpSection() {
                 step: '01',
                 icon: Code,
                 title: 'Install the extension',
-                desc: 'Recherchez "Nexora AI" dans le marketplace VS Code',
+                desc: 'Search for "Nexora AI" in the VS Code marketplace',
                 color: 'text-foreground/70',
                 bg: 'bg-muted',
               },
@@ -108,7 +109,7 @@ export default function HelpSection() {
                   <step.icon className={`w-4.5 h-4.5 ${step.color}`} />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-mono mb-0.5">ÉTAPE {step.step}</p>
+                  <p className="text-xs text-muted-foreground font-mono mb-0.5">STEP {step.step}</p>
                   <p className="text-sm font-semibold">{step.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{step.desc}</p>
                 </div>
@@ -118,49 +119,49 @@ export default function HelpSection() {
         </CardContent>
       </Card>
 
-      {/* Resources */}
+      {/*
+        * Deux ressources, et elles mènent quelque part.
+        *
+        * Il y en avait trois, sans aucun `href` : des cartes en
+        * `cursor-pointer` qui se soulevaient au survol et ne faisaient
+        * rien. Deux promettaient en plus ce qui n'existe pas — un Discord
+        * jamais ouvert, et « le code source de l'extension » alors que ce
+        * depot est prive. Une porte peinte sur un mur est pire qu'un mur :
+        * on perd du temps a la pousser.
+        */}
       <div>
-        <h2 className="text-base font-semibold mb-4">Ressources</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <h2 className="text-base font-semibold mb-4">Resources</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             {
               icon: Book,
               title: 'Documentation',
               desc: 'Full guides, API reference and tutorials',
-              color: 'text-foreground/70',
-              bg: 'bg-muted',
-              hover: 'hover:border-border hover:bg-muted',
-              action: 'Consulter →',
-            },
-            {
-              icon: GitBranch,
-              title: 'GitHub',
-              desc: 'Extension source code and issues',
-              color: 'text-foreground',
-              bg: 'bg-white/[0.06]',
-              hover: 'hover:border-white/[0.12] hover:bg-white/[0.04]',
-              action: 'View the repo →',
+              action: 'Read the docs →',
+              href: '/docs',
+              externe: false,
             },
             {
               icon: MessagesSquare,
-              title: 'Community',
-              desc: 'Discord and forum with the Nexora community',
-              color: 'text-foreground/70',
-              bg: 'bg-muted',
-              hover: 'hover:border-border hover:bg-muted',
-              action: 'Join →',
+              title: 'Contact support',
+              desc: 'Open a request and follow it from « My requests »',
+              action: 'Open a request →',
+              href: '/support',
+              externe: false,
             },
           ].map(item => (
-            <Card key={item.title} className={`glass border-border/50 ${item.hover} transition-all cursor-pointer group hover:-translate-y-0.5`}>
-              <CardContent className="p-5">
-                <div className={`w-10 h-10 mb-4 rounded-xl ${item.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <item.icon className={`w-5 h-5 ${item.color}`} />
-                </div>
-                <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{item.desc}</p>
-                <span className="text-xs text-foreground/70 font-medium">{item.action}</span>
-              </CardContent>
-            </Card>
+            <Link key={item.title} href={item.href} target={item.externe ? '_blank' : undefined}>
+              <Card className="glass border-border/50 hover:border-border hover:bg-muted transition-all cursor-pointer group hover:-translate-y-0.5 h-full">
+                <CardContent className="p-5">
+                  <div className="w-10 h-10 mb-4 rounded-xl bg-muted flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <item.icon className="w-5 h-5 text-foreground/70" />
+                  </div>
+                  <h3 className="font-semibold text-base mb-1">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{item.desc}</p>
+                  <span className="text-sm text-foreground/70 font-medium">{item.action}</span>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

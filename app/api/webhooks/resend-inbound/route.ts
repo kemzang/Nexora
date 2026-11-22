@@ -95,10 +95,22 @@ export async function POST(req: NextRequest) {
     }
     contenu = reponse.data
   } catch (e) {
-    // 500 : Resend reessaiera. Acquitter ici perdrait le message pour de
-    // bon, puisque son contenu n'existe plus ailleurs apres trente jours.
+    /*
+     * 500 : Resend reessaiera. Acquitter ici perdrait le message pour de
+     * bon, puisque son contenu n'existe plus ailleurs apres trente jours.
+     *
+     * La RAISON part aussi dans la reponse, pas seulement dans les logs.
+     * Resend affiche ce corps dans l'historique de livraison : sans lui,
+     * on lit « Could not fetch the message » et il faut aller fouiller
+     * Vercel pour apprendre qu'il s'agissait d'une clef sans droits.
+     * Ce tableau de bord n'est accessible qu'au proprietaire du compte.
+     */
+    const raison = e instanceof Error ? e.message : String(e)
     console.error('[inbound] contenu illisible pour', emailId, e)
-    return NextResponse.json({ error: 'Could not fetch the message' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Could not fetch the message', reason: raison.slice(0, 300) },
+      { status: 500 },
+    )
   }
 
   const expediteur = String(contenu.from ?? evenement.data.from ?? '').toLowerCase()

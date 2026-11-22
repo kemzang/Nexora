@@ -104,8 +104,23 @@ Doit toujours rendre les deux `fwd*.porkbun.com`.
 
 Webhooks → Add Webhook :
 
-- **Endpoint** : `https://www.nexoracoding.com/api/webhooks/resend-inbound`
+- **Endpoint** : `https://nexoracoding.com/api/webhooks/resend-inbound`
 - **Event** : `email.received`, et seulement celui-là
+
+⚠️ **Sans le `www.`** Le domaine canonique du projet est l'apex :
+`www.nexoracoding.com` répond `308 Permanent Redirect` vers
+`nexoracoding.com`. Resend ne suit pas les redirections sur un POST — et il
+a raison, suivre une redirection en POST est dangereux. Avec le `www.`,
+chaque message reçu reste bloqué en « Attempting » sans jamais arriver.
+
+Pour vérifier avant de créer le webhook, **sans suivre la redirection** :
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST https://nexoracoding.com/api/webhooks/resend-inbound
+```
+
+`400` est la bonne réponse : la route vit et refuse un appel non signé. Un
+`308` signifie que l'URL est mauvaise.
 
 Resend affiche un **signing secret** après création. C'est la variable
 du point 4.
@@ -145,9 +160,11 @@ n'ont pas répondu. Tant que la variable est absente, on continue d'écrire
 
 Si l'étape 5 ne donne rien, regarder dans l'ordre :
 
-- Resend → Webhooks → l'historique des livraisons. Un 400 signifie que
-  le secret ne correspond pas ; un 500, que le contenu n'a pas pu être
-  relu — Resend réessaiera tout seul.
+- Resend → Webhooks → l'historique des livraisons. **308** : l'URL porte
+  un `www.` de trop. **400** : le secret ne correspond pas. **500** : le
+  contenu n'a pas pu être relu — Resend réessaiera tout seul. Un événement
+  bloqué se renvoie avec le bouton **Replay**, sans avoir à réexpédier un
+  courriel.
 - Vercel → Logs, filtrer sur `[inbound]`.
 - La table `support_tickets` : si un ticket neuf de catégorie `other`
   est apparu avec `context->>'source' = 'inbound email'`, le message est

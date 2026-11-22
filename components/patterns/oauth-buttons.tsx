@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useAuth } from '@/hooks/use-auth'
+import { lireMethode, noterMethode } from '@/lib/derniereMethode'
 
 /**
  * « Continuer avec Google » et « Continuer avec GitHub ».
@@ -58,9 +59,29 @@ const FOURNISSEURS = [
   { id: 'github' as const, nom: 'GitHub', actif: GITHUB_ACTIF, Marque: MarqueGitHub },
 ].filter((f) => f.actif)
 
+/** La pastille qui rappelle par quoi l'on est passe la derniere fois. */
+export function PastilleDerniereFois() {
+  return (
+    <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+      Last used
+    </span>
+  )
+}
+
 export function OAuthButtons({ onError }: { onError: (message: string) => void }) {
   const { signInWithProvider } = useAuth()
   const [enCours, setEnCours] = useState<string | null>(null)
+  const [derniere, setDerniere] = useState<string | null>(null)
+
+  /*
+   * Lu dans un effet, jamais au rendu : localStorage n'existe pas sur le
+   * serveur, et lire au rendu ferait diverger le HTML rendu cote serveur
+   * de celui du navigateur — React s'en plaint, et la pastille
+   * clignoterait.
+   */
+  useEffect(() => {
+    setDerniere(lireMethode())
+  }, [])
 
   if (FOURNISSEURS.length === 0) return null
 
@@ -81,6 +102,9 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
             onClick={async () => {
               setEnCours(id)
               onError('')
+              // Avant la redirection : la page part, et rien ne
+              // s'executera au retour.
+              noterMethode(id)
               const { error } = await signInWithProvider(id)
               if (error) {
                 onError(error)
@@ -92,10 +116,13 @@ export function OAuthButtons({ onError }: { onError: (message: string) => void }
                * evite un second clic pendant que la page s'en va.
                */
             }}
-            className="flex w-full items-center justify-center gap-2.5 h-11 rounded-xl border border-white/15 bg-white/5 text-base font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-60"
+            className="flex w-full items-center gap-2.5 px-3 h-11 rounded-xl border border-white/15 bg-white/5 text-base font-medium text-foreground transition-colors hover:bg-white/10 disabled:opacity-60"
           >
             <Marque />
-            {enCours === id ? `Opening ${nom}…` : `Continue with ${nom}`}
+            <span className="flex-1 text-center">
+              {enCours === id ? `Opening ${nom}…` : `Continue with ${nom}`}
+            </span>
+            {derniere === id ? <PastilleDerniereFois /> : <span className="w-5" />}
           </button>
         ))}
       </div>

@@ -10,7 +10,8 @@ import { emailSchema } from '@/lib/email'
 import { PasswordInput } from '@/components/ui/password-input'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
-import { OAuthButtons } from '@/components/patterns/oauth-buttons'
+import { OAuthButtons, PastilleDerniereFois } from '@/components/patterns/oauth-buttons'
+import { lireMethode, noterMethode } from '@/lib/derniereMethode'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,6 +34,10 @@ function LoginForm() {
   const [success, setSuccess] = useState(false)
   const [redirectToken, setRedirectToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Par quoi cette personne est passee la derniere fois, sur CE
+  // navigateur. Lu dans un effet : localStorage n'existe pas au rendu
+  // serveur, et le lire au rendu ferait clignoter la pastille.
+  const [derniereMethode, setDerniereMethode] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const { signIn, user, token } = useAuth()
@@ -41,6 +46,10 @@ function LoginForm() {
   const callback = searchParams.get('callback')
   const redirect = searchParams.get('redirect')
   const state = searchParams.get('state')
+
+  useEffect(() => {
+    setDerniereMethode(lireMethode())
+  }, [])
 
   useEffect(() => {
     if (user && token) {
@@ -81,6 +90,7 @@ function LoginForm() {
         setError(result.error)
         setLoading(false)
       } else {
+        noterMethode('password')
         showToast('Signed in', 'success')
         if (callback) {
           if (result.token) {
@@ -240,7 +250,18 @@ function LoginForm() {
                 {loading ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in…</>
                 ) : (
-                  <>Sign in <ArrowRight className="ml-2 h-4 w-4" /></>
+                  <>
+                    Sign in <ArrowRight className="ml-2 h-4 w-4" />
+                    {/* Le rappel se pose aussi sur le mot de passe : sans
+                        lui, quelqu'un qui en a un croirait etre passe par
+                        un fournisseur, puisque seuls ceux-la porteraient
+                        une pastille. */}
+                    {derniereMethode === 'password' && (
+                      <span className="ml-2">
+                        <PastilleDerniereFois />
+                      </span>
+                    )}
+                  </>
                 )}
               </Button>
             </form>

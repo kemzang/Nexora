@@ -54,7 +54,7 @@ export default function HistorySection() {
       setResults(data.results ?? [])
       setSearched(true)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erreur inconnue')
+      setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setLoading(false)
     }

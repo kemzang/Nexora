@@ -126,7 +126,8 @@ export default function DashboardPage() {
   }
 
   const sectionTitle = sidebarLinks.find(l => l.section === activeSection)?.label
-    || (activeSection === 'parametres' ? 'Settings' : 'Vue d\'ensemble')
+    || adminLinks.find(l => l.section === activeSection)?.label
+    || (activeSection === 'parametres' ? 'Settings' : 'Overview')
   const ActiveComponent = sections[activeSection] || sections.dashboard
 
   if (loading || !user) {

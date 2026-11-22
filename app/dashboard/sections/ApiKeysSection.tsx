@@ -111,7 +111,7 @@ export default function ApiKeysSection() {
       setShowCreate(false)
       if (user?.id) fetchKeys(user.id)
     } catch {
-      showToast('Erreur inattendue', 'error')
+      showToast('Unexpected error', 'error')
     } finally {
       setCreating(false)
     }

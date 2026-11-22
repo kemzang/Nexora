@@ -81,7 +81,7 @@ export default function HelpSection() {
               {
                 step: '01',
                 icon: Code,
-                title: 'Installer l\'extension',
+                title: 'Install the extension',
                 desc: 'Recherchez "Nexora AI" dans le marketplace VS Code',
                 color: 'text-foreground/70',
                 bg: 'bg-muted',

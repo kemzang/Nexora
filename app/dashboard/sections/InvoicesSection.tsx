@@ -95,7 +95,7 @@ function InvoiceModal({ invoice, user, onClose }: { invoice: Invoice; user: User
               <p className="text-xs text-muted-foreground">contact@nexoracoding.com</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-foreground uppercase tracking-tight">Facture</p>
+              <p className="text-2xl font-bold text-foreground uppercase tracking-tight">Invoice</p>
               <p className="text-sm text-muted-foreground mt-1">N° {invoice.invoice_number}</p>
               <p className="text-xs text-muted-foreground">Émise le {issueDate}</p>
               <div className="mt-2">
@@ -275,7 +275,7 @@ export default function InvoicesSection() {
             <div className="space-y-2">
               {/* Table header */}
               <div className="hidden sm:grid grid-cols-[1fr_120px_140px_100px_auto] gap-4 px-4 py-2 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                <span>Facture</span>
+                <span>Invoice</span>
                 <span>Montant</span>
                 <span>Period</span>
                 <span>Status</span>

@@ -274,7 +274,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2">
           <Card className="glass h-full">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold">Actions rapides</CardTitle>
+              <CardTitle className="text-base font-semibold">Quick actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -282,7 +282,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   {
                     icon: Key,
                     label: 'Create an API key',
-                    desc: 'Connecter VS Code',
+                    desc: 'Connect VS Code',
                     color: 'text-foreground/70',
                     bg: 'bg-muted',
                     hover: 'hover:bg-muted hover:border-border',
@@ -290,7 +290,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   },
                   {
                     icon: CreditCard,
-                    label: stats.planSlug === 'free' ? 'Passer au Pro' : 'Manage subscription',
+                    label: stats.planSlug === 'free' ? 'Upgrade to Pro' : 'Manage subscription',
                     desc: stats.planSlug === 'free' ? 'Unlock more credits' : 'See your plan',
                     color: 'text-amber-400',
                     bg: 'bg-amber-500/10',
@@ -300,7 +300,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                   {
                     icon: Bot,
                     label: 'Documentation',
-                    desc: 'Guides & tutoriels',
+                    desc: 'Guides & tutorials',
                     color: 'text-emerald-400',
                     bg: 'bg-emerald-500/10',
                     hover: 'hover:bg-emerald-500/15 hover:border-emerald-500/30',
@@ -333,7 +333,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { step: 1, title: 'Installer l\'extension', desc: 'Add Nexora to VS Code', done: false },
+                { step: 1, title: 'Install the extension', desc: 'Add Nexora to VS Code', done: false },
                 { step: 2, title: 'Create an API key', desc: 'Generate your access key', done: stats.apiKeysCount > 0 },
                 { step: 3, title: 'Start coding', desc: 'Use AI in your editor', done: stats.monthlyRequests > 0 },
               ].map((item) => (

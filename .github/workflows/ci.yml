@@ -41,10 +41,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: typecheck
     env:
-      # Minimal env needed for static build — real secrets in Vercel
+      # Des valeurs FACTICES, jamais de vrais secrets : ceux-la vivent dans
+      # Vercel. Elles sont la parce que vingt-sept routes construisent leur
+      # client Supabase ou Resend AU CHARGEMENT du module. Next.js importe
+      # chaque route pour collecter ses metadonnees, et un constructeur qui
+      # leve sur une clef absente fait echouer le build entier — alors
+      # qu'aucun appel reseau n'est fait.
+      #
+      # La dette reelle est ce motif : un client construit a l'import rend
+      # une route impossible a charger quand sa variable manque, avec une
+      # erreur qui ne nomme pas le coupable. Ce sont deux lignes ici contre
+      # vingt-sept fichiers a reecrire ; a faire au fil de l'eau.
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder_anon_key
       NEXT_PUBLIC_APP_URL: https://nexora-mu-henna.vercel.app
+      SUPABASE_SERVICE_ROLE_KEY: placeholder_service_role_key
+      RESEND_API_KEY: re_placeholder_000000000000000000000000
     steps:
       - uses: actions/checkout@v4
 

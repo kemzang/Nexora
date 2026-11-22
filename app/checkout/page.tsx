@@ -337,8 +337,16 @@ function CheckoutForm() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      /*
+       * Un anneau nu sur fond noir, sur la page ou l'on s'apprete a
+       * payer : rien ne dit chez qui l'on est, ni si quelque chose se
+       * passe. C'est le plus mauvais endroit du site pour laisser ce
+       * doute. Le logo et le nom suffisent a le lever.
+       */
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+        <BrandLogo size={56} />
         <div className="w-8 h-8 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+        <p className="text-base text-muted-foreground">Preparing your checkout…</p>
       </div>
     }>
       <CheckoutForm />

@@ -57,7 +57,15 @@ export async function GET(req: NextRequest) {
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     services: checks,
     providers,
-    proxy: 'nexoracoding.com',
+    /*
+     * L'hote REELLEMENT interroge, pas une constante.
+     *
+     * Ce champ annoncait « nexoracoding.com » quel que soit le domaine
+     * qui avait servi la reponse. Interroge sur l'URL vercel.app, le
+     * point de sante repondait donc le nom d'un autre hote — de quoi
+     * croire qu'on surveille la production alors qu'on sonde un apercu.
+     */
+    proxy: (req.headers.get('host') ?? 'unknown').split(':')[0],
   }
 
   return NextResponse.json(body, {

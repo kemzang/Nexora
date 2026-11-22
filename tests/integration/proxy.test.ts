@@ -64,7 +64,17 @@ await test('GET /api/health → 200 with ok status', async () => {
   expect(res.status).toBe(200)
   const body = await res.json()
   expect(body.status).toBe('ok')
-  expect(body.proxy).toContain('vercel')
+  /*
+   * Le champ `proxy` doit nommer l'hote reellement interroge.
+   *
+   * Ce test exigeait qu'il contienne « vercel » — vrai tant que le site
+   * vivait sur nexora-mu-henna.vercel.app, faux depuis que le domaine
+   * propre existe. Une affirmation qui a cesse d'etre vraie sans que
+   * personne la corrige, et qui faisait echouer l'integration continue a
+   * chaque commit. On compare maintenant a la cible, ce qui reste vrai
+   * quel que soit l'hebergeur.
+   */
+  expect(body.proxy).toBe(new URL(BASE).hostname)
 })
 
 await test('HEAD /api/health → 200', async () => {

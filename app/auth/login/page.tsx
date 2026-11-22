@@ -10,6 +10,7 @@ import { emailSchema } from '@/lib/email'
 import { PasswordInput } from '@/components/ui/password-input'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
+import { OAuthButtons } from '@/components/patterns/oauth-buttons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,7 +35,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn, signInWithGoogle, user, token } = useAuth()
+  const { signIn, user, token } = useAuth()
   const { showToast } = useToast()
 
   const callback = searchParams.get('callback')
@@ -244,28 +245,7 @@ function LoginForm() {
               </Button>
             </form>
 
-            {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true' && (
-              <>
-                <div className="flex items-center gap-3 py-1">
-                  <div className="h-px flex-1 bg-white/10" />
-                  <span className="text-xs text-muted-foreground">ou</span>
-                  <div className="h-px flex-1 bg-white/10" />
-                </div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const { error } = await signInWithGoogle()
-                    if (error) setError(error)
-                  }}
-                  className="flex w-full items-center justify-center gap-2 h-11 rounded-xl border border-white/15 bg-white/5 font-medium text-foreground transition-colors hover:bg-white/10"
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 1.9 14.7 1 12 1 6.5 1 2 5.5 2 11s4.5 10 10 10c5.8 0 9.6-4.1 9.6-9.8 0-.7-.1-1.2-.2-1.7H12z"/>
-                  </svg>
-                  Continue with Google
-                </button>
-              </>
-            )}
+            <OAuthButtons onError={(m) => setError(m || null)} />
 
             <div className="text-center pt-1">
               <p className="text-sm text-muted-foreground">

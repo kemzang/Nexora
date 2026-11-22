@@ -2,6 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { retourApresFournisseur } from '@/lib/oauthRetour'
 import { AuthService } from '@/lib/supabase/auth'
 import type { AuthUser, LoginCredentials, RegisterCredentials } from '@/types'
 
@@ -11,7 +12,7 @@ interface AuthContextType {
   token: string | null
   signIn: (credentials: LoginCredentials) => Promise<{ error?: string, token?: string }>
   signUp: (credentials: RegisterCredentials) => Promise<{ error?: string, token?: string }>
-  signInWithGoogle: () => Promise<{ error?: string }>
+  signInWithProvider: (provider: 'google' | 'github') => Promise<{ error?: string }>
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -176,19 +177,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  /** Connexion via Google (OAuth Supabase). Redirige vers Google puis revient
-   *  sur le dashboard. Nécessite que le provider Google soit activé dans Supabase. */
-  const signInWithGoogle = async (): Promise<{ error?: string }> => {
+  /**
+   * Connexion ou inscription via un fournisseur (OAuth Supabase).
+   *
+   * Le retour se fait sur la PAGE COURANTE, parametres compris, et non
+   * sur /dashboard. C'est ce qui sauve la connexion depuis un editeur :
+   * /auth/login?callback=…&state=… porte de quoi rendre son jeton a VS
+   * Code, et un retour sur /dashboard perdait ces parametres — l'editeur
+   * attendait alors un jeton qui n'arrivait jamais, sans message.
+   *
+   * L'effet deja en place sur les pages de connexion et d'inscription
+   * fait le reste des que la session apparait : il n'y a rien a dupliquer
+   * ici.
+   */
+  const signInWithProvider = async (
+    provider: 'google' | 'github',
+  ): Promise<{ error?: string }> => {
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? retourApresFournisseur(window.location.href)
+        : undefined
+
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo:
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/dashboard`
-            : undefined,
-      },
+      provider,
+      options: { redirectTo },
     })
-    return error ? { error: error.message } : {}
+
+    if (!error) return {}
+
+    // « Unsupported provider » veut dire que le fournisseur n'est pas
+    // active cote Supabase. Le message brut n'aide personne.
+    const message = /not enabled|unsupported provider/i.test(error.message)
+      ? `${provider === 'google' ? 'Google' : 'GitHub'} sign-in is not available right now.`
+      : error.message
+    return { error: message }
   }
 
   const value: AuthContextType = {
@@ -197,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     signIn,
     signUp,
-    signInWithGoogle,
+    signInWithProvider,
     signOut,
     refreshUser
   }

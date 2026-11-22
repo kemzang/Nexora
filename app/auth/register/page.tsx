@@ -12,6 +12,7 @@ import { PasswordRequirements } from '@/components/ui/password-requirements'
 import { passwordSchema } from '@/lib/password'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/use-auth'
+import { OAuthButtons } from '@/components/patterns/oauth-buttons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -246,6 +247,11 @@ function RegisterForm() {
                   )}
                 </Button>
               </form>
+
+              {/* Avec un fournisseur, s'inscrire et se connecter sont le
+                  meme geste : le bouton est donc identique des deux
+                  cotes, et un visiteur sans compte en obtient un. */}
+              <OAuthButtons onError={(m) => setError(m || null)} />
 
               <div className="text-center pt-1">
                 <p className="text-sm text-muted-foreground">

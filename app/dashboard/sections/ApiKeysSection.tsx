@@ -41,6 +41,19 @@ function timeAgo(dateStr: string | null) {
   return `il y a ${days}j`
 }
 
+/*
+ * Au-dela de ce delai, on cesse d'attendre.
+ *
+ * `fetch` n'a aucune expiration par defaut : sur une liaison qui decroche,
+ * la promesse ne se resout jamais et le bouton reste sur « Creating… »
+ * indefiniment. L'utilisateur ne peut alors pas distinguer « c'est lent »
+ * de « c'est mort ». Mesure du 23 novembre 2026 sur cette route : une
+ * requete sur trois n'aboutissait pas, les deux autres repondaient en 1 a
+ * 4 secondes. 45 secondes laissent donc largement passer un demarrage a
+ * froid tout en bornant l'attente.
+ */
+const DELAI_CREATION_MS = 45_000
+
 export default function ApiKeysSection() {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -49,6 +62,7 @@ export default function ApiKeysSection() {
   const [showCreate, setShowCreate] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [keyCopied, setKeyCopied] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -80,6 +94,7 @@ export default function ApiKeysSection() {
   const handleCreate = async () => {
     if (!newKeyName.trim() || !user?.id) return
     setCreating(true)
+    setCreateError(null)
     try {
       // La clé est générée et insérée côté serveur (rôle service) : plus de
       // dépendance au RLS/à la session du navigateur. On s'authentifie avec le
@@ -98,11 +113,14 @@ export default function ApiKeysSection() {
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ name: newKeyName.trim() }),
+        signal: AbortSignal.timeout(DELAI_CREATION_MS),
       })
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok || !data?.success || !data?.token) {
-        showToast(data?.error || 'Failed to create the key', 'error')
+        const message = data?.error || 'Failed to create the key'
+        setCreateError(message)
+        showToast(message, 'error')
         return
       }
 
@@ -110,8 +128,29 @@ export default function ApiKeysSection() {
       setNewKeyName('')
       setShowCreate(false)
       if (user?.id) fetchKeys(user.id)
-    } catch {
-      showToast('Unexpected error', 'error')
+    } catch (e) {
+      /*
+       * Ce qu'on ne fait PAS : reessayer tout seul.
+       *
+       * Cette requete n'est pas idempotente. Une expiration ne dit pas que
+       * rien n'a ete cree — elle dit qu'on n'a pas recu la reponse. Le
+       * serveur a peut-etre insere la cle, dont le jeton n'est affiche
+       * qu'une seule fois : un second envoi laisserait alors une cle
+       * fantome, impossible a utiliser et deroutante a voir apparaitre.
+       *
+       * On rafraichit donc la liste et on laisse la personne decider.
+       */
+      const expire =
+        e instanceof DOMException &&
+        (e.name === 'TimeoutError' || e.name === 'AbortError')
+
+      const message = expire
+        ? 'The request timed out. The key may have been created anyway — check the list below before trying again.'
+        : 'Network error. Check your connection, then try again.'
+
+      setCreateError(message)
+      showToast(message, 'error')
+      if (user?.id) fetchKeys(user.id)
     } finally {
       setCreating(false)
     }
@@ -177,12 +216,21 @@ export default function ApiKeysSection() {
                     id="keyName"
                     placeholder="ex: VS Code - MacBook Pro"
                     value={newKeyName}
-                    onChange={e => setNewKeyName(e.target.value)}
+                    onChange={e => { setNewKeyName(e.target.value); setCreateError(null) }}
                     onKeyDown={e => e.key === 'Enter' && handleCreate()}
                     className="bg-card border-border/50 focus:border-foreground/30"
                     maxLength={50}
                   />
                 </div>
+                {createError && (
+                  <p
+                    role="alert"
+                    className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  >
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{createError}</span>
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <Button
                     onClick={handleCreate}
@@ -191,7 +239,7 @@ export default function ApiKeysSection() {
                   >
                     {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating…</> : 'Create the key'}
                   </Button>
-                  <Button variant="ghost" onClick={() => setShowCreate(false)} className="text-muted-foreground">
+                  <Button variant="ghost" onClick={() => { setShowCreate(false); setCreateError(null) }} className="text-muted-foreground">
                     Cancel
                   </Button>
                 </div>

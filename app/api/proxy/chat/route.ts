@@ -10,6 +10,7 @@ import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { PLANS, type PlanId } from '@/lib/models'
 import { enArrierePlan } from '@/lib/arrierePlan'
+import { getUserPlan } from '@/lib/quota'
 
 export const runtime = 'nodejs'
 
@@ -24,23 +25,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const planCache = new Map<string, { plan: PlanId; expiresAt: number }>()
-
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const cached = planCache.get(userId)
-  if (cached && cached.expiresAt > Date.now()) return cached.plan
-
-  const { data } = await supabase
-    .from('user_subscriptions')
-    .select('subscription_plans!inner(slug)')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  const plan = ((data?.subscription_plans as { slug?: string } | null)?.slug ?? 'free') as PlanId
-  planCache.set(userId, { plan, expiresAt: Date.now() + 300_000 })
-  return plan
-}
+/*
+ * Le plan se lit dans `lib/quota.ts`, et nulle part ailleurs.
+ *
+ * Cette route en tenait sa propre copie, qui filtrait sur
+ * `status = 'active'` SANS verifier `current_period_end`. Un abonnement
+ * dont la periode est terminee mais dont le statut n'a pas encore
+ * bascule continuait d'etre servi comme un abonnement payant.
+ */
 
 const PROVIDER_ROUTES: Record<string, { url: string; keyEnv: string }> = {
   deepseek: { url: 'https://api.deepseek.com/v1/chat/completions', keyEnv: 'DEEPSEEK_API_KEY' },

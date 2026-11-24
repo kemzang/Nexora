@@ -6,6 +6,7 @@ import type { FimModelId } from '@/lib/modelRouter'
 import { quotaWindow, secondsUntilReset } from '@/lib/billingWindow'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 import { enArrierePlan } from '@/lib/arrierePlan'
+import { getUserPlan } from '@/lib/quota'
 
 export const runtime = 'nodejs'
 
@@ -20,7 +21,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const planCache = new Map<string, { plan: PlanId; expiresAt: number }>()
 const usageCache = new Map<string, { total: number; expiresAt: number }>()
 const createdAtCache = new Map<string, { createdAt: string; expiresAt: number }>()
 
@@ -42,19 +42,22 @@ function planGte(a: PlanId, b: PlanId): boolean {
   return PLAN_ORDER.indexOf(a) >= PLAN_ORDER.indexOf(b)
 }
 
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const cached = planCache.get(userId)
-  if (cached && cached.expiresAt > Date.now()) return cached.plan
-  const { data } = await supabase
-    .from('user_subscriptions')
-    .select('subscription_plans!inner(slug)')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .maybeSingle()
-  const plan = (data?.subscription_plans as any)?.slug as PlanId || 'free'
-  planCache.set(userId, { plan, expiresAt: Date.now() + 300_000 })
-  return plan
-}
+/*
+ * Le plan se lit dans `lib/quota.ts`, et nulle part ailleurs.
+ *
+ * Cette route en tenait sa propre copie, qui filtrait sur
+ * `status = 'active'` SANS verifier `current_period_end`. Un abonnement
+ * dont la periode est terminee mais dont le statut n'a pas encore bascule
+ * — le temps qu'un webhook arrive, qu'un paiement echoue, ou qu'une
+ * annulation prenne effet — continuait donc d'etre servi comme un
+ * abonnement payant.
+ *
+ * Trois autres routes faisaient la verification correctement ; deux
+ * l'oubliaient. C'est le propre d'une fonction recopiee : elle se
+ * corrige a un endroit et reste fausse aux autres. Il n'y en a plus
+ * qu'une, celle de `lib/quota.ts`, qui verifie la date de fin et partage
+ * son cache.
+ */
 
 async function getUserCreatedAt(userId: string): Promise<string | undefined> {
   const cached = createdAtCache.get(userId)

@@ -5,6 +5,7 @@ import { verifyToken } from '@/lib/auth-verify'
 import { PLANS, type PlanId } from '@/lib/models'
 import { captureServerError } from '@/lib/sentry'
 import { appUrlFromRequest } from '@/lib/appUrl'
+import { getUserPlan } from '@/lib/quota'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,17 +22,15 @@ const createRoomSchema = z.object({
 })
 
 /** Plan actif de l'utilisateur (défaut: free). Détermine la limite de collaborateurs. */
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const { data } = await supabase
-    .from('user_subscriptions')
-    .select('subscription_plans!inner(slug)')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .gt('current_period_end', new Date().toISOString())
-    .maybeSingle()
-  const slug = (data?.subscription_plans as { slug?: string } | null)?.slug as PlanId | undefined
-  return slug && PLANS[slug] ? slug : 'free'
-}
+/*
+ * Le plan se lit dans `lib/quota.ts`, et nulle part ailleurs.
+ *
+ * Quatre copies de cette fonction coexistaient, chacune ecrite un peu
+ * differemment, et toutes ne verifiaient pas `current_period_end` : un
+ * abonnement termine mais pas encore bascule restait servi comme payant.
+ * On corrige une copie, les autres restent fausses — c'est pour cela
+ * qu'il n'y en a plus qu'une.
+ */
 
 /** POST /api/collab/rooms — Créer un room de collaboration */
 export async function POST(req: NextRequest) {

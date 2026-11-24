@@ -2,30 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth-verify'
 import { createClient } from '@supabase/supabase-js'
 import { getModelsForPlan, MODELS, type ModelId, type PlanId, PLANS } from '@/lib/models'
+import { getUserPlan } from '@/lib/quota'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function getUserPlan(userId: string): Promise<PlanId> {
-  const { data: sub } = await supabase
-    .from('user_subscriptions')
-    .select('plan_id, status')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .single()
-
-  if (!sub) return 'free'
-
-  const { data: plan } = await supabase
-    .from('subscription_plans')
-    .select('slug')
-    .eq('id', sub.plan_id)
-    .single()
-
-  return (plan?.slug as PlanId) || 'free'
-}
+/*
+ * Le plan se lit dans `lib/quota.ts`, et nulle part ailleurs.
+ *
+ * Quatre copies de cette fonction coexistaient, chacune ecrite un peu
+ * differemment, et toutes ne verifiaient pas `current_period_end` : un
+ * abonnement termine mais pas encore bascule restait servi comme payant.
+ * On corrige une copie, les autres restent fausses — c'est pour cela
+ * qu'il n'y en a plus qu'une.
+ */
 
 export async function GET(req: NextRequest) {
   try {

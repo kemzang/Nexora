@@ -132,6 +132,34 @@ export async function GET(req: NextRequest) {
     const plan = ((subscription?.subscription_plans as { slug?: string } | null)?.slug ?? 'free') as PlanId
     const { models, autocomplete } = buildModels(plan, token)
 
+    /*
+     * Ce que l'utilisateur peut invoquer avec `@`.
+     *
+     * Huit fournisseurs sont charges d'office par le coeur (file,
+     * currentFile, diff, git, terminal, problems, rules, symbol). Les
+     * autres restent invisibles tant qu'ils ne sont pas declares ici.
+     *
+     * Ce champ valait `[]`. Or c'est CETTE route qui sert la configuration
+     * a tous les utilisateurs connectes : `core/config/default.ts` declare
+     * bien sept fournisseurs, mais il ne vaut que pour le profil local, que
+     * personne n'utilise en production. Autrement dit, personne n'a jamais
+     * vu `@web` — dont la cle Tavily est payee et le point d'entree
+     * (/api/proxy/web) deploye depuis des semaines.
+     *
+     * Volontairement absent : `codebase`. Il exige un modele d'embeddings
+     * dans cette meme liste et declenche l'indexation du depot de chaque
+     * utilisateur — un cout et un changement de comportement qui se
+     * decident a part.
+     */
+    const context = [
+      { provider: 'folder' },
+      { provider: 'web' },
+      { provider: 'open' },
+      { provider: 'url' },
+      { provider: 'search' },
+      { provider: 'tree' },
+    ]
+
     // AssistantUnrolled shape expected by PlatformProfileLoader
     const assistantConfig = {
       name: 'Nexora AI',
@@ -139,7 +167,7 @@ export async function GET(req: NextRequest) {
       schema: 'v1',
       models,
       tabAutocompleteModel: autocomplete,
-      context: [],
+      context,
     }
 
     const rawYaml = [
@@ -156,6 +184,8 @@ export async function GET(req: NextRequest) {
         `\n    roles:\n` +
         m.roles.map(r => `      - ${r}`).join('\n')
       ),
+      `context:`,
+      ...context.map(c => `  - provider: ${c.provider}`),
     ].join('\n')
 
     // Return the shape that ControlPlaneClient.listAssistants() destructures

@@ -113,6 +113,24 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
 }
 
 export async function POST(req: NextRequest) {
+  /*
+   * Ou passe le temps avant le premier octet ?
+   *
+   * Mesure du 24 novembre 2026 : 2,43 s avant le premier octet, puis
+   * 0,3 s pour tout le reste. Le flux fonctionne donc, mais il demarre
+   * trop tard : VS Code annule sa demande d'autocompletion entre 1,5 et
+   * 3,7 s, et aucune suggestion n'a jamais pu s'afficher.
+   *
+   * Reste a savoir si ces secondes sont a nous — verification du jeton,
+   * lecture du plan, calcul du quota, chacun un aller-retour de base —
+   * ou si c'est DeepSeek qui met ce temps a produire son premier jeton.
+   * Les deux se corrigent a des endroits opposes, et on ne peut pas
+   * trancher de l'exterieur. Ces mesures repondent en une requete.
+   */
+  const t0 = Date.now()
+  let tAuth = 0
+  let tQuota = 0
+
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
@@ -124,6 +142,8 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    tAuth = Date.now() - t0
 
     const body = await req.json()
     const {
@@ -186,6 +206,9 @@ export async function POST(req: NextRequest) {
     }
     if (suffix !== undefined) fimBody.suffix = suffix
 
+    tQuota = Date.now() - t0 - tAuth
+
+    const tAvantModele = Date.now()
     const upstream = await fetch(fimRoute.url, {
       method: 'POST',
       headers: {
@@ -233,6 +256,12 @@ export async function POST(req: NextRequest) {
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
           'X-Accel-Buffering': 'no',
+          // Lisible par `curl -D-` et par l'onglet reseau du navigateur.
+          'Server-Timing': [
+            `auth;dur=${tAuth}`,
+            `quota;dur=${tQuota}`,
+            `model;dur=${Date.now() - tAvantModele}`,
+          ].join(', '),
         },
       })
     }

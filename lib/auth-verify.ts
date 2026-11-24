@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 import { apiKeyExpiresAt } from '@/lib/api-keys'
+import { cacheGet, cacheSet } from './upstash-cache'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,6 +40,12 @@ async function adresseConfirmee(userId: string): Promise<boolean> {
   const cached = confirmCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) return cached.ok
 
+  const partage = await cacheGet<boolean>(`conf:${userId}`)
+  if (typeof partage === 'boolean') {
+    confirmCache.set(userId, { ok: partage, expiresAt: Date.now() + 600_000 })
+    return partage
+  }
+
   /*
    * En cas de panne, on LAISSE PASSER.
    *
@@ -68,6 +75,7 @@ async function adresseConfirmee(userId: string): Promise<boolean> {
   const ok = Boolean(u?.email_confirmed_at || u?.confirmed_at)
   // Seul un resultat SUR est mis en cache.
   confirmCache.set(userId, { ok, expiresAt: Date.now() + 10 * 60 * 1000 })
+  void cacheSet(`conf:${userId}`, ok, 600)
   return ok
 }
 
@@ -128,9 +136,34 @@ export async function verifyToken(token: string): Promise<string | null> {
     return cached.userId
   }
 
+  /*
+   * Le cache memoire ne survit pas a l'instance.
+   *
+   * Vercel demarre sans cesse de nouvelles instances, chacune avec une
+   * Map vide. L'autocompletion, qui part a chaque pause de frappe,
+   * tombait donc presque toujours sur une instance neuve et repayait
+   * deux allers-retours Supabase : la lecture de la clef, puis la
+   * verification du compte.
+   *
+   * Mesure du 24 novembre 2026 : 1822 ms pour cette seule fonction,
+   * quand DeepSeek rendait son premier jeton en 360 ms. L'editeur
+   * annulait bien avant, et aucune suggestion ne s'affichait jamais.
+   *
+   * Le cache partage corrige cela, comme il le fait deja pour le plan
+   * et le quota dans `lib/quota.ts`. La clef stockee est le HACHAGE du
+   * jeton, jamais le jeton : un acces au cache ne doit pas donner de
+   * quoi se faire passer pour quelqu'un.
+   */
+  const empreinte = await sha256(token)
+  const partage = await cacheGet<string>(`tok:${empreinte}`)
+  if (partage) {
+    tokenCache.set(token, { userId: partage, expiresAt: Date.now() + 300_000 })
+    return partage
+  }
+
   // Token custom nxr_
   if (token.startsWith('nxr_')) {
-    const tokenHash = await sha256(token)
+    const tokenHash = empreinte
     const { data, error } = await supabase
       .from('api_keys')
       .select('user_id, expires_at, is_active')
@@ -148,6 +181,7 @@ export async function verifyToken(token: string): Promise<string | null> {
 
     // Mettre en cache pour 5 minutes
     tokenCache.set(token, { userId: data.user_id, expiresAt: Date.now() + 5 * 60 * 1000 })
+    void cacheSet(`tok:${empreinte}`, data.user_id, 300)
     return data.user_id
   }
 
@@ -163,5 +197,6 @@ export async function verifyToken(token: string): Promise<string | null> {
 
   // Mettre en cache pour 5 minutes
   tokenCache.set(token, { userId: user.id, expiresAt: Date.now() + 5 * 60 * 1000 })
+  void cacheSet(`tok:${empreinte}`, user.id, 300)
   return user.id
 }

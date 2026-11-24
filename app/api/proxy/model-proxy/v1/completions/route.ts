@@ -7,6 +7,7 @@ import { quotaWindow, secondsUntilReset } from '@/lib/billingWindow'
 import { isFreeQuotaBlocked } from '@/lib/machineAccounts'
 import { enArrierePlan } from '@/lib/arrierePlan'
 import { getUserPlan } from '@/lib/quota'
+import { cacheGet, cacheSet } from '@/lib/upstash-cache'
 
 export const runtime = 'nodejs'
 
@@ -59,12 +60,42 @@ function planGte(a: PlanId, b: PlanId): boolean {
  * son cache.
  */
 
+/*
+ * Les caches memoire ne survivent pas a l'instance.
+ *
+ * Vercel demarre sans cesse de nouvelles instances, chacune avec des Map
+ * vides. L'autocompletion part a chaque pause de frappe : elle tombait
+ * donc presque toujours sur une instance neuve et repayait tous les
+ * allers-retours — date d'inscription, abonnement, somme des sessions du
+ * mois.
+ *
+ * Mesure du 24 novembre 2026 : 902 ms pour ce seul calcul de quota,
+ * quand DeepSeek rendait son premier jeton en 360 ms. Ces deux fonctions
+ * doublent donc leur cache memoire d'un cache partage, comme le font
+ * deja `lib/quota.ts` et `lib/machineAccounts.ts`.
+ *
+ * La date d'inscription ne change jamais : une heure de cache est
+ * prudente. La consommation, elle, garde ses 60 secondes.
+ */
 async function getUserCreatedAt(userId: string): Promise<string | undefined> {
   const cached = createdAtCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) return cached.createdAt
+
+  const partage = await cacheGet<string>(`created:${userId}`)
+  if (partage) {
+    createdAtCache.set(userId, {
+      createdAt: partage,
+      expiresAt: Date.now() + 3_600_000,
+    })
+    return partage
+  }
+
   const { data } = await supabase.auth.admin.getUserById(userId)
   const createdAt = data?.user?.created_at
-  if (createdAt) createdAtCache.set(userId, { createdAt, expiresAt: Date.now() + 3_600_000 })
+  if (createdAt) {
+    createdAtCache.set(userId, { createdAt, expiresAt: Date.now() + 3_600_000 })
+    void cacheSet(`created:${userId}`, createdAt, 3600)
+  }
   return createdAt
 }
 
@@ -88,6 +119,12 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
   if (cached && cached.expiresAt > Date.now()) {
     return cached.total >= planLimit ? planLimit.toString() : null
   }
+
+  const partage = await cacheGet<number>(`fimusage:${userId}`)
+  if (typeof partage === 'number') {
+    usageCache.set(userId, { total: partage, expiresAt: Date.now() + 60_000 })
+    return partage >= planLimit ? planLimit.toString() : null
+  }
   // Meme fenetre que le proxy de chat : l'autocompletion puise dans le meme
   // quota, les deux compteurs doivent repartir ensemble.
   const { data: sub } = await supabase
@@ -109,6 +146,7 @@ async function checkMonthlyLimit(userId: string, plan: PlanId): Promise<string |
     .eq('user_id', userId)
   const usage = (data ?? []).reduce((s, r) => s + (r.tokens_total ?? r.tokens_input ?? 0), 0)
   usageCache.set(userId, { total: usage, expiresAt: Date.now() + 60_000 })
+  void cacheSet(`fimusage:${userId}`, usage, 60)
   return usage >= planLimit ? planLimit.toString() : null
 }
 

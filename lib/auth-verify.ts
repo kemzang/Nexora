@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
+import { apiKeyExpiresAt } from '@/lib/api-keys'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -77,6 +79,49 @@ async function sha256(text: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
+/*
+ * Une clef qui SERT ne doit jamais expirer sous les pieds de son porteur.
+ *
+ * Les clefs `nxr_` vivent 90 jours. C'est une bonne regle pour une clef
+ * oubliee dans un script, et une mauvaise pour celle que l'editeur de
+ * quelqu'un utilise toutes les trente secondes : au 91e jour, son
+ * autocompletion s'arrete, son chat s'arrete, et rien ne lui dit pourquoi.
+ * Il n'a rien fait de mal, et on lui demande d'aller se reconnecter.
+ *
+ * L'echeance glisse donc tant que la clef sert : chaque usage, au plus une
+ * fois par periode de cache, la repousse a 90 jours. Une clef abandonnee
+ * expire comme avant ; une clef revoquee reste refusee immediatement, car
+ * `is_active` est verifie a chaque appel et ne glisse pas, lui.
+ *
+ * L'ecriture est deliberement detachee (`void`) : la reponse ne doit pas
+ * attendre un aller-retour de base supplementaire sur le chemin chaud de
+ * l'autocompletion. Si elle echoue, la clef reste simplement valide
+ * jusqu'a son echeance actuelle.
+ */
+export const RENOUVELER_SOUS_JOURS = 30
+
+export async function prolongerSiProche(
+  tokenHash: string,
+  expiresAt: string | null,
+  db?: { from: (t: string) => any },
+): Promise<boolean> {
+  if (!expiresAt) return false
+  const restant = new Date(expiresAt).getTime() - Date.now()
+  if (restant > RENOUVELER_SOUS_JOURS * 24 * 60 * 60 * 1000) return false
+
+  try {
+    await (db ?? supabase)
+      .from('api_keys')
+      .update({ expires_at: apiKeyExpiresAt() })
+      .eq('key_hash', tokenHash)
+      .eq('is_active', true)
+    return true
+  } catch {
+    // Sans consequence : la clef garde son echeance actuelle.
+    return false
+  }
+}
+
 export async function verifyToken(token: string): Promise<string | null> {
   const cached = tokenCache.get(token)
   if (cached && cached.expiresAt > Date.now()) {
@@ -98,6 +143,8 @@ export async function verifyToken(token: string): Promise<string | null> {
     // Une clef `nxr_` survit a son porteur : on verifie le compte, pas
     // seulement la clef.
     if (!(await adresseConfirmee(data.user_id))) return null
+
+    void prolongerSiProche(tokenHash, data.expires_at as string | null)
 
     // Mettre en cache pour 5 minutes
     tokenCache.set(token, { userId: data.user_id, expiresAt: Date.now() + 5 * 60 * 1000 })

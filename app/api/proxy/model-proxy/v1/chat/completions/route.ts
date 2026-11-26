@@ -766,6 +766,23 @@ function geminiStreamToOpenAI(
 
 // ── Main handler ──────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  /*
+   * Ou passe le temps avant que le modele ne reponde ?
+   *
+   * La route FIM emet ces mesures depuis le 24 novembre 2026, et c'est
+   * grace a elles qu'on a vu que 2,7 s sur 3 etaient a nous, pas au
+   * modele. Cette route-ci ne les emettait pas — or c'est elle que
+   * prend tout modele sans FIM, celui que le selecteur marque
+   * « chat fallback ». Un utilisateur signalant une lenteur sur un tel
+   * modele nous aurait laisses aussi aveugles qu'on l'etait alors.
+   *
+   * Trois durees, aucune donnee utilisateur.
+   */
+  const t0 = Date.now()
+  let tAuth = 0
+  let tQuota = 0
+  let tModel = 0
+
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
@@ -775,6 +792,7 @@ export async function POST(req: NextRequest) {
     const token = authHeader.split(' ')[1]
     const [userId, body] = await Promise.all([verifyToken(token), req.json()])
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    tAuth = Date.now() - t0
 
     // Validate messages
     const { messages, model: preferredModel, stream = true, ...rest } = body
@@ -818,6 +836,7 @@ export async function POST(req: NextRequest) {
         ? String(orgCreditLimit(org))
         : null
       : await checkMonthlyLimit(userId, userPlan)
+    tQuota = Date.now() - t0 - tAuth
     if (limitReached) {
       const now = new Date()
       const retryAfter = (await getQuotaWindow(userId, now)).secondsUntilReset
@@ -1010,6 +1029,7 @@ export async function POST(req: NextRequest) {
     let lastFailure: { status: number; text: string; modelId: string } | null = null
     const attempted: string[] = []
 
+    const tAvantModele = Date.now()
     for (const candidate of candidates.slice(0, MAX_ATTEMPTS)) {
       const candidateRoute = API_ROUTES[candidate.id]
       if (!candidateRoute) continue
@@ -1107,8 +1127,18 @@ export async function POST(req: NextRequest) {
       startedAt: Date.now(),
     }
 
+    // La boucle a pu tenter plusieurs modeles : la duree couvre l'attente
+    // reelle, pas seulement celle du modele qui a fini par repondre.
+    tModel = Date.now() - tAvantModele
+
     const responseHeaders: Record<string, string> = {
       'Content-Type': 'text/event-stream',
+      // Memes mesures que la route FIM, lisibles par l'extension.
+      'Server-Timing': [
+        `auth;dur=${tAuth}`,
+        `quota;dur=${tQuota}`,
+        `model;dur=${tModel}`,
+      ].join(', '),
       'Cache-Control': 'no-cache, no-store',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',

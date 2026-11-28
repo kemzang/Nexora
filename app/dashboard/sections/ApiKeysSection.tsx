@@ -54,6 +54,24 @@ function timeAgo(dateStr: string | null) {
  */
 const DELAI_CREATION_MS = 45_000
 
+/**
+ * Etat d'echeance d'une clef, tel qu'on l'annonce a son porteur.
+ *
+ * Une clef `nxr_` vit 90 jours, mais l'echeance GLISSE : chaque utilisation la
+ * repousse (prolongerSiProche, lib/auth-verify.ts). Ce n'est donc pas « 90
+ * jours de vie » mais « 90 jours d'inactivite », et c'est exactement ce qu'il
+ * faut ecrire — sinon l'utilisateur croit devoir renouveler une clef qui ne
+ * mourra jamais tant qu'il s'en sert.
+ */
+function etatEcheance(expiresAt: string | null): {
+  expiree: boolean
+  jours: number | null
+} {
+  if (!expiresAt) return { expiree: false, jours: null }
+  const restant = new Date(expiresAt).getTime() - Date.now()
+  return { expiree: restant <= 0, jours: Math.max(0, Math.ceil(restant / 86_400_000)) }
+}
+
 export default function ApiKeysSection() {
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -75,12 +93,17 @@ export default function ApiKeysSection() {
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
-    const now = new Date()
-    // Filter out temporary auth codes and expired keys
+    // Les codes d'authentification temporaires ne sont pas des clefs : ils
+    // n'ont rien a faire dans cette liste.
+    //
+    // Les clefs EXPIREES, en revanche, y restent desormais. Elles etaient
+    // filtrees ici : une clef arrivee a echeance disparaissait sans un mot,
+    // l'autocompletion de son porteur s'arretait, et rien dans le tableau de
+    // bord ne permettait de comprendre pourquoi. Mieux vaut l'afficher morte
+    // que de la faire disparaitre.
     const realKeys = ((data as ApiKeyRow[]) || []).filter(k => {
       const perms = k.permissions as Record<string, unknown> | null
       if (perms?.temporary || perms?.auth_code) return false
-      if (k.expires_at && new Date(k.expires_at) < now) return false
       return true
     })
     setKeys(realKeys)
@@ -340,7 +363,11 @@ export default function ApiKeysSection() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-foreground truncate">{key.name}</p>
-                      <span className="badge-success">Active</span>
+                      {etatEcheance(key.expires_at).expiree ? (
+                        <span className="badge-warning">Expired</span>
+                      ) : (
+                        <span className="badge-success">Active</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
                       <code className="text-xs text-muted-foreground font-mono">{key.key_prefix}••••••••••••••••••••</code>
@@ -349,7 +376,16 @@ export default function ApiKeysSection() {
                         <Clock className="w-3 h-3" />{timeAgo(key.last_used_at)}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">Created on {formatDate(key.created_at)}</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">
+                      Created on {formatDate(key.created_at)}
+                      {(() => {
+                        const { expiree, jours } = etatEcheance(key.expires_at)
+                        if (jours === null) return null
+                        return expiree
+                          ? ` · expired on ${formatDate(key.expires_at as string)} — create a new key to sign in again`
+                          : ` · renews itself while in use, expires in ${jours} days if left unused`
+                      })()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {deleteConfirm === key.id ? (

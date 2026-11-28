@@ -76,11 +76,16 @@ export const STARTUP_PROGRAM = {
   // 20 % et non 30 : a 30 %, un client Business tombait a 21 $ pour un cout
   // d'API pouvant atteindre 21,82 $ — la remise rendait le forfait
   // deficitaire au pire cas, et Pro ne gardait que 22 centimes de marge.
-  // A 20 %, la remise reste substantielle (2,40 $ sur Pro, 6 $ sur Business)
-  // et la marge demeure positive quelle que soit la consommation.
   discountPercent: 20,
   durationMonths: 12,
-  eligiblePlans: ['pro', 'business'] as const,
+  // Business sort du programme le 28 novembre 2026. Le calcul qui l'y avait
+  // laisse supposait moitie entree / moitie sortie ET prenait Opus pour le
+  // modele le plus couteux. Les deux etaient faux : la sortie coute quatre a
+  // cinq fois l'entree, et a credit egal c'est DeepSeek — puis Gemini Pro des
+  // 60 % de sortie — qui coute le plus cher, pas Opus. Recalcule correctement,
+  // Business remise encaisse 24 $ pour 24 $ de cout des 50 % de sortie, et
+  // perd au-dela. Pro remise garde 0,60 $ a 50 %, ce qui tient.
+  eligiblePlans: ['pro'] as const,
   maxAgeYears: 3,
   maxTeamSize: 10,
   maxFundingUsd: 500_000,

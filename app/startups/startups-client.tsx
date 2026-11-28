@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
 import { TextField, SelectField, TextArea, Honeypot } from '@/components/patterns/lead-form-fields'
 import { STARTUP_PROGRAM, checkStartupEligibility } from '@/lib/leads'
+import { PLANS as PLAN_DETAILS } from '@/lib/models'
 
 const STAGES = [
   { value: 'bootstrapped', label: 'Bootstrapped' },
@@ -13,10 +14,13 @@ const STAGES = [
   { value: 'seed', label: 'Seed' },
   { value: 'series-a+', label: 'Series A or beyond' },
 ]
-const PLANS = [
-  { value: 'pro', label: 'Pro — $12/month' },
-  { value: 'business', label: 'Business — $30/month' },
-]
+// Derive de STARTUP_PROGRAM : le formulaire proposait Pro et Business en dur,
+// alors que l'API refuse tout forfait hors eligiblePlans. Quand Business est
+// sorti du programme, le menu l'offrait encore et la soumission repondait 400.
+const PLANS = STARTUP_PROGRAM.eligiblePlans.map((id) => ({
+  value: id,
+  label: `${PLAN_DETAILS[id].name} — $${PLAN_DETAILS[id].price}/month`,
+}))
 const PROOFS = [
   { value: 'registration', label: 'Company registration certificate' },
   { value: 'accelerator', label: 'Accelerator or incubator membership' },

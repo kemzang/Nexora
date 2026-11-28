@@ -38,7 +38,7 @@ export default function StartupsPage() {
             {STARTUP_PROGRAM.discountPercent}% off for {STARTUP_PROGRAM.durationMonths} months
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            On the Pro and Business plans, for teams early enough that the price still matters.
+            On the Pro plan, for teams early enough that the price still matters.
           </p>
         </div>
       </section>

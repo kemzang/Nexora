@@ -72,6 +72,12 @@ const DEEP_WORK_PATTERNS =
 const TECHNICAL_TERMS = /\b(refactor|architecture|optimis|pattern\s+[a-z]|algorithme|asynchrone|performances?|sécurité|design\s+pattern|scalabilit|déploiement|microservice|api\s+rest|graphql|middleware|middleware|endpoint|thread|mutex|deadlock|race\s+condition|compliquit|big\s*o|time\s*complexity|espace\s*complexit)\b/i
 const COMPLEX_TERMS = /\b(architect|refactor|cache|cluster|load\s+balanc|index\s+compos|re-render|bundler|lazy\s+load|stream|webhook|orm|transaction|sharding|replicat|failover|container|docker|kubernetes|ci\/cd)\b/i
 
+/**
+ * Date a laquelle Google double le tarif de Gemini Flash (annonce officielle).
+ * Sortie en constante pour que le test puisse la verifier sans la deviner.
+ */
+export const GEMINI_FLASH_DOUBLEMENT = Date.parse('2027-01-01T00:00:00Z')
+
 export const MODELS: Record<ModelId, AIModel> = {
   'deepseek-chat': {
     id: 'deepseek-chat',
@@ -99,17 +105,28 @@ export const MODELS: Record<ModelId, AIModel> = {
     provider: 'Google',
     // gemini-2.0-flash a été arrêté par Google le 1er juin 2026 (404 sur
     // generateContent) - gemini-3.8-flash est le modèle Flash stable actuel.
-    // ATTENTION : Google double ce tarif le 1er janvier 2027 (1.50$/7.50$).
-    // Il faudra alors passer le multiplicateur de 4 à 8, sinon on vend à perte.
+    // Google double ce tarif le 1er janvier 2027. Le prix ET le multiplicateur
+    // basculent ensemble a GEMINI_FLASH_DOUBLEMENT : les separer donnerait une
+    // marge calculee sur un prix qu'on ne paie plus.
     apiIdentifier: 'gemini-3.8-flash',
     apiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
-    inputCostPer1K: 0.00075,
-    outputCostPer1K: 0.00375,
+    inputCostPer1K: Date.now() >= GEMINI_FLASH_DOUBLEMENT ? 0.0015 : 0.00075,
+    outputCostPer1K: Date.now() >= GEMINI_FLASH_DOUBLEMENT ? 0.0075 : 0.00375,
     contextWindow: 1000000,
     capability: 2,
     sortOrder: 2,
     supportsVision: true,
-    creditMultiplier: 4,
+    // Google double son tarif le 1er janvier 2027 (0.75$/3.75$ -> 1.50$/7.50$).
+    // Le multiplicateur bascule donc tout seul a cette date : le fixer a 8
+    // des maintenant ferait payer le double a nos clients pendant un mois sur
+    // un modele qui nous coute encore l'ancien prix, et le laisser a 4 nous
+    // ferait vendre a perte des le 1er janvier si personne n'y pense.
+    //
+    // Evalue au chargement du module. Sur Vercel les lambdas redemarrent en
+    // permanence, donc la bascule prend effet dans l'heure ; un processus
+    // demarre en decembre et jamais recycle resterait a 4, ce qui est sans
+    // consequence a notre echelle.
+    creditMultiplier: Date.now() >= GEMINI_FLASH_DOUBLEMENT ? 8 : 4,
   },
   'gemini-pro': {
     id: 'gemini-pro',

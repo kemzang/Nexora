@@ -136,16 +136,46 @@ describe('mode Auto', () => {
  * sans que personne s'en apercoive.
  */
 describe('marges', () => {
-  const cout = (m: (typeof MODELS)[keyof typeof MODELS], jetons: number) =>
-    (jetons / 2 / 1000) * m.inputCostPer1K + (jetons / 2 / 1000) * m.outputCostPer1K
+  /**
+   * Cout d'un nombre de jetons, pour une part de sortie donnee.
+   *
+   * `partSortie` valait 0.5 en dur. Or la sortie coute quatre a cinq fois
+   * l'entree chez tous nos fournisseurs : une conversation en mode agent, qui
+   * genere beaucoup et lit peu, coute donc nettement plus que ce que ce test
+   * mesurait. Le parametre rend l'hypothese visible au lieu de la cacher.
+   */
+  const cout = (
+    m: (typeof MODELS)[keyof typeof MODELS],
+    jetons: number,
+    partSortie = 0.5,
+  ) =>
+    (jetons * (1 - partSortie) * m.inputCostPer1K) / 1000 +
+    (jetons * partSortie * m.outputCostPer1K) / 1000
+
+  /**
+   * Le modele le plus couteux d'un forfait, a credit depense egal.
+   *
+   * Le tri se faisait sur `creditMultiplier`, qui classe par prix d'API et non
+   * par cout reel d'un credit. Opus (x22) revient a 0,40 $/Mcr et DeepSeek
+   * (x1,25) a 0,60 $ : le test surveillait donc Opus, alors que c'est DeepSeek
+   * qui nous coute le plus cher par credit — et c'est en plus le modele de
+   * l'autocompletion, donc le plus consomme.
+   */
+  function modelePireCas(planId: keyof typeof PLANS, partSortie: number) {
+    return getModelsForPlan(planId)
+      .map((id) => MODELS[id])
+      .sort(
+        (a, b) =>
+          cout(b, 1 / b.creditMultiplier, partSortie) -
+          cout(a, 1 / a.creditMultiplier, partSortie),
+      )[0]
+  }
 
   /** Cout maximal d'un forfait : tout le quota sur son modele le plus cher. */
-  function pireCas(planId: keyof typeof PLANS): number {
+  function pireCas(planId: keyof typeof PLANS, partSortie = 0.5): number {
     const plan = PLANS[planId]
-    const pire = getModelsForPlan(planId)
-      .map((id) => MODELS[id])
-      .sort((a, b) => b.creditMultiplier - a.creditMultiplier)[0]
-    return cout(pire, plan.tokensPerMonth / pire.creditMultiplier)
+    const pire = modelePireCas(planId, partSortie)
+    return cout(pire, plan.tokensPerMonth / pire.creditMultiplier, partSortie)
   }
 
   it('chaque forfait payant reste rentable au pire cas', () => {

@@ -130,6 +130,34 @@ export async function prolongerSiProche(
   }
 }
 
+/**
+ * Horodate la derniere utilisation d'une clef.
+ *
+ * Le tableau de bord AFFICHE `last_used_at` (« il y a 3 jours ») mais rien ne
+ * l'ecrivait jamais : la colonne gardait sa valeur de creation, et chaque
+ * utilisateur lisait une date fausse. Pire pour l'hygiene des clefs — on ne
+ * pouvait pas distinguer une clef active d'une clef oubliee.
+ *
+ * L'ecriture n'a lieu que sur un echec de cache, donc au plus une fois par
+ * periode de cache (5 minutes) et par clef : « derniere utilisation » n'a pas
+ * besoin d'etre plus fin que ca. Detachee (`void`) comme la prolongation, pour
+ * ne pas ajouter un aller-retour sur le chemin chaud de l'autocompletion.
+ */
+export async function marquerUtilisation(
+  tokenHash: string,
+  db?: { from: (t: string) => any },
+): Promise<void> {
+  try {
+    await (db ?? supabase)
+      .from('api_keys')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('key_hash', tokenHash)
+      .eq('is_active', true)
+  } catch {
+    // Sans consequence : l'affichage reste sur la date precedente.
+  }
+}
+
 export async function verifyToken(token: string): Promise<string | null> {
   const cached = tokenCache.get(token)
   if (cached && cached.expiresAt > Date.now()) {
@@ -178,6 +206,7 @@ export async function verifyToken(token: string): Promise<string | null> {
     if (!(await adresseConfirmee(data.user_id))) return null
 
     void prolongerSiProche(tokenHash, data.expires_at as string | null)
+    void marquerUtilisation(tokenHash)
 
     // Mettre en cache pour 5 minutes
     tokenCache.set(token, { userId: data.user_id, expiresAt: Date.now() + 5 * 60 * 1000 })

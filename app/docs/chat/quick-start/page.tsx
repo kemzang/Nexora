@@ -46,16 +46,16 @@ export default function ChatQuickStartPage() {
         Nexora&apos;s chat lets you talk to the best AI models (DeepSeek, Gemini, Claude) straight from VS Code, without leaving your editor.
       </p>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Requirements</h2>
+      <h2 className="text-xl font-bold mb-4">Requirements</h2>
       <ul className="space-y-2 text-sm text-muted-foreground mb-8">
         <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>The Nexora extension installed in VS Code</li>
         <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>A Nexora account, created and verified at <a href="https://nexoracoding.com" className="text-foreground/70 hover:underline">nexoracoding.com</a></li>
         <li className="flex items-start gap-2"><span className="text-foreground/70 mt-0.5">•</span>The extension connected to your account (token configured)</li>
       </ul>
 
-      <h2 className="text-xl font-bold mb-5">Usage</h2>
+      <h2 className="text-xl font-bold mb-4">Usage</h2>
 
       <Step n={1} title="Open Nexora chat">
         <p>Open the command palette with <kbd className="px-1.5 py-0.5 bg-white/[0.08] border border-border/60 rounded text-xs text-foreground font-mono">Ctrl+Shift+P</kbd> (ou <kbd className="px-1.5 py-0.5 bg-white/[0.08] border border-border/60 rounded text-xs text-foreground font-mono">Cmd+Shift+P</kbd> on Mac), then type:</p>
@@ -94,9 +94,9 @@ export default function ChatQuickStartPage() {
         <p>Nexora can read the file you have open. In the chat, type <code className="px-1 py-0.5 bg-white/[0.06] rounded text-xs font-mono text-foreground/70">@file</code> to reference the active file, or <code className="px-1 py-0.5 bg-white/[0.06] rounded text-xs font-mono text-foreground/70">@selection</code> for the current selection.</p>
       </Step>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Keyboard shortcuts</h2>
+      <h2 className="text-xl font-bold mb-4">Keyboard shortcuts</h2>
       <div className="rounded-xl border border-border/60 overflow-hidden text-sm">
         <div className="bg-white/[0.03] px-4 py-2.5 grid grid-cols-2 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
           <span>Action</span>
@@ -116,7 +116,7 @@ export default function ChatQuickStartPage() {
         ))}
       </div>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Automatic model selection</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -127,7 +127,7 @@ export default function ChatQuickStartPage() {
         Token usage is visible in your <a href="/dashboard" className="underline underline-offset-2">dashboard</a>, under Usage.
       </Callout>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Next page</span>

@@ -97,7 +97,7 @@ export default function DocsIndexPage() {
 
       {/* Getting started */}
       <h2 className="text-xl font-bold mb-1">Quick start</h2>
-      <p className="text-sm text-muted-foreground mb-5">Pick your environment to install Nexora.</p>
+      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">Pick your environment to install Nexora.</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <InstallCard
           icon={Code2}
@@ -137,11 +137,11 @@ export default function DocsIndexPage() {
         You will be redirected to your browser to authenticate.
       </Callout>
 
-      <div className="h-px bg-border/50 mb-10" />
+      <div className="h-px bg-border/50 my-10" />
 
       {/* Features */}
       <h2 className="text-xl font-bold mb-1">Features</h2>
-      <p className="text-sm text-muted-foreground mb-5">The four ways to work with the AI at the heart of Nexora.</p>
+      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">The four ways to work with the AI at the heart of Nexora.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         <FeatureDocCard
           icon={MessageSquare}
@@ -170,11 +170,11 @@ export default function DocsIndexPage() {
         />
       </div>
 
-      <div className="h-px bg-border/50 mb-10" />
+      <div className="h-px bg-border/50 my-10" />
 
       {/* Guides */}
       <h2 className="text-xl font-bold mb-1">Guides</h2>
-      <p className="text-sm text-muted-foreground mb-5">Go further with configuring Nexora.</p>
+      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">Go further with configuring Nexora.</p>
       <Link
         href="/docs/guides/codebase-documentation-awareness"
         className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors mb-10"
@@ -189,11 +189,11 @@ export default function DocsIndexPage() {
         <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
       </Link>
 
-      <div className="h-px bg-border/50 mb-10" />
+      <div className="h-px bg-border/50 my-10" />
 
       {/* Models */}
       <h2 className="text-xl font-bold mb-1">Available AI models</h2>
-      <p className="text-sm text-muted-foreground mb-5">
+      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
         Nexora routes each request to the model that best fits the task&apos;s complexity and your plan.
         See <Link href="/pricing" className="text-foreground/70 hover:underline">which models each plan includes</Link>.
       </p>
@@ -220,10 +220,10 @@ export default function DocsIndexPage() {
         </table>
       </div>
 
-      <div className="h-px bg-border/50 mb-10" />
+      <div className="h-px bg-border/50 my-10" />
 
       {/* Resources */}
-      <h2 className="text-xl font-bold mb-5">Resources</h2>
+      <h2 className="text-xl font-bold mb-4">Resources</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/pricing" className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50 hover:bg-white/[0.045] hover:border-border transition-colors">
           <CreditCard className="w-4 h-4 text-foreground/70 shrink-0" />

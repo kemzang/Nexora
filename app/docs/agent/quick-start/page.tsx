@@ -38,9 +38,9 @@ export default function AgentQuickStartPage() {
         Agent mode lets the AI work through a task on its own: reading your files, creating or editing several of them, running commands, and asking for your approval before anything sensitive.
       </p>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Turning it on</h2>
+      <h2 className="text-xl font-bold mb-4">Turning it on</h2>
 
       <Step n={1} title="Select Agent mode">
         <p>
@@ -84,9 +84,9 @@ export default function AgentQuickStartPage() {
         </Callout>
       </Step>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Choosing the model</h2>
+      <h2 className="text-xl font-bold mb-4">Choosing the model</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
         The model you pick at the top of the chat applies to Agent mode too — see the <Link href="/docs/chat/quick-start" className="text-foreground/70 hover:underline">chat quick start</Link> for what each plan includes.
       </p>
@@ -95,7 +95,7 @@ export default function AgentQuickStartPage() {
         Agent mode can use more credits than a plain chat, because every file read, search and action is part of the exchange with the model. Your usage stays visible in your <a href="/dashboard" className="underline underline-offset-2">dashboard</a>.
       </Callout>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/autocomplete/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">

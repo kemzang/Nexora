@@ -38,9 +38,9 @@ export default function EditQuickStartPage() {
         Inline edit rewrites a code selection right inside your file, without opening the chat panel — handy for a rename, a fix or a small local rewrite.
       </p>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Usage</h2>
+      <h2 className="text-xl font-bold mb-4">Usage</h2>
 
       <Step n={1} title="Select the code to change">
         <p>
@@ -78,14 +78,14 @@ export default function EditQuickStartPage() {
         </Callout>
       </Step>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Inline edit or Agent mode?</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
         Inline edit stays within one file and one exchange — ideal for a quick, targeted change. For a task that spans several files, runs commands, or needs to explore the project, use <Link href="/docs/agent/quick-start" className="text-foreground/70 hover:underline">Agent mode</Link> instead.
       </p>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/agent/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">

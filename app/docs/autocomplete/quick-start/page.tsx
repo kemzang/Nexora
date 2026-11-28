@@ -50,9 +50,9 @@ export default function AutocompleteQuickStartPage() {
         Autocomplete requires the <strong>Starter plan or above</strong>. On the Free plan, only chat is available.
       </Callout>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">Turning it on</h2>
+      <h2 className="text-xl font-bold mb-4">Turning it on</h2>
 
       <Step n={1} title="Check you are on Starter or above">
         <p>
@@ -99,9 +99,9 @@ export default function AutocompleteQuickStartPage() {
         </div>
       </Step>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
-      <h2 className="text-xl font-bold mb-5">How it works</h2>
+      <h2 className="text-xl font-bold mb-4">How it works</h2>
 
       <div className="space-y-4 mb-8">
         <div className="p-4 rounded-xl bg-white/[0.03] border border-border/50">
@@ -128,14 +128,14 @@ export default function AutocompleteQuickStartPage() {
         Raise <code className="font-mono text-xs">triggerDelay</code> to 500ms or more if suggestions fire too often and burn through your credits.
       </Callout>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Turning it off temporarily</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
         Click the Nexora button in the VS Code status bar (bottom right) to toggle autocomplete on and off without touching the settings.
       </p>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/chat/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">

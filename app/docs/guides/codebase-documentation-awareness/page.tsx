@@ -45,10 +45,10 @@ export default function CodebaseDocumentationAwarenessPage() {
         This works on every plan. The better structured your documentation, the sharper the suggestions.
       </Callout>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">How Nexora reads your project</h2>
-      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
         When a workspace opens, Nexora indexes the documentation files it detects. That index is passed to the models as system context, so they understand your project before you even ask a question.
       </p>
 
@@ -70,7 +70,7 @@ export default function CodebaseDocumentationAwarenessPage() {
         ))}
       </div>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Configuring documentation in VS Code</h2>
 
@@ -93,7 +93,7 @@ export default function CodebaseDocumentationAwarenessPage() {
         Keep <code className="font-mono text-xs">maxFileSize</code> under 50,000 characters per file. Larger files are truncated automatically, which can cut out important information.
       </Callout>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Recommended project structure</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -113,7 +113,7 @@ export default function CodebaseDocumentationAwarenessPage() {
         '└── package.json',
       ]} />
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">Using @doc in the chat</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -137,7 +137,7 @@ export default function CodebaseDocumentationAwarenessPage() {
         Combine <code className="font-mono text-xs">@doc</code> and <code className="font-mono text-xs">@file</code> for very targeted questions: <em>&ldquo;@doc conventions.md @file src/utils/parser.ts — does this file follow our conventions?&rdquo;</em>
       </Callout>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">A concrete example</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -157,7 +157,7 @@ export default function CodebaseDocumentationAwarenessPage() {
         </div>
       </div>
 
-      <div className="h-px bg-border/50 mb-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <h2 className="text-xl font-bold mb-4">The .nexoraignore file</h2>
       <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -176,7 +176,7 @@ docs/internal/    # Confidential internal documentation`} />
         Nexora never reads <code className="font-mono text-xs">.env</code> or <code className="font-mono text-xs">.env.*</code> files by default, even without a <code className="font-mono text-xs">.nexoraignore</code>.
       </Callout>
 
-      <div className="h-px bg-border/50 my-8" />
+      <div className="h-px bg-border/50 my-10" />
 
       <div className="flex items-center justify-between text-sm">
         <Link href="/docs/autocomplete/quick-start" className="text-foreground/70 hover:text-foreground transition-colors">

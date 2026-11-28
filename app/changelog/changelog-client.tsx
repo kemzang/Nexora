@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Sparkles, MessageSquare, ShieldCheck, LayoutPanelLeft, Mail, Cpu } from 'lucide-react'
+import { Sparkles, MessageSquare, ShieldCheck, LayoutPanelLeft, Mail, Cpu, Zap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
 import { SectionLayout } from '@/components/patterns/section-layout'
@@ -10,6 +10,16 @@ import { SiteHeader } from '@/components/patterns/site-header'
 import { SiteFooter } from '@/components/patterns/site-footer'
 
 const CURRENT_ENTRIES = [
+  {
+    icon: Zap,
+    title: 'Autocomplete works again, everywhere',
+    desc: 'Inline suggestions are back in VS Code and JetBrains. Completion requests now use the proper fill-in-the-middle format, a suggestion is kept instead of being thrown away when you keep typing, and the delays were retuned for a hosted model — so suggestions appear while you type rather than after you stop.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'A calmer chat panel',
+    desc: 'Chat text follows your editor font size instead of staying fixed, the @ and / menus no longer cover your code, and the space they reserve is always released when they close.',
+  },
   {
     icon: Cpu,
     title: 'Claude 5.5 across every plan',

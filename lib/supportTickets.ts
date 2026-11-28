@@ -102,7 +102,7 @@ export const SUPPORT_CATEGORIES: SupportCategory[] = [
         label: 'Version',
         type: 'text',
         required: false,
-        placeholder: 'e.g. 1.0.21',
+        placeholder: 'e.g. 2.1.2',
         autofill: 'version',
       },
       {

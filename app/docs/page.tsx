@@ -5,6 +5,7 @@ import {
   Bot, PenLine, BookOpen, ArrowRight, ExternalLink, CreditCard, ScrollText,
 } from 'lucide-react'
 import { MODELS } from '@/lib/models'
+import { Callout } from '@/components/docs/callout'
 
 export const metadata: Metadata = {
   title: 'Documentation — Nexora',
@@ -130,12 +131,11 @@ export default function DocsIndexPage() {
         />
       </div>
 
-      <div className="border rounded-xl px-4 py-3 text-sm mb-10 leading-relaxed bg-sky-500/10 border-sky-500/25 text-sky-300">
-        <span className="mr-2">ℹ️</span>
+      <Callout type="info">
         Once installed, connect your account: run the <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">Nexora: Login</code> command
         from the VS Code / IntelliJ command palette, or <code className="px-1 py-0.5 bg-white/[0.08] rounded text-xs font-mono">nexora login</code> for the CLI.
         You will be redirected to your browser to authenticate.
-      </div>
+      </Callout>
 
       <div className="h-px bg-border/50 mb-10" />
 

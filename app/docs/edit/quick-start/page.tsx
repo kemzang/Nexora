@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Callout } from '@/components/docs/callout'
 
 export const metadata: Metadata = {
   title: 'Inline edit — Quick start | Nexora Docs',
@@ -16,20 +17,6 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         <h3 className="font-semibold text-base mb-2">{title}</h3>
         <div className="text-muted-foreground text-sm leading-relaxed">{children}</div>
       </div>
-    </div>
-  )
-}
-
-function Callout({ type = 'info', children }: { type?: 'info' | 'warning' | 'tip'; children: React.ReactNode }) {
-  const styles = {
-    info:    'bg-sky-500/10 border-sky-500/25 text-sky-300',
-    warning: 'bg-amber-500/10 border-amber-500/25 text-amber-300',
-    tip:     'bg-emerald-500/10 border-emerald-500/25 text-emerald-300',
-  }
-  const icons = { info: 'ℹ️', warning: '⚠️', tip: '💡' }
-  return (
-    <div className={`border rounded-xl px-4 py-3 text-sm mb-4 leading-relaxed ${styles[type]}`}>
-      <span className="mr-2">{icons[type]}</span>{children}
     </div>
   )
 }

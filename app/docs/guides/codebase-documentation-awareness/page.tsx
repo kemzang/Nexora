@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Callout } from '@/components/docs/callout'
+import { FileText, Folder, MessageSquare, Settings2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Project documentation — Guide | Nexora Docs',
@@ -11,20 +13,6 @@ function CodeBlock({ code, lang = 'json' }: { code: string; lang?: string }) {
     <pre className="bg-white/[0.04] border border-border/60 rounded-xl p-4 overflow-x-auto text-sm font-mono text-foreground/90 my-4">
       <code>{code}</code>
     </pre>
-  )
-}
-
-function Callout({ type = 'info', children }: { type?: 'info' | 'warning' | 'tip'; children: React.ReactNode }) {
-  const styles = {
-    info:    'bg-sky-500/10 border-sky-500/25 text-sky-300',
-    warning: 'bg-amber-500/10 border-amber-500/25 text-amber-300',
-    tip:     'bg-emerald-500/10 border-emerald-500/25 text-emerald-300',
-  }
-  const icons = { info: 'ℹ️', warning: '⚠️', tip: '💡' }
-  return (
-    <div className={`border rounded-xl px-4 py-3 text-sm mb-4 leading-relaxed ${styles[type]}`}>
-      <span className="mr-2">{icons[type]}</span>{children}
-    </div>
   )
 }
 
@@ -66,13 +54,14 @@ export default function CodebaseDocumentationAwarenessPage() {
 
       <div className="space-y-3 mb-8">
         {[
-          { icon: '📄', title: 'README.md', desc: 'Project description, install instructions, overall architecture.' },
-          { icon: '⚙️', title: 'Config files', desc: 'package.json, tsconfig.json, pyproject.toml — to understand your dependencies and conventions.' },
-          { icon: '💬', title: 'JSDoc comments / docstrings', desc: 'Nexora reads type annotations and function descriptions to enrich the context.' },
-          { icon: '📁', title: 'AGENTS.md / CLAUDE.md', desc: 'When present, these files take priority and steer the AI with your own instructions.' },
+          { Icon: FileText, title: 'README.md', desc: 'Project description, install instructions, overall architecture.' },
+          { Icon: Settings2, title: 'Config files', desc: 'package.json, tsconfig.json, pyproject.toml — to understand your dependencies and conventions.' },
+          { Icon: MessageSquare, title: 'JSDoc comments / docstrings', desc: 'Nexora reads type annotations and function descriptions to enrich the context.' },
+          { Icon: Folder, title: 'AGENTS.md / CLAUDE.md', desc: 'When present, these files take priority and steer the AI with your own instructions.' },
         ].map(item => (
           <div key={item.title} className="flex gap-3 p-4 rounded-xl bg-white/[0.03] border border-border/50">
-            <span className="text-lg shrink-0">{item.icon}</span>
+            {/* `mt-0.5` cale l'icone sur la premiere ligne du titre. */}
+            <item.Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <div>
               <p className="text-sm font-semibold mb-0.5">{item.title}</p>
               <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>

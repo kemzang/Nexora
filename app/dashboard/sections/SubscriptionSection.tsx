@@ -511,7 +511,7 @@ export default function SubscriptionSection({ onNavigate }: { onNavigate?: (s: s
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold shadow-lg">
-                    ⭐ Popular
+                    Popular
                   </div>
                 )}
                 <Card className={`border-border/50 ${plan.border} transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${plan.popular ? `${plan.activeBorder} shadow-amber-500/10` : ''}`}>

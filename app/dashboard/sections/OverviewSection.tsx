@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Zap, Key, BarChart3, Star, ArrowRight, Bot, TrendingUp, Clock, CreditCard } from 'lucide-react'
+import { Zap, Key, BarChart3, Star, ArrowRight, Bot, TrendingUp, Clock, CreditCard, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { PLANS } from '@/lib/models'
@@ -212,8 +212,8 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
           <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1.5">
-          Bonjour,{' '}
-          <span className="gradient-text-strong">{user.firstName || 'there'}</span> 👋
+          Welcome back,{' '}
+          <span className="gradient-text-strong">{user.firstName || 'there'}</span>
         </h1>
         <p className="text-muted-foreground text-sm">
           Here is a summary of your activity on Nexora.
@@ -344,7 +344,7 @@ export default function OverviewSection({ user, onNavigate }: OverviewSectionPro
                       : 'bg-muted border-border'
                   }`}>
                     {item.done
-                      ? <span className="text-emerald-400 text-xs">✓</span>
+                      ? <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
                       : <span className="text-foreground/70 text-xs font-bold">{item.step}</span>
                     }
                   </div>
